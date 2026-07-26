@@ -2,12 +2,22 @@ import { fileURLToPath } from "node:url";
 
 import Fastify from "fastify";
 
+import { registerRequestLifecycle } from "../adapters/http/request-lifecycle.js";
+import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-logger.js";
+import type { RequestLogger } from "../ports/logging/logger.js";
 import { loadConfig } from "./config.js";
 
-export function buildServer() {
+type ServerOptions = {
+  logger?: RequestLogger;
+};
+
+export function buildServer(options: ServerOptions = {}) {
   const server = Fastify({
     logger: false,
   });
+  const logger = options.logger ?? new HumanReadableRequestLogger();
+
+  registerRequestLifecycle(server, logger);
 
   server.get("/health", async () => ({ status: "ok" }));
 
