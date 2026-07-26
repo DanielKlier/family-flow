@@ -4,17 +4,51 @@ This manual describes how to operate the local FamilyFlow deployment.
 
 ## Deployment
 
-1. Copy `.env.example` to `.env` and adjust values for the target host.
-2. Build containers with `docker compose build`.
-3. Start services with `docker compose up -d`.
+The reference deployment builds Docker images on the target server from a versioned Git tag. A local Docker registry is not required for the current single-host deployment.
+
+Target server requirements:
+
+- Git.
+- Docker Engine with Docker Compose.
+- Outbound access to the Git repository, Docker Hub, and the npm/pnpm registries during builds.
+- A persistent checkout directory, for example `/opt/family-flow`.
+- A local `.env` file created from `.env.example` and adjusted for the target host.
+
+Initial deployment:
+
+1. Clone the repository into the target directory.
+2. Fetch tags with `git fetch --tags`.
+3. Check out the desired version tag, for example `git checkout v0.2.0`.
+4. Copy `.env.example` to `.env` and adjust values for the target host.
+5. Build containers with `docker compose build`.
+6. Start services with `docker compose up -d`.
+7. Verify the app with `curl http://127.0.0.1:3000/health`.
+
+Deployment update:
+
+1. Fetch the latest repository state and tags with `git fetch --tags`.
+2. Check out the desired version tag, for example `git checkout v0.2.0`.
+3. Review `CHANGELOG.md` and `OPERATIONS.md` for required manual steps.
+4. Build containers with `docker compose build`.
+5. Start the updated deployment with `docker compose up -d`.
+6. Verify the app with `curl http://127.0.0.1:3000/health`.
+
+Rollback:
+
+1. Check out the previous known-good version tag, for example `git checkout v0.1.0`.
+2. Rebuild containers with `docker compose build`.
+3. Restart services with `docker compose up -d`.
 4. Verify the app with `curl http://127.0.0.1:3000/health`.
+
+Image distribution alternatives:
+
+- Current default: build from Git on the target server. This keeps infrastructure minimal and avoids registry credentials.
+- Later option: build locally or in CI, push versioned images to GHCR, Docker Hub, or a LAN registry, and let the target server pull images by tag.
+- A registry becomes useful when the target server should not build images, multiple hosts need the same image, outbound dependency downloads are restricted, or CI should produce release artifacts.
 
 ## Updates
 
-1. Pull the latest repository state.
-2. Run `pnpm install` when dependencies changed.
-3. Run `pnpm format:check`, `pnpm lint`, `pnpm test`, `pnpm test:e2e`, and `pnpm build`.
-4. Rebuild and restart containers with `docker compose build` and `docker compose up -d`.
+Before publishing a new version tag, run `pnpm install` when dependencies changed, then run `pnpm format:check`, `pnpm lint`, `pnpm test`, `pnpm test:e2e`, `pnpm build`, and `docker compose build` locally.
 
 ## Versioning And Tags
 
