@@ -1,0 +1,31 @@
+# FamilyFlow
+
+FamilyFlow is a local web application for household and family finance planning.
+
+## Requirements
+
+- Node.js 24
+- pnpm 11
+- Docker and Docker Compose
+
+## Local Development
+
+1. Install dependencies with `pnpm install`.
+2. Copy `.env.example` to `.env` and adjust values if needed.
+3. Start the development server with `pnpm dev`.
+4. Open `http://127.0.0.1:3000/health` to verify the app is running.
+
+## Commands
+
+- `pnpm format`: format files with Prettier.
+- `pnpm format:check`: check formatting.
+- `pnpm lint`: run ESLint.
+- `pnpm test`: run unit and integration tests.
+- `pnpm test:e2e`: run E2E tests.
+- `pnpm build`: compile TypeScript.
+
+## Docker
+
+Build the image with `docker compose build`.
+
+Start the app and PostgreSQL with `docker compose up`.
