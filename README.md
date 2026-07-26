@@ -17,12 +17,20 @@ FamilyFlow is a local web application for household and family finance planning.
 
 ## Commands
 
-- `pnpm format`: format files with Prettier.
+- `pnpm format`: format files with Biome.
 - `pnpm format:check`: check formatting.
-- `pnpm lint`: run ESLint.
+- `pnpm lint`: run Biome linting.
 - `pnpm test`: run unit and integration tests.
 - `pnpm test:e2e`: run E2E tests.
 - `pnpm build`: compile TypeScript.
+
+## Versioning
+
+Pre-release versions use `0.x.y` SemVer-style versions. Each versioned state has:
+
+- A `package.json` version.
+- A `CHANGELOG.md` entry.
+- A Git tag named `vMAJOR.MINOR.PATCH`, for example `v0.1.0`.
 
 ## Docker
 

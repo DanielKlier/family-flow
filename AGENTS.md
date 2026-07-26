@@ -40,7 +40,7 @@ Der geplante Stack ist Node.js, TypeScript, Fastify, PostgreSQL, Drizzle, server
 
 ### 3. Formatierung Und Quality Gates
 
-- Code wird automatisch mit Prettier formatiert.
+- Code wird automatisch mit Biome formatiert.
 - Vor jedem Commit muss der Code getestet, gelintet und formatiert sein.
 - Erwartete lokale Gates:
   - `pnpm format:check`
@@ -59,7 +59,7 @@ Der geplante Stack ist Node.js, TypeScript, Fastify, PostgreSQL, Drizzle, server
   - `fix: prevent duplicate csv imports`
   - `test: cover scenario calculations`
   - `docs: add backup runbook`
-  - `chore: configure prettier`
+  - `chore: configure biome`
   - `refactor: isolate forecasting core`
 - Jeder Phasenabschluss aus `TASKS.md` endet in einem Commit.
 - Nicht committen, wenn Tests, Linting, Formatierung oder Build fehlschlagen.

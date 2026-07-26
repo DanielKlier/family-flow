@@ -16,6 +16,12 @@ This manual describes how to operate the local FamilyFlow deployment. Phase 0 on
 3. Run `pnpm format:check`, `pnpm lint`, `pnpm test`, `pnpm test:e2e`, and `pnpm build`.
 4. Rebuild and restart containers with `docker compose build` and `docker compose up -d`.
 
+## Versioning And Tags
+
+Versions use SemVer-style `0.x.y` numbers before the first stable release. Every versioned state must update `package.json`, add a `CHANGELOG.md` entry, and create an annotated Git tag named `vMAJOR.MINOR.PATCH`.
+
+Example: `git tag -a v0.1.0 -m "v0.1.0"`.
+
 ## Database Migrations
 
 Database migrations are not implemented in Phase 0. PostgreSQL is started by Docker Compose and is reserved for later phases.
