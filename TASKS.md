@@ -11,11 +11,11 @@ Jede Phase endet mit einem Conventional Commit. Vor jedem Commit muessen Formati
 - Core-Logik liegt in `src/core` und ist ohne Adapter testbar.
 - Ports definieren Abhaengigkeiten des Core.
 - Adapter enthalten Web, DB, OIDC, CSV, Logging und Template-Integration.
-- `npm run format` wurde ausgefuehrt.
-- `npm run lint` ist gruen.
-- `npm test` ist gruen.
-- `npm run test:e2e` ist fuer relevante Features gruen.
-- `npm run build` ist gruen.
+- `pnpm format` wurde ausgefuehrt.
+- `pnpm lint` ist gruen.
+- `pnpm test` ist gruen.
+- `pnpm test:e2e` ist fuer relevante Features gruen.
+- `pnpm build` ist gruen.
 - Docker Image baut erfolgreich.
 - Docker Compose startet die App erfolgreich.
 - Operations Manual ist fuer neue Betriebsablaeufe aktualisiert.
@@ -49,11 +49,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 
 Commit:
@@ -84,11 +84,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 
 Commit:
@@ -121,11 +121,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 - `docker compose up` startet mit Migrationen.
 
@@ -159,11 +159,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 
 Commit:
@@ -199,11 +199,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 
 Commit:
@@ -240,11 +240,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 
 Commit:
@@ -276,11 +276,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 
 Commit:
@@ -313,11 +313,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 
 Commit:
@@ -350,11 +350,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 
 Commit:
@@ -392,11 +392,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 
 Commit:
@@ -430,11 +430,11 @@ Tests:
 
 Quality Gate:
 
-- `npm run format:check`
-- `npm run lint`
-- `npm test`
-- `npm run test:e2e`
-- `npm run build`
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
 - `docker compose build`
 - `docker compose up` Smoke Test.
 
