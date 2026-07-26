@@ -29,8 +29,7 @@ Tasks:
 
 - `package.json` mit Scripts fuer `dev`, `build`, `test`, `test:e2e`, `lint`, `format`, `format:check` anlegen.
 - TypeScript konfigurieren.
-- ESLint konfigurieren.
-- Prettier konfigurieren.
+- Biome fuer Formatierung und Linting konfigurieren.
 - Test-Framework fuer Unit- und Integrationstests einrichten.
 - E2E-Test-Framework einrichten.
 - Minimale Fastify-App mit Healthcheck vorbereiten.

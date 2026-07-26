@@ -43,8 +43,7 @@ Diese Zuordnung dient ausschliesslich der Filterung und Auswertung, nicht der Zu
 - Authentifizierung: OIDC gegen Authentik mit Session-Cookies
 - Deployment: Docker Compose
 - Reverse Proxy: vorhandener Caddy
-- Formatierung: Prettier
-- Linting: ESLint
+- Formatierung und Linting: Biome
 - Tests: Unit-/Integrationstests fuer Core und Adapter, E2E Tests fuer Features
 
 ## Architektur
@@ -318,6 +317,6 @@ Ein MVP gilt als deploybar, wenn:
 - OIDC-Konfiguration dokumentiert ist.
 - Tests gruen sind.
 - Linting gruen ist.
-- Prettier angewendet wurde.
+- Biome angewendet wurde.
 - E2E Tests fuer neue Features existieren und gruen sind.
 - Operations Manual fuer den aktuellen Stand aktualisiert ist.

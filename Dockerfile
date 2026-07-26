@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM node:24-alpine AS dependencies
 
 WORKDIR /app
 
@@ -7,6 +7,22 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
+FROM node:24-alpine AS production-dependencies
+
+WORKDIR /app
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+
+FROM node:24-alpine AS build
+
+WORKDIR /app
+
+RUN corepack enable
+
+COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
 
@@ -16,15 +32,12 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN corepack enable
-
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --prod --frozen-lockfile
-
+COPY --from=production-dependencies /app/node_modules ./node_modules
+COPY package.json ./package.json
 COPY --from=build /app/dist ./dist
 
 USER node
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+CMD ["node", "dist/app/server.js"]
