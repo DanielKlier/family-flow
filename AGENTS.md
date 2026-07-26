@@ -43,11 +43,11 @@ Der geplante Stack ist Node.js, TypeScript, Fastify, PostgreSQL, Drizzle, server
 - Code wird automatisch mit Prettier formatiert.
 - Vor jedem Commit muss der Code getestet, gelintet und formatiert sein.
 - Erwartete lokale Gates:
-  - `npm run format:check`
-  - `npm run lint`
-  - `npm test`
-  - `npm run test:e2e`
-  - `npm run build`
+  - `pnpm format:check`
+  - `pnpm lint`
+  - `pnpm test`
+  - `pnpm test:e2e`
+  - `pnpm build`
 - Wenn Docker betroffen ist, muss auch `docker compose build` erfolgreich sein.
 - Wenn Deployment betroffen ist, muss ein Docker-Compose-Smoke-Test erfolgen.
 
@@ -215,10 +215,10 @@ Der Core darf nicht enthalten:
 - Core-Logik ist im Core und isoliert testbar.
 - Adapter enthalten nur technische Integration.
 - Dokumentation ist aktualisiert.
-- `npm run format:check` ist gruen.
-- `npm run lint` ist gruen.
-- `npm test` ist gruen.
-- `npm run test:e2e` ist gruen.
-- `npm run build` ist gruen.
+- `pnpm format:check` ist gruen.
+- `pnpm lint` ist gruen.
+- `pnpm test` ist gruen.
+- `pnpm test:e2e` ist gruen.
+- `pnpm build` ist gruen.
 - Docker Build ist gruen, wenn Infrastruktur betroffen ist.
 - Commit nutzt Conventional Commits.
