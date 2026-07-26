@@ -37,3 +37,5 @@ Pre-release versions use `0.x.y` SemVer-style versions. Each versioned state has
 Build the image with `docker compose build`.
 
 Start the app and PostgreSQL with `docker compose up`.
+
+Deployment to the target server is documented in `OPERATIONS.md`. The current reference process builds images on the target server from versioned Git tags; no local Docker registry is required yet.
