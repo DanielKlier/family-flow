@@ -16,7 +16,7 @@ export function buildAuthorizationUrl(
   baseUrl: string,
   state: string,
 ): string {
-  const url = new URL("authorize/", `${config.issuerUrl}/`);
+  const url = new URL("authorize/", getOauthEndpointBaseUrl(config));
   url.searchParams.set("client_id", config.clientId);
   url.searchParams.set("redirect_uri", `${baseUrl}/auth/callback`);
   url.searchParams.set("response_type", "code");
@@ -38,7 +38,7 @@ export async function exchangeAuthorizationCode(
   baseUrl: string,
   code: string,
 ): Promise<OidcUserInfo> {
-  const tokenResponse = await fetch(new URL("token/", `${config.issuerUrl}/`), {
+  const tokenResponse = await fetch(new URL("token/", getOauthEndpointBaseUrl(config)), {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -61,7 +61,7 @@ export async function exchangeAuthorizationCode(
     throw new Error("OIDC token response did not include an access token");
   }
 
-  const userInfoResponse = await fetch(new URL("userinfo/", `${config.issuerUrl}/`), {
+  const userInfoResponse = await fetch(new URL("userinfo/", getOauthEndpointBaseUrl(config)), {
     headers: {
       Authorization: `Bearer ${tokenPayload.access_token}`,
     },
@@ -83,4 +83,17 @@ export async function exchangeAuthorizationCode(
       typeof userInfo.preferred_username === "string" ? userInfo.preferred_username : undefined,
     email: typeof userInfo.email === "string" ? userInfo.email : undefined,
   };
+}
+
+function getOauthEndpointBaseUrl(config: OidcRuntimeConfig): URL {
+  const issuerUrl = new URL(`${config.issuerUrl}/`);
+  const pathSegments = issuerUrl.pathname.split("/").filter(Boolean);
+
+  if (pathSegments.length === 0) {
+    return issuerUrl;
+  }
+
+  issuerUrl.pathname = `/${pathSegments.slice(0, -1).join("/")}/`;
+
+  return issuerUrl;
 }
