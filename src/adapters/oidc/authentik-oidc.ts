@@ -4,6 +4,13 @@ export type OidcRuntimeConfig = {
   clientSecret: string;
 };
 
+export type OidcProviderMetadata = {
+  authorizationEndpoint: string;
+  tokenEndpoint: string;
+  userinfoEndpoint: string;
+  endSessionEndpoint: string | null;
+};
+
 export type OidcUserInfo = {
   sub: string;
   name?: string;
@@ -11,12 +18,36 @@ export type OidcUserInfo = {
   email?: string;
 };
 
-export function buildAuthorizationUrl(
+type FetchProvider = (input: URL | string, init?: RequestInit) => Promise<Response>;
+
+export async function discoverOidcProvider(
   config: OidcRuntimeConfig,
+  fetchProvider: FetchProvider = fetch,
+): Promise<OidcProviderMetadata> {
+  const discoveryUrl = new URL(".well-known/openid-configuration", `${config.issuerUrl}/`);
+  const response = await fetchProvider(discoveryUrl);
+
+  if (!response.ok) {
+    throw new Error("OIDC discovery request failed");
+  }
+
+  const metadata = (await response.json()) as Record<string, unknown>;
+
+  return {
+    authorizationEndpoint: readEndpoint(metadata, "authorization_endpoint"),
+    tokenEndpoint: readEndpoint(metadata, "token_endpoint"),
+    userinfoEndpoint: readEndpoint(metadata, "userinfo_endpoint"),
+    endSessionEndpoint: readOptionalEndpoint(metadata, "end_session_endpoint"),
+  };
+}
+
+export function buildAuthorizationUrl(
+  config: Pick<OidcRuntimeConfig, "clientId">,
+  provider: OidcProviderMetadata,
   baseUrl: string,
   state: string,
 ): string {
-  const url = new URL("authorize/", getOauthEndpointBaseUrl(config));
+  const url = new URL(provider.authorizationEndpoint);
   url.searchParams.set("client_id", config.clientId);
   url.searchParams.set("redirect_uri", `${baseUrl}/auth/callback`);
   url.searchParams.set("response_type", "code");
@@ -26,8 +57,12 @@ export function buildAuthorizationUrl(
   return url.toString();
 }
 
-export function buildEndSessionUrl(config: OidcRuntimeConfig, baseUrl: string): string {
-  const url = new URL("end-session/", `${config.issuerUrl}/`);
+export function buildEndSessionUrl(provider: OidcProviderMetadata, baseUrl: string): string | null {
+  if (provider.endSessionEndpoint === null) {
+    return null;
+  }
+
+  const url = new URL(provider.endSessionEndpoint);
   url.searchParams.set("post_logout_redirect_uri", `${baseUrl}/auth/login`);
 
   return url.toString();
@@ -35,10 +70,12 @@ export function buildEndSessionUrl(config: OidcRuntimeConfig, baseUrl: string): 
 
 export async function exchangeAuthorizationCode(
   config: OidcRuntimeConfig,
+  provider: OidcProviderMetadata,
   baseUrl: string,
   code: string,
+  fetchProvider: FetchProvider = fetch,
 ): Promise<OidcUserInfo> {
-  const tokenResponse = await fetch(new URL("token/", getOauthEndpointBaseUrl(config)), {
+  const tokenResponse = await fetchProvider(provider.tokenEndpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -61,7 +98,7 @@ export async function exchangeAuthorizationCode(
     throw new Error("OIDC token response did not include an access token");
   }
 
-  const userInfoResponse = await fetch(new URL("userinfo/", getOauthEndpointBaseUrl(config)), {
+  const userInfoResponse = await fetchProvider(provider.userinfoEndpoint, {
     headers: {
       Authorization: `Bearer ${tokenPayload.access_token}`,
     },
@@ -85,15 +122,24 @@ export async function exchangeAuthorizationCode(
   };
 }
 
-function getOauthEndpointBaseUrl(config: OidcRuntimeConfig): URL {
-  const issuerUrl = new URL(`${config.issuerUrl}/`);
-  const pathSegments = issuerUrl.pathname.split("/").filter(Boolean);
-
-  if (pathSegments.length === 0) {
-    return issuerUrl;
+function readEndpoint(metadata: Record<string, unknown>, key: string): string {
+  const value = metadata[key];
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`OIDC discovery response did not include ${key}`);
   }
 
-  issuerUrl.pathname = `/${pathSegments.slice(0, -1).join("/")}/`;
+  return value;
+}
 
-  return issuerUrl;
+function readOptionalEndpoint(metadata: Record<string, unknown>, key: string): string | null {
+  const value = metadata[key];
+  if (value === undefined) {
+    return null;
+  }
+
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`OIDC discovery response included invalid ${key}`);
+  }
+
+  return value;
 }

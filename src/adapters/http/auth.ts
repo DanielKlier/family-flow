@@ -5,7 +5,9 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import {
   buildAuthorizationUrl,
   buildEndSessionUrl,
+  discoverOidcProvider,
   exchangeAuthorizationCode,
+  type OidcProviderMetadata,
   type OidcRuntimeConfig,
 } from "../oidc/authentik-oidc.js";
 import type { UserContext } from "../../ports/auth/user-context.js";
@@ -45,6 +47,13 @@ const oidcStateCookieName = "ff_oidc_state";
 
 export function registerAuth(server: FastifyInstance, config: AuthRuntimeConfig): void {
   const secureCookie = config.baseUrl.startsWith("https://");
+  let oidcProviderMetadata: Promise<OidcProviderMetadata> | null = null;
+
+  function getOidcProviderMetadata(oidcConfig: OidcRuntimeConfig): Promise<OidcProviderMetadata> {
+    oidcProviderMetadata ??= discoverOidcProvider(oidcConfig);
+
+    return oidcProviderMetadata;
+  }
 
   server.addHook("preHandler", async (request: RequestWithUser, reply) => {
     const path = getPath(request.url);
@@ -85,9 +94,10 @@ export function registerAuth(server: FastifyInstance, config: AuthRuntimeConfig)
     }
 
     const state = randomUUID();
+    const provider = await getOidcProviderMetadata(config.oidc);
     reply.header("Set-Cookie", serializeNamedCookie(oidcStateCookieName, state, secureCookie));
 
-    return reply.redirect(buildAuthorizationUrl(config.oidc, config.baseUrl, state));
+    return reply.redirect(buildAuthorizationUrl(config.oidc, provider, config.baseUrl, state));
   });
 
   server.get("/auth/test-login", async (request, reply) => {
@@ -113,7 +123,13 @@ export function registerAuth(server: FastifyInstance, config: AuthRuntimeConfig)
       return reply.status(400).send("Invalid OIDC callback state");
     }
 
-    const oidcUser = await exchangeAuthorizationCode(config.oidc, config.baseUrl, query.code);
+    const provider = await getOidcProviderMetadata(config.oidc);
+    const oidcUser = await exchangeAuthorizationCode(
+      config.oidc,
+      provider,
+      config.baseUrl,
+      query.code,
+    );
     const user: UserContext = {
       id: oidcUser.sub,
       displayName: oidcUser.name ?? oidcUser.preferred_username ?? oidcUser.email ?? oidcUser.sub,
@@ -132,7 +148,8 @@ export function registerAuth(server: FastifyInstance, config: AuthRuntimeConfig)
     reply.header("Set-Cookie", serializeExpiredSessionCookie(secureCookie));
 
     if (config.mode === "oidc" && config.oidc !== null) {
-      return reply.redirect(buildEndSessionUrl(config.oidc, config.baseUrl));
+      const provider = await getOidcProviderMetadata(config.oidc);
+      return reply.redirect(buildEndSessionUrl(provider, config.baseUrl) ?? "/auth/login");
     }
 
     return reply.redirect("/auth/login");

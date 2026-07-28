@@ -4,6 +4,12 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.4.2] - 2026-07-28
+
+### Fixed
+
+- Use OIDC provider discovery metadata instead of deriving Authentik endpoint URLs locally.
+
 ## [0.4.1] - 2026-07-28
 
 ### Fixed
