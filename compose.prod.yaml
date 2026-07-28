@@ -1,0 +1,42 @@
+services:
+  app:
+    image: ${APP_IMAGE:?APP_IMAGE is required}
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      BASE_URL: ${BASE_URL:-https://finances.home.arpa}
+      DATABASE_URL: postgres://family_flow:family_flow@postgres:5432/family_flow
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+      - proxy
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: family_flow
+      POSTGRES_USER: family_flow
+      POSTGRES_PASSWORD: family_flow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U family_flow -d family_flow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+volumes:
+  postgres-data:
+
+networks:
+  internal:
+    internal: true
+  proxy:
+    external: true

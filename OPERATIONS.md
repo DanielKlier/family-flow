@@ -4,15 +4,17 @@ This manual describes how to operate the local FamilyFlow deployment.
 
 ## Deployment
 
-The reference deployment builds Docker images on the target server from a versioned Git tag. A local Docker registry is not required for the current single-host deployment.
+The reference production deployment runs a prebuilt Docker image. The production server must not install npm packages and must not build the application image.
 
 Target server requirements:
 
 - Git.
 - Docker Engine with Docker Compose.
-- Outbound access to the Git repository, Docker Hub, and the npm/pnpm registries during builds.
+- Outbound access to the Git repository, Docker Hub, and the configured application image registry.
 - A persistent checkout directory, for example `/opt/family-flow`.
 - A local `.env` file created from `.env.example` and adjusted for the target host.
+
+The production runtime container does not include pnpm or run package installation commands. pnpm is only used in Docker build stages outside the production server and in local development commands. Runtime migrations are executed by Node.js through the compiled server code.
 
 Initial deployment:
 
@@ -20,35 +22,41 @@ Initial deployment:
 2. Fetch tags with `git fetch --tags`.
 3. Check out the desired version tag, for example `git checkout v0.2.0`.
 4. Copy `.env.example` to `.env` and adjust values for the target host.
-5. Build containers with `docker compose build`.
-6. Start services with `docker compose up -d`.
-7. Verify the app with `curl http://127.0.0.1:3000/health`.
+5. Set `APP_IMAGE` in `.env` to the prebuilt image reference, for example `ghcr.io/example/family-flow:0.2.0`.
+6. Pull images with `docker compose -f compose.prod.yaml pull`.
+7. Start services with `docker compose -f compose.prod.yaml up -d`. The app runs pending database migrations and seeds master data during startup.
+8. Verify the app with `curl http://127.0.0.1:3000/health`.
+9. Verify seeded master data at `http://127.0.0.1:3000/admin/master-data`.
 
 Deployment update:
 
 1. Fetch the latest repository state and tags with `git fetch --tags`.
 2. Check out the desired version tag, for example `git checkout v0.2.0`.
 3. Review `CHANGELOG.md` and `OPERATIONS.md` for required manual steps.
-4. Build containers with `docker compose build`.
-5. Start the updated deployment with `docker compose up -d`.
-6. Verify the app with `curl http://127.0.0.1:3000/health`.
+4. Set `APP_IMAGE` in `.env` to the new prebuilt image reference.
+5. Pull images with `docker compose -f compose.prod.yaml pull`.
+6. Start the updated deployment with `docker compose -f compose.prod.yaml up -d`. Startup applies any new migrations before the HTTP server starts.
+7. Verify the app with `curl http://127.0.0.1:3000/health`.
 
 Rollback:
 
 1. Check out the previous known-good version tag, for example `git checkout v0.1.0`.
-2. Rebuild containers with `docker compose build`.
-3. Restart services with `docker compose up -d`.
-4. Verify the app with `curl http://127.0.0.1:3000/health`.
+2. Set `APP_IMAGE` in `.env` to the previous known-good image reference.
+3. Pull images with `docker compose -f compose.prod.yaml pull`.
+4. Restart services with `docker compose -f compose.prod.yaml up -d`.
+5. Verify the app with `curl http://127.0.0.1:3000/health`.
 
 Image distribution alternatives:
 
-- Current default: build from Git on the target server. This keeps infrastructure minimal and avoids registry credentials.
-- Later option: build locally or in CI, push versioned images to GHCR, Docker Hub, or a LAN registry, and let the target server pull images by tag.
-- A registry becomes useful when the target server should not build images, multiple hosts need the same image, outbound dependency downloads are restricted, or CI should produce release artifacts.
+- Current production default: build locally or in CI, push a versioned image to GHCR, Docker Hub, or a LAN registry, and let the target server pull images by tag.
+- Local development default: use `compose.yaml` and `docker compose build` when you intentionally want to build the image on the development machine.
+- A registry is required for production because the target server must not build images or install npm packages.
 
 ## Updates
 
-Before publishing a new version tag, run `pnpm install` when dependencies changed, then run `pnpm format:check`, `pnpm lint`, `pnpm test`, `pnpm test:e2e`, `pnpm build`, and `docker compose build` locally.
+Before publishing a new version tag, run `pnpm install` when dependencies changed, then run `pnpm format:check`, `pnpm lint`, `pnpm test`, `pnpm test:e2e`, `pnpm build`, and `docker compose build` locally or in CI. Push the resulting image and deploy that immutable image reference with `compose.prod.yaml`.
+
+When database schema changes are included, inspect the SQL files in `drizzle/` before deployment and check `docker compose logs app` after startup for migration failures.
 
 ## Versioning And Tags
 
@@ -58,15 +66,47 @@ Example: `git tag -a v0.1.0 -m "v0.1.0"`.
 
 ## Database Migrations
 
-Database migrations are not implemented in Phase 0. PostgreSQL is started by Docker Compose and is reserved for later phases.
+Migrations are stored as SQL files in `drizzle/` and are tracked in the `schema_migrations` table. The application runs pending migrations automatically during startup before it begins listening for HTTP traffic.
 
-## Backup
+Manual migration run for local development:
 
-Backups are not implemented in Phase 0. Until database schema and data flows exist, no application data is stored by FamilyFlow.
+1. Start PostgreSQL with `docker compose -f compose.yaml -f compose.dev.yaml up -d postgres`.
+2. Ensure `DATABASE_URL` points at the target database. The development Compose override publishes PostgreSQL on `127.0.0.1:5432`; the base and production Compose files do not publish PostgreSQL to the host.
+3. Run `pnpm db:migrate`.
 
-## Restore
+Manual migration run with the production image:
 
-Restore is not implemented in Phase 0. This section will be expanded when backups and migrations exist.
+1. Ensure the app image has already been built outside production and pulled on the production server.
+2. Ensure `DATABASE_URL` points at the target database through Compose environment configuration.
+3. Run `docker compose -f compose.prod.yaml run --rm app node dist/adapters/db/migrate.js`.
+
+Do not run `pnpm` inside the production container. The production image contains the compiled migration runner and SQL files, not the development toolchain.
+
+Migration troubleshooting:
+
+- If startup fails before the app listens on port 3000, inspect `docker compose logs app`.
+- If a migration file was partially applied outside the normal transaction flow, inspect `schema_migrations` and the affected tables before retrying.
+- Never edit an already deployed migration file. Add a new migration instead.
+
+## Seeds
+
+The app seeds initial accounts and categories during startup after migrations. Seeds are idempotent: existing rows with the same stable ID are updated, and missing rows are inserted.
+
+Initial accounts:
+
+- `Person A checking` with owner context `person_a`.
+- `Person B checking` with owner context `person_b`.
+- `Shared checking` with owner context `shared`.
+
+Initial categories include `Wohnen/Miete`, `Lebensmittel`, `Drogerie`, `Versicherungen`, `Mobilitaet`, `Gesundheit`, `Kind/Baby`, `Abos`, `Freizeit`, `Urlaub`, `Kleidung`, and `Sonstiges`.
+
+## Backup 
+
+PostgreSQL now stores master data. A full backup runbook is still pending, but before destructive maintenance export the database with `pg_dump` from a trusted host or from the PostgreSQL container.
+
+## Restore 
+
+Restore is not fully automated yet. For local recovery, stop the app, restore a PostgreSQL dump into the `family_flow` database, then start the app so pending migrations and idempotent seeds can run.
 
 ## Debugging
 
@@ -74,6 +114,7 @@ Restore is not implemented in Phase 0. This section will be expanded when backup
 - Use `docker compose logs app` to inspect application output.
 - Use `docker compose logs postgres` to inspect PostgreSQL output.
 - Use `/health` to verify that the application process is reachable.
+- Use `/admin/master-data` to verify that account and category seeds are visible.
 - Every HTTP response contains an `X-Request-Id` header. Use this value to find the matching request log entry.
 - Send `X-Request-Id` in a request to keep a caller-provided correlation ID.
 

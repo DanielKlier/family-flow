@@ -4,6 +4,16 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.3.0] - 2026-07-28
+
+### Added
+
+- Add account and category core entities with repository ports.
+- Add Drizzle/PostgreSQL schema, migrations, repository adapters, and idempotent master-data seeds.
+- Add `/admin/master-data` to verify seeded accounts and categories.
+- Add development and production Compose variants for host-based PostgreSQL development and prebuilt production images.
+- Document migration, seed, and production runtime behavior.
+
 ## [0.2.1] - 2026-07-26
 
 ### Fixed

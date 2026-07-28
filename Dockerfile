@@ -35,6 +35,7 @@ ENV NODE_ENV=production
 COPY --from=production-dependencies /app/node_modules ./node_modules
 COPY package.json ./package.json
 COPY --from=build /app/dist ./dist
+COPY drizzle ./drizzle
 
 USER node
 

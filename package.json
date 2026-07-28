@@ -1,6 +1,6 @@
 {
   "name": "family-flow",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.5.2",
@@ -8,6 +8,7 @@
     "dev": "node --env-file=.env --watch --import tsx src/app/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/app/server.js",
+    "db:migrate": "tsx src/adapters/db/migrate.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "lint": "biome lint .",
@@ -15,12 +16,15 @@
     "format:check": "biome format ."
   },
   "dependencies": {
-    "fastify": "^5.6.0"
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.6.0",
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.5",
     "@playwright/test": "^1.54.2",
     "@types/node": "^24.1.0",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"

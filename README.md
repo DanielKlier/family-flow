@@ -12,8 +12,10 @@ FamilyFlow is a local web application for household and family finance planning.
 
 1. Install dependencies with `pnpm install`.
 2. Copy `.env.example` to `.env` and adjust values if needed.
-3. Start the development server with `pnpm dev`.
-4. Open `http://127.0.0.1:3000/health` to verify the app is running.
+3. Start PostgreSQL with `docker compose -f compose.yaml -f compose.dev.yaml up -d postgres`. The development override exposes PostgreSQL on `127.0.0.1:5432` for host-based development.
+4. Start the development server with `pnpm dev`.
+5. Open `http://127.0.0.1:3000/health` to verify the app is running.
+6. Open `http://127.0.0.1:3000/admin/master-data` to verify seeded accounts and categories.
 
 ## Commands
 
@@ -21,8 +23,10 @@ FamilyFlow is a local web application for household and family finance planning.
 - `pnpm format:check`: check formatting.
 - `pnpm lint`: run Biome linting.
 - `pnpm test`: run unit and integration tests.
+- `TEST_DATABASE_URL=postgres://... pnpm test`: include Drizzle repository integration tests against a test database.
 - `pnpm test:e2e`: run E2E tests.
 - `pnpm build`: compile TypeScript.
+- `pnpm db:migrate`: run pending SQL migrations against `DATABASE_URL` during local development.
 
 ## Versioning
 
@@ -38,4 +42,8 @@ Build the image with `docker compose build`.
 
 Start the app and PostgreSQL with `docker compose up`.
 
-Deployment to the target server is documented in `OPERATIONS.md`. The current reference process builds images on the target server from versioned Git tags; no local Docker registry is required yet.
+The app applies SQL migrations from `drizzle/` and seeds initial accounts and categories during startup.
+
+The runtime image starts with `node dist/app/server.js`. It does not include pnpm and does not install packages at container startup.
+
+Deployment to the target server is documented in `OPERATIONS.md`. Production deployment uses `compose.prod.yaml` with a prebuilt `APP_IMAGE`. The production server does not run `docker compose build`, does not install npm packages, and does not need pnpm.
