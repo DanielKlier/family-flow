@@ -36,4 +36,29 @@ describe("request logging", () => {
 
     await server.close();
   });
+
+  it("includes authenticated user context in request logs", async () => {
+    const logger = new CapturingLogger();
+    const server = buildServer({ logger });
+
+    const loginResponse = await server.inject({
+      method: "GET",
+      url: "/auth/test-login",
+    });
+    const sessionCookie = loginResponse.cookies.find((cookie) => cookie.name === "ff_session");
+
+    const response = await server.inject({
+      method: "GET",
+      url: "/",
+      cookies: sessionCookie === undefined ? undefined : { ff_session: sessionCookie.value },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(logger.entries.at(-1)).toMatchObject({
+      path: "/",
+      user: "test-user",
+    });
+
+    await server.close();
+  });
 });

@@ -8,6 +8,7 @@ import { DrizzleCategoryRepository } from "../adapters/db/drizzle-category-repos
 import { migrate } from "../adapters/db/migrate.js";
 import { createPostgresConnection } from "../adapters/db/postgres.js";
 import { seedMasterData, type MasterDataRepositories } from "../adapters/db/seeds/master-data.js";
+import { registerAuth, type AuthRuntimeConfig } from "../adapters/http/auth.js";
 import { registerRequestLifecycle } from "../adapters/http/request-lifecycle.js";
 import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-logger.js";
 import type { RequestLogger } from "../ports/logging/logger.js";
@@ -16,6 +17,7 @@ import { loadConfig } from "./config.js";
 type ServerOptions = {
   logger?: RequestLogger;
   repositories?: MasterDataRepositories;
+  auth?: AuthRuntimeConfig;
 };
 
 export function buildServer(options: ServerOptions = {}) {
@@ -24,8 +26,17 @@ export function buildServer(options: ServerOptions = {}) {
   });
   const logger = options.logger ?? new HumanReadableRequestLogger();
   const repositories = options.repositories ?? createSeededInMemoryRepositories();
+  const auth =
+    options.auth ??
+    ({
+      mode: "test",
+      sessionSecret: "test-session-secret-with-enough-length",
+      baseUrl: "http://127.0.0.1:3000",
+      oidc: null,
+    } satisfies AuthRuntimeConfig);
 
   registerRequestLifecycle(server, logger);
+  registerAuth(server, auth);
 
   server.get("/health", async () => ({ status: "ok" }));
   server.get("/admin/master-data", async (_request, reply) => {
@@ -91,7 +102,13 @@ async function main() {
 
   await seedMasterData(repositories);
 
-  const server = buildServer({ repositories });
+  const server = buildServer({
+    repositories,
+    auth: {
+      ...config.auth,
+      baseUrl: config.baseUrl,
+    },
+  });
 
   server.addHook("onClose", async () => {
     await connection.client.end();

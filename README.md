@@ -13,9 +13,10 @@ FamilyFlow is a local web application for household and family finance planning.
 1. Install dependencies with `pnpm install`.
 2. Copy `.env.example` to `.env` and adjust values if needed.
 3. Start PostgreSQL with `docker compose -f compose.yaml -f compose.dev.yaml up -d postgres`. The development override exposes PostgreSQL on `127.0.0.1:5432` for host-based development.
-4. Start the development server with `pnpm dev`.
-5. Open `http://127.0.0.1:3000/health` to verify the app is running.
-6. Open `http://127.0.0.1:3000/admin/master-data` to verify seeded accounts and categories.
+4. For local development without Authentik, set `AUTH_MODE=test` and a local `SESSION_SECRET` with at least 32 characters in `.env`.
+5. Start the development server with `pnpm dev`.
+6. Open `http://127.0.0.1:3000/health` to verify the app is running.
+7. Open `http://127.0.0.1:3000/auth/test-login` in `AUTH_MODE=test`, then open `http://127.0.0.1:3000/admin/master-data` to verify seeded accounts and categories.
 
 ## Commands
 
@@ -43,6 +44,8 @@ Build the image with `docker compose build`.
 Start the app and PostgreSQL with `docker compose up`.
 
 The app applies SQL migrations from `drizzle/` and seeds initial accounts and categories during startup.
+
+The app protects all non-health app routes. Production Compose defaults to `AUTH_MODE=oidc` and requires Authentik OIDC settings plus `SESSION_SECRET`.
 
 The runtime image starts with `node dist/app/server.js`. It does not include pnpm and does not install packages at container startup.
 

@@ -3,9 +3,11 @@ import { STATUS_CODES } from "node:http";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { normalizeQueryForLog } from "../logging/request-log-context.js";
+import type { UserContext } from "../../ports/auth/user-context.js";
 import type { RequestLogger } from "../../ports/logging/logger.js";
 
 type RequestWithLogContext = FastifyRequest & {
+  userContext?: UserContext;
   requestLogContext?: {
     requestId: string;
     startedAt: bigint;
@@ -51,7 +53,7 @@ export function registerRequestLifecycle(server: FastifyInstance, logger: Reques
       query: normalizeQueryForLog(request.query as Record<string, string | string[] | undefined>),
       statusCode: reply.statusCode,
       durationMs,
-      user: null,
+      user: request.userContext?.id ?? null,
       outcome: reply.statusCode >= 400 ? "error" : "success",
       error,
     });

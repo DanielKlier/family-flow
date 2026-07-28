@@ -4,6 +4,15 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.4.0] - 2026-07-28
+
+### Added
+
+- Add protected-route authentication with signed session cookies.
+- Add Authentik OIDC configuration validation and login/logout redirects.
+- Add local `AUTH_MODE=test` login flow for E2E tests without an Authentik instance.
+- Include authenticated user context in request logs.
+
 ## [0.3.0] - 2026-07-28
 
 ### Added

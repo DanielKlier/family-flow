@@ -35,7 +35,9 @@ test("error responses include X-Request-Id", async ({ request }) => {
       throw new Error("Expected the test server to listen on a TCP port");
     }
 
-    const response = await request.get(`http://127.0.0.1:${address.port}/missing`);
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+    await request.get(`${baseUrl}/auth/test-login`);
+    const response = await request.get(`${baseUrl}/missing`);
 
     expect(response.status()).toBe(404);
     expect(response.headers()["x-request-id"]).toMatch(

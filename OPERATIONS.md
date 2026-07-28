@@ -26,7 +26,8 @@ Initial deployment:
 6. Pull images with `docker compose -f compose.prod.yaml pull`.
 7. Start services with `docker compose -f compose.prod.yaml up -d`. The app runs pending database migrations and seeds master data during startup.
 8. Verify the app with `curl http://127.0.0.1:3000/health`.
-9. Verify seeded master data at `http://127.0.0.1:3000/admin/master-data`.
+9. Verify authentication by opening `https://finances.home.arpa/` and signing in through Authentik.
+10. Verify seeded master data at `https://finances.home.arpa/admin/master-data` after login.
 
 Deployment update:
 
@@ -88,6 +89,26 @@ Migration troubleshooting:
 - If a migration file was partially applied outside the normal transaction flow, inspect `schema_migrations` and the affected tables before retrying.
 - Never edit an already deployed migration file. Add a new migration instead.
 
+## Authentication And Sessions
+
+All non-health application routes are protected. `/health` remains public for local health checks. Login and logout are handled through `/auth/login`, `/auth/callback`, and `/auth/logout`.
+
+Production uses Authentik through `AUTH_MODE=oidc` and requires these environment variables:
+
+- `BASE_URL`: the externally visible application URL, normally `https://finances.home.arpa`.
+- `SESSION_SECRET`: at least 32 random characters, used to sign local session cookies.
+- `OIDC_ISSUER_URL`: the Authentik provider URL for the FamilyFlow application.
+- `OIDC_CLIENT_ID`: the Authentik client ID.
+- `OIDC_CLIENT_SECRET`: the Authentik client secret.
+
+Authentik application settings:
+
+- Redirect URI: `https://finances.home.arpa/auth/callback`.
+- Post-logout redirect URI: `https://finances.home.arpa/auth/login`.
+- Scopes: `openid`, `email`, and `profile`.
+
+Local E2E tests and development without Authentik can use `AUTH_MODE=test`. In this mode `/auth/test-login` creates a signed session for the deterministic `test-user`. Do not run production with `AUTH_MODE=test`.
+
 ## Seeds
 
 The app seeds initial accounts and categories during startup after migrations. Seeds are idempotent: existing rows with the same stable ID are updated, and missing rows are inserted.
@@ -120,7 +141,15 @@ Restore is not fully automated yet. For local recovery, stop the app, restore a 
 
 ## OIDC/Auth Problems
 
-OIDC authentication is not implemented in Phase 0. Future authentication issues will be diagnosed through request IDs, callback URLs, and Authentik logs.
+Check these items when login fails:
+
+- Confirm `BASE_URL` exactly matches the external URL used in Authentik redirect URIs.
+- Confirm `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID`, and `OIDC_CLIENT_SECRET` match the Authentik provider.
+- Confirm the browser reaches the app through HTTPS when `BASE_URL` is HTTPS, because session cookies are marked `Secure` in that case.
+- Use the visible `X-Request-Id` response header to find the matching request log entry.
+- Check Authentik logs for denied redirect URIs, invalid client credentials, or provider errors.
+
+Never log OIDC tokens, session cookies, client secrets, or complete callback URLs containing secret-like query values. Query parameters such as `code`, `state`, and `token` are redacted in request logs.
 
 ## CSV Import Problems
 
@@ -130,7 +159,7 @@ CSV import is not implemented in Phase 0. Future import issues will be diagnosed
 
 Every HTTP request writes exactly one human-readable request log entry to stdout. Docker logs are the primary log source.
 
-Request log entries include the request ID, timestamp, method, path, sanitized query values, status code, duration, user context when available, outcome, and error details when available.
+Request log entries include the request ID, timestamp, method, path, sanitized query values, status code, duration, user context when available, outcome, and error details when available. Authenticated requests record the stable user ID, not session cookie contents or OIDC tokens.
 
 Query values with secret-like names such as `code`, `token`, `session`, `state`, `secret`, or `password` are redacted. Session cookies, OIDC tokens, full CSV content, and unnecessary financial details must not be logged.
 

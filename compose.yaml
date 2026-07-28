@@ -7,6 +7,11 @@ services:
       PORT: 3000
       BASE_URL: ${BASE_URL:-https://finances.home.arpa}
       DATABASE_URL: postgres://family_flow:family_flow@postgres:5432/family_flow
+      AUTH_MODE: ${AUTH_MODE:-oidc}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+      OIDC_ISSUER_URL: ${OIDC_ISSUER_URL:?OIDC_ISSUER_URL is required}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:?OIDC_CLIENT_ID is required}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?OIDC_CLIENT_SECRET is required}
     ports:
       - "3000:3000"
     depends_on:

@@ -6,6 +6,19 @@ export type AppConfig = {
   port: number;
   baseUrl: string;
   databaseUrl: string;
+  auth: AuthConfig;
+};
+
+export type AuthConfig = {
+  mode: "test" | "oidc";
+  sessionSecret: string;
+  oidc: OidcConfig | null;
+};
+
+export type OidcConfig = {
+  issuerUrl: string;
+  clientId: string;
+  clientSecret: string;
 };
 
 type Environment = Record<string, string | undefined>;
@@ -18,6 +31,7 @@ export function loadConfig(environment: Environment = process.env): AppConfig {
   const port = readPort(environment.PORT);
   const baseUrl = readUrl(environment.BASE_URL, "BASE_URL");
   const databaseUrl = readRequiredString(environment.DATABASE_URL, "DATABASE_URL");
+  const auth = readAuthConfig(environment, nodeEnv);
 
   return {
     nodeEnv,
@@ -25,6 +39,7 @@ export function loadConfig(environment: Environment = process.env): AppConfig {
     port,
     baseUrl,
     databaseUrl,
+    auth,
   };
 }
 
@@ -62,4 +77,52 @@ function readUrl(value: string | undefined, name: string): string {
   } catch {
     throw new Error(`${name} must be a valid URL`);
   }
+}
+
+function readAuthConfig(environment: Environment, nodeEnv: NodeEnv): AuthConfig {
+  const mode = readAuthMode(environment.AUTH_MODE, nodeEnv);
+  const sessionSecret = readSessionSecret(environment.SESSION_SECRET);
+
+  if (mode === "test") {
+    return {
+      mode,
+      sessionSecret,
+      oidc: null,
+    };
+  }
+
+  return {
+    mode,
+    sessionSecret,
+    oidc: {
+      issuerUrl: readUrl(environment.OIDC_ISSUER_URL, "OIDC_ISSUER_URL"),
+      clientId: readRequiredString(environment.OIDC_CLIENT_ID, "OIDC_CLIENT_ID"),
+      clientSecret: readRequiredString(environment.OIDC_CLIENT_SECRET, "OIDC_CLIENT_SECRET"),
+    },
+  };
+}
+
+function readAuthMode(value: string | undefined, nodeEnv: NodeEnv): AuthConfig["mode"] {
+  if (value === undefined || value.trim() === "") {
+    if (nodeEnv === "production") {
+      throw new Error("AUTH_MODE is required in production");
+    }
+
+    return "test";
+  }
+
+  if (value === "test" || value === "oidc") {
+    return value;
+  }
+
+  throw new Error("AUTH_MODE must be test or oidc");
+}
+
+function readSessionSecret(value: string | undefined): string {
+  const secret = readRequiredString(value, "SESSION_SECRET");
+  if (secret.length < 32) {
+    throw new Error("SESSION_SECRET must be at least 32 characters");
+  }
+
+  return secret;
 }

@@ -18,6 +18,7 @@ test("accounts list is visible after seeding", async ({ request }) => {
 
   try {
     const baseUrl = await listen(server);
+    await request.get(`${baseUrl}/auth/test-login`);
     const response = await request.get(`${baseUrl}/admin/master-data`);
     const body = await response.text();
 
@@ -36,6 +37,7 @@ test("categories list is visible after seeding", async ({ request }) => {
 
   try {
     const baseUrl = await listen(server);
+    await request.get(`${baseUrl}/auth/test-login`);
     const response = await request.get(`${baseUrl}/admin/master-data`);
     const body = await response.text();
 
