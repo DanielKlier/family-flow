@@ -209,7 +209,45 @@ Commit:
 
 - `feat: add manual transactions`
 
-## Phase 5: CSV-Import Fuer Bank-CSV-Dateien
+## Phase 5: Initiales Styling Und Einsatz Von HTMX
+
+Ziel: Die bestehende serverseitige UI wird bedienbar gestaltet, Styling wird aus HTML ausgelagert, und Formularinteraktionen aktualisieren relevante Bereiche per HTMX statt die ganze Seite neu zu laden.
+
+Tasks:
+
+- Zentrales Stylesheet fuer die Web-Oberflaeche anlegen und ueber alle HTML-Seiten ausliefern.
+- Inline-Styles aus ausgeliefertem HTML entfernen.
+- Stabile IDs und CSS-Klassen fuer Layout, Navigation, Formulare, Tabellen, Meldungen und HTMX-Zielbereiche einfuehren.
+- Gemeinsames Seitenlayout fuer Dashboard, Stammdaten und Transaktionen etablieren.
+- Transaktionsformular per HTMX so umbauen, dass erfolgreiche Erstellung, Bearbeitung und Loeschung nur die Transaktionsliste bzw. relevante Fragmente aktualisieren.
+- Filterformular per HTMX so umbauen, dass Filterergebnisse ohne Full-Page-Reload aktualisiert werden.
+- Fehler- und Validierungsmeldungen in Formularfragmenten nutzerfreundlich anzeigen.
+- Progressive Enhancement sicherstellen: Basisfunktionen muessen ohne JavaScript weiterhin nutzbar bleiben.
+- Operations Manual um statische Assets, Stylesheet-Auslieferung und HTMX-Debugging erweitern.
+
+Tests:
+
+- Fehlschlagender E2E Test: Stylesheet wird mit Transaktionsseite ausgeliefert.
+- Fehlschlagender E2E Test: ausgeliefertes App-HTML enthaelt keine Inline-Style-Attribute.
+- Fehlschlagender E2E Test: Transaktion anlegen aktualisiert per HTMX die Liste ohne Full-Page-Reload.
+- Fehlschlagender E2E Test: Filter aktualisiert per HTMX die Liste ohne Full-Page-Reload.
+- Fehlschlagender E2E Test: Transaktionsformular bleibt ohne JavaScript nutzbar.
+- Integrationstest fuer statische Asset-Auslieferung mit korrektem Content-Type.
+
+Quality Gate:
+
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
+- `docker compose build`
+
+Commit:
+
+- `feat: add initial styling and htmx interactions`
+
+## Phase 6: CSV-Import Fuer Bank-CSV-Dateien
 
 Ziel: CSV-Dateien koennen mit Importprofilen hochgeladen, geprueft, kategorisiert und importiert werden.
 
@@ -250,7 +288,7 @@ Commit:
 
 - `feat: add csv transaction imports`
 
-## Phase 6: Kategorisierungsregeln
+## Phase 7: Kategorisierungsregeln
 
 Ziel: Transaktionen koennen automatisch anhand einfacher Textregeln kategorisiert werden.
 
@@ -286,7 +324,7 @@ Commit:
 
 - `feat: add categorization rules`
 
-## Phase 7: Einnahmenplanung
+## Phase 8: Einnahmenplanung
 
 Ziel: Wiederkehrende Einnahmen und monatliche Abweichungen koennen gepflegt und ausgewertet werden.
 
@@ -323,7 +361,7 @@ Commit:
 
 - `feat: add income planning`
 
-## Phase 8: Dashboard Und Monatsprognose
+## Phase 9: Dashboard Und Monatsprognose
 
 Ziel: Dashboard zeigt Ist-Ausgaben, Einnahmen, Saldo, Kategorien und Monatsprognose.
 
@@ -360,7 +398,7 @@ Commit:
 
 - `feat: add dashboard forecasting`
 
-## Phase 9: Szenarienplanung
+## Phase 10: Szenarienplanung
 
 Ziel: Elternzeit-, Elterngeld- und Teilzeit-Szenarien koennen ueber 18 bis 24 Monate geplant werden.
 
@@ -402,7 +440,7 @@ Commit:
 
 - `feat: add scenario planning`
 
-## Phase 10: Deployment Hardening Und MVP Release
+## Phase 11: Deployment Hardening Und MVP Release
 
 Ziel: Der MVP ist lokal stabil deploybar, dokumentiert und betreibbar.
 
