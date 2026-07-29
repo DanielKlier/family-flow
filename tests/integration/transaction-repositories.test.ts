@@ -1,0 +1,53 @@
+import { describe, expect, it } from "vitest";
+
+import { InMemoryTransactionRepository } from "../../src/adapters/db/in-memory-transaction-repository.js";
+import { initialAccounts } from "../../src/adapters/db/seeds/master-data.js";
+import { createTransaction } from "../../src/core/transactions/transaction.js";
+
+describe("transaction repositories", () => {
+  it("stores, filters, updates, and deletes transactions", async () => {
+    const repository = new InMemoryTransactionRepository(initialAccounts);
+    const groceries = createTransaction({
+      id: "transaction-groceries",
+      accountId: "account-person-a-checking",
+      categoryId: "category-groceries",
+      date: "2026-07-15",
+      amountCents: -4299,
+      description: "Groceries",
+      payee: "Market",
+      source: "manual",
+      status: "booked",
+      fixedCost: false,
+      note: null,
+    });
+    const rent = createTransaction({
+      id: "transaction-rent",
+      accountId: "account-shared-checking",
+      categoryId: "category-housing-rent",
+      date: "2026-07-01",
+      amountCents: -120000,
+      description: "Rent",
+      payee: "Landlord",
+      source: "manual",
+      status: "planned",
+      fixedCost: true,
+      note: null,
+    });
+
+    await repository.save(groceries);
+    await repository.save(rent);
+
+    await expect(repository.list({ month: "2026-07", ownerContext: "shared" })).resolves.toEqual([
+      rent,
+    ]);
+
+    await repository.save({ ...groceries, description: "Weekly groceries", status: "planned" });
+    await expect(repository.get("transaction-groceries")).resolves.toMatchObject({
+      description: "Weekly groceries",
+      status: "planned",
+    });
+
+    await repository.delete("transaction-rent");
+    await expect(repository.list({})).resolves.toHaveLength(1);
+  });
+});

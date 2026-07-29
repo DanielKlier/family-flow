@@ -134,9 +134,28 @@ Initial accounts:
 
 Initial categories include `Wohnen/Miete`, `Lebensmittel`, `Drogerie`, `Versicherungen`, `Mobilitaet`, `Gesundheit`, `Kind/Baby`, `Abos`, `Freizeit`, `Urlaub`, `Kleidung`, and `Sonstiges`.
 
+## Manual Transaction Maintenance
+
+Authenticated users can maintain manual expenses at `/transactions`.
+
+Supported maintenance actions:
+
+- Create booked or planned manual expenses.
+- Mark planned or booked expenses as fixed costs.
+- Edit account, category, date, description, payee, amount, status, fixed-cost flag, and note.
+- Delete incorrectly entered manual transactions.
+- Filter by month, account, owner context, category, and status.
+
+Operational notes:
+
+- Amounts are entered as positive expense amounts in the UI and stored as negative cents in PostgreSQL.
+- Owner-context filtering is derived from the selected account, not from a separate transaction field.
+- Use `/admin/master-data` to verify account and category seed data if transaction forms have missing options.
+- For manual correction issues, capture the visible `X-Request-Id` and inspect the matching request log entry. Do not log or paste broad financial exports when a single minimized transaction example is enough.
+
 ## Backup 
 
-PostgreSQL now stores master data. A full backup runbook is still pending, but before destructive maintenance export the database with `pg_dump` from a trusted host or from the PostgreSQL container.
+PostgreSQL stores master data and manual transactions. A full backup runbook is still pending, but before destructive maintenance export the database with `pg_dump` from a trusted host or from the PostgreSQL container.
 
 ## Restore 
 
