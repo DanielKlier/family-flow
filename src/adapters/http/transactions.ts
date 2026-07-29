@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { parseOwnerContext } from "../../core/shared/owner-context.js";
 import { createTransaction, type Transaction } from "../../core/transactions/transaction.js";
@@ -30,116 +30,155 @@ export function registerTransactionRoutes(
   repositories: TransactionRouteRepositories,
 ): void {
   server.get("/transactions", async (request, reply) => {
-    const [accounts, categories] = await Promise.all([
-      repositories.accounts.list(),
-      repositories.categories.list(),
-    ]);
-    const filters = readTransactionFilters(request.query);
-    const transactions = await repositories.transactions.list(filters);
-
-    const body = renderTransactionsPage({ accounts, categories, transactions, filters });
-
-    if (isHtmxRequest(request.headers)) {
-      return reply
-        .type("text/html; charset=utf-8")
-        .send(renderTransactionListSection(transactions));
-    }
-
-    return reply.type("text/html; charset=utf-8").send(body);
+    return handleListTransactions(repositories, request, reply);
   });
 
   server.post("/transactions", async (request, reply) => {
-    try {
-      const form = readForm(request.body);
-      const transaction = createTransactionFromForm(form, randomUUID());
-      await repositories.transactions.save(transaction);
-    } catch (error: unknown) {
-      if (isHtmxRequest(request.headers)) {
-        const [accounts, categories, transactions] = await Promise.all([
-          repositories.accounts.list(),
-          repositories.categories.list(),
-          repositories.transactions.list({}),
-        ]);
-
-        return reply
-          .status(400)
-          .type("text/html; charset=utf-8")
-          .send(
-            renderTransactionsPanel({
-              accounts,
-              categories,
-              transactions,
-              filters: {},
-              formError: error instanceof Error ? error.message : "Transaction could not be saved",
-            }),
-          );
-      }
-
-      throw error;
-    }
-
-    if (isHtmxRequest(request.headers)) {
-      const transactions = await repositories.transactions.list({});
-
-      return reply
-        .type("text/html; charset=utf-8")
-        .send(renderTransactionListSection(transactions));
-    }
-
-    return reply.redirect("/transactions");
+    return handleCreateTransaction(repositories, request, reply);
   });
 
   server.get("/transactions/:id/edit", async (request, reply) => {
-    const id = readRouteId(request.params);
-    const transaction = await repositories.transactions.get(id);
-    if (transaction === null) {
-      return reply.status(404).send("Transaction not found");
-    }
-
-    const [accounts, categories] = await Promise.all([
-      repositories.accounts.list(),
-      repositories.categories.list(),
-    ]);
-
-    return reply
-      .type("text/html; charset=utf-8")
-      .send(renderTransactionEditPage({ accounts, categories, transaction }));
+    return handleEditTransactionForm(repositories, request, reply);
   });
 
   server.post("/transactions/:id", async (request, reply) => {
-    const id = readRouteId(request.params);
-    const existing = await repositories.transactions.get(id);
-    if (existing === null) {
-      return reply.status(404).send("Transaction not found");
-    }
-
-    await repositories.transactions.save(createTransactionFromForm(readForm(request.body), id));
-
-    if (isHtmxRequest(request.headers)) {
-      const [accounts, categories, transactions] = await Promise.all([
-        repositories.accounts.list(),
-        repositories.categories.list(),
-        repositories.transactions.list({}),
-      ]);
-
-      return reply
-        .type("text/html; charset=utf-8")
-        .send(renderTransactionsPanel({ accounts, categories, transactions, filters: {} }));
-    }
-
-    return reply.redirect("/transactions");
+    return handleUpdateTransaction(repositories, request, reply);
   });
 
   server.post("/transactions/:id/delete", async (request, reply) => {
-    await repositories.transactions.delete(readRouteId(request.params));
+    return handleDeleteTransaction(repositories, request, reply);
+  });
+}
 
+async function handleListTransactions(
+  repositories: TransactionRouteRepositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const [accounts, categories] = await Promise.all([
+    repositories.accounts.list(),
+    repositories.categories.list(),
+  ]);
+  const filters = readTransactionFilters(request.query);
+  const transactions = await repositories.transactions.list(filters);
+
+  if (isHtmxRequest(request.headers)) {
+    return reply.type("text/html; charset=utf-8").send(renderTransactionListSection(transactions));
+  }
+
+  return reply
+    .type("text/html; charset=utf-8")
+    .send(renderTransactionsPage({ accounts, categories, transactions, filters }));
+}
+
+async function handleCreateTransaction(
+  repositories: TransactionRouteRepositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    await repositories.transactions.save(
+      createTransactionFromForm(readForm(request.body), randomUUID()),
+    );
+  } catch (error: unknown) {
     if (isHtmxRequest(request.headers)) {
       return reply
+        .status(400)
         .type("text/html; charset=utf-8")
-        .send(renderTransactionListSection(await repositories.transactions.list({})));
+        .send(
+          await renderTransactionsPanelState(
+            repositories,
+            error instanceof Error ? error.message : "Transaction could not be saved",
+          ),
+        );
     }
 
-    return reply.redirect("/transactions");
+    throw error;
+  }
+
+  if (isHtmxRequest(request.headers)) {
+    return reply
+      .type("text/html; charset=utf-8")
+      .send(renderTransactionListSection(await repositories.transactions.list({})));
+  }
+
+  return reply.redirect("/transactions");
+}
+
+async function handleEditTransactionForm(
+  repositories: TransactionRouteRepositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const transaction = await repositories.transactions.get(readRouteId(request.params));
+  if (transaction === null) {
+    return reply.status(404).send("Transaction not found");
+  }
+
+  const [accounts, categories] = await Promise.all([
+    repositories.accounts.list(),
+    repositories.categories.list(),
+  ]);
+
+  return reply
+    .type("text/html; charset=utf-8")
+    .send(renderTransactionEditPage({ accounts, categories, transaction }));
+}
+
+async function handleUpdateTransaction(
+  repositories: TransactionRouteRepositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const id = readRouteId(request.params);
+  const existing = await repositories.transactions.get(id);
+  if (existing === null) {
+    return reply.status(404).send("Transaction not found");
+  }
+
+  await repositories.transactions.save(createTransactionFromForm(readForm(request.body), id));
+
+  if (isHtmxRequest(request.headers)) {
+    return reply
+      .type("text/html; charset=utf-8")
+      .send(await renderTransactionsPanelState(repositories));
+  }
+
+  return reply.redirect("/transactions");
+}
+
+async function handleDeleteTransaction(
+  repositories: TransactionRouteRepositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  await repositories.transactions.delete(readRouteId(request.params));
+
+  if (isHtmxRequest(request.headers)) {
+    return reply
+      .type("text/html; charset=utf-8")
+      .send(renderTransactionListSection(await repositories.transactions.list({})));
+  }
+
+  return reply.redirect("/transactions");
+}
+
+async function renderTransactionsPanelState(
+  repositories: TransactionRouteRepositories,
+  formError?: string,
+): Promise<string> {
+  const [accounts, categories, transactions] = await Promise.all([
+    repositories.accounts.list(),
+    repositories.categories.list(),
+    repositories.transactions.list({}),
+  ]);
+
+  return renderTransactionsPanel({
+    accounts,
+    categories,
+    transactions,
+    filters: {},
+    formError,
   });
 }
 
