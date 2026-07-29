@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 
@@ -51,6 +52,12 @@ export function buildServer(options: ServerOptions = {}) {
   registerRequestLifecycle(server, logger);
   registerAuth(server, auth);
 
+  server.get("/assets/app.css", async (_request, reply) => {
+    return reply.type("text/css; charset=utf-8").send(appStylesheet);
+  });
+  server.get("/assets/htmx.min.js", async (_request, reply) => {
+    return reply.type("application/javascript; charset=utf-8").send(await readHtmxScript());
+  });
   server.get("/health", async () => ({ status: "ok" }));
   server.get("/admin/master-data", async (_request, reply) => {
     const [accounts, categories] = await Promise.all([
@@ -68,14 +75,53 @@ export function buildServer(options: ServerOptions = {}) {
     const filters = readTransactionFilters(request.query);
     const transactions = await repositories.transactions.list(filters);
 
-    return reply
-      .type("text/html; charset=utf-8")
-      .send(renderTransactionsPage({ accounts, categories, transactions, filters }));
+    const body = renderTransactionsPage({ accounts, categories, transactions, filters });
+
+    if (isHtmxRequest(request.headers)) {
+      return reply
+        .type("text/html; charset=utf-8")
+        .send(renderTransactionListSection(transactions));
+    }
+
+    return reply.type("text/html; charset=utf-8").send(body);
   });
   server.post("/transactions", async (request, reply) => {
-    const form = readForm(request.body);
-    const transaction = createTransactionFromForm(form, randomUUID());
-    await repositories.transactions.save(transaction);
+    try {
+      const form = readForm(request.body);
+      const transaction = createTransactionFromForm(form, randomUUID());
+      await repositories.transactions.save(transaction);
+    } catch (error: unknown) {
+      if (isHtmxRequest(request.headers)) {
+        const [accounts, categories, transactions] = await Promise.all([
+          repositories.accounts.list(),
+          repositories.categories.list(),
+          repositories.transactions.list({}),
+        ]);
+
+        return reply
+          .status(400)
+          .type("text/html; charset=utf-8")
+          .send(
+            renderTransactionsPanel({
+              accounts,
+              categories,
+              transactions,
+              filters: {},
+              formError: error instanceof Error ? error.message : "Transaction could not be saved",
+            }),
+          );
+      }
+
+      throw error;
+    }
+
+    if (isHtmxRequest(request.headers)) {
+      const transactions = await repositories.transactions.list({});
+
+      return reply
+        .type("text/html; charset=utf-8")
+        .send(renderTransactionListSection(transactions));
+    }
 
     return reply.redirect("/transactions");
   });
@@ -104,10 +150,28 @@ export function buildServer(options: ServerOptions = {}) {
 
     await repositories.transactions.save(createTransactionFromForm(readForm(request.body), id));
 
+    if (isHtmxRequest(request.headers)) {
+      const [accounts, categories, transactions] = await Promise.all([
+        repositories.accounts.list(),
+        repositories.categories.list(),
+        repositories.transactions.list({}),
+      ]);
+
+      return reply
+        .type("text/html; charset=utf-8")
+        .send(renderTransactionsPanel({ accounts, categories, transactions, filters: {} }));
+    }
+
     return reply.redirect("/transactions");
   });
   server.post("/transactions/:id/delete", async (request, reply) => {
     await repositories.transactions.delete(readRouteId(request.params));
+
+    if (isHtmxRequest(request.headers)) {
+      return reply
+        .type("text/html; charset=utf-8")
+        .send(renderTransactionListSection(await repositories.transactions.list({})));
+    }
 
     return reply.redirect("/transactions");
   });
@@ -119,6 +183,209 @@ type RenderableAccount = Awaited<ReturnType<MasterDataRepositories["accounts"]["
 type RenderableCategory = Awaited<ReturnType<MasterDataRepositories["categories"]["list"]>>[number];
 
 type FormBody = Record<string, string | undefined>;
+const htmxScriptUrl = new URL("../../node_modules/htmx.org/dist/htmx.min.js", import.meta.url);
+
+const appStylesheet = `:root {
+  color-scheme: light;
+  --color-bg: #f7f3eb;
+  --color-panel: #fffaf0;
+  --color-text: #241d16;
+  --color-muted: #6f6256;
+  --color-border: #dfd1bd;
+  --color-accent: #2f6f6d;
+  --color-accent-dark: #214f4d;
+  --shadow-panel: 0 18px 45px rgb(73 55 34 / 14%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(135deg, #f7f3eb 0%, #ecf4f3 100%);
+  color: var(--color-text);
+}
+
+a {
+  color: var(--color-accent-dark);
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.app-header,
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-panel);
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.app-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.7rem);
+  letter-spacing: -0.04em;
+}
+
+.app-nav,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.panel {
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.grid-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fffdf8;
+  color: var(--color-text);
+}
+
+textarea {
+  min-height: 44px;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-field input {
+  width: auto;
+}
+
+button,
+.button-link {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: var(--color-accent);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+button:hover,
+.button-link:hover {
+  background: var(--color-accent-dark);
+}
+
+.button-secondary {
+  background: #e9ddd0;
+  color: var(--color-text);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.inline-form {
+  display: inline;
+}
+
+.empty-state,
+.form-error {
+  color: var(--color-muted);
+  background: #fff4df;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.form-error {
+  color: #8b1e1e;
+  background: #fff0f0;
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    width: min(100% - 20px, 1120px);
+    padding: 16px 0;
+  }
+
+  .app-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+}`;
+
+let htmxScript: Promise<string> | null = null;
+
+function readHtmxScript(): Promise<string> {
+  htmxScript ??= readFile(htmxScriptUrl, "utf8");
+
+  return htmxScript;
+}
 
 function registerFormParser(server: FastifyInstance): void {
   server.addContentTypeParser(
@@ -219,6 +486,10 @@ function readRouteId(params: unknown): string {
   return (params as { id: string }).id;
 }
 
+function isHtmxRequest(headers: Record<string, string | string[] | undefined>): boolean {
+  return headers["hx-request"] === "true";
+}
+
 function renderMasterDataPage(
   accounts: RenderableAccount[],
   categories: RenderableCategory[],
@@ -228,16 +499,20 @@ function renderMasterDataPage(
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/app.css">
     <title>FamilyFlow Master Data</title>
   </head>
   <body>
-    <main>
-      <h1>Master Data</h1>
-      <section aria-labelledby="accounts-heading">
+    <main class="app-shell">
+      <header class="app-header">
+        <h1 class="app-title">Master Data</h1>
+        <nav class="app-nav"><a href="/">Dashboard</a><a href="/transactions">Transactions</a></nav>
+      </header>
+      <section class="panel" aria-labelledby="accounts-heading">
         <h2 id="accounts-heading">Accounts</h2>
         <ul>${accounts.map((account) => `<li>${escapeHtml(account.name)} (${escapeHtml(account.ownerContext)})</li>`).join("")}</ul>
       </section>
-      <section aria-labelledby="categories-heading">
+      <section class="panel" aria-labelledby="categories-heading">
         <h2 id="categories-heading">Categories</h2>
         <ul>${categories.map((category) => `<li>${escapeHtml(category.name)}</li>`).join("")}</ul>
       </section>
@@ -257,17 +532,34 @@ function renderTransactionsPage(input: {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/app.css">
+    <script src="/assets/htmx.min.js" defer></script>
     <title>FamilyFlow Transactions</title>
   </head>
   <body>
-    <main>
-      <h1>Transactions</h1>
-      ${renderTransactionForm({ accounts: input.accounts, categories: input.categories })}
-      ${renderTransactionFilters(input)}
-      ${renderTransactionList(input.transactions)}
+    <main class="app-shell">
+      <header class="app-header">
+        <h1 class="app-title">Transactions</h1>
+        <nav class="app-nav"><a href="/">Dashboard</a><a href="/admin/master-data">Master Data</a></nav>
+      </header>
+      ${renderTransactionsPanel(input)}
     </main>
   </body>
 </html>`;
+}
+
+function renderTransactionsPanel(input: {
+  accounts: RenderableAccount[];
+  categories: RenderableCategory[];
+  transactions: Transaction[];
+  filters: TransactionFilters;
+  formError?: string;
+}): string {
+  return `<section id="transactions-panel">
+    ${renderTransactionForm({ accounts: input.accounts, categories: input.categories, formError: input.formError })}
+    ${renderTransactionFilters(input)}
+    ${renderTransactionListSection(input.transactions)}
+  </section>`;
 }
 
 function renderTransactionEditPage(input: {
@@ -280,11 +572,16 @@ function renderTransactionEditPage(input: {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/app.css">
+    <script src="/assets/htmx.min.js" defer></script>
     <title>Edit Transaction</title>
   </head>
   <body>
-    <main>
-      <h1>Edit Transaction</h1>
+    <main class="app-shell">
+      <header class="app-header">
+        <h1 class="app-title">Edit Transaction</h1>
+        <nav class="app-nav"><a href="/transactions">Transactions</a></nav>
+      </header>
       ${renderTransactionForm(input)}
     </main>
   </body>
@@ -295,6 +592,7 @@ function renderTransactionForm(input: {
   accounts: RenderableAccount[];
   categories: RenderableCategory[];
   transaction?: Transaction;
+  formError?: string;
 }): string {
   const transaction = input.transaction;
   const action =
@@ -302,28 +600,36 @@ function renderTransactionForm(input: {
       ? "/transactions"
       : `/transactions/${encodeURIComponent(transaction.id)}`;
   const button = transaction === undefined ? "Add transaction" : "Save transaction";
+  const htmxAttributes =
+    transaction === undefined
+      ? ' hx-post="/transactions" hx-target="#transactions-list" hx-swap="outerHTML"'
+      : "";
 
-  return `<form method="post" action="${action}">
-    <label>Transaction account
+  return `<section class="panel" aria-labelledby="transaction-form-heading">
+    <h2 id="transaction-form-heading">${transaction === undefined ? "Add transaction" : "Edit transaction"}</h2>
+    ${input.formError === undefined ? "" : `<p class="form-error">${escapeHtml(input.formError)}</p>`}
+    <form id="transaction-form" class="grid-form" method="post" action="${action}"${htmxAttributes}>
+    <label class="field">Transaction account
       <select name="accountId">${input.accounts.map((account) => renderOption(account.id, account.name, transaction?.accountId)).join("")}</select>
     </label>
-    <label>Category
+    <label class="field">Category
       <select name="categoryId">${input.categories.map((category) => renderOption(category.id, category.name, transaction?.categoryId)).join("")}</select>
     </label>
-    <label>Date <input name="date" type="date" value="${escapeHtml(transaction?.date ?? "")}" required></label>
-    <label>Description <input name="description" value="${escapeHtml(transaction?.description ?? "")}" required></label>
-    <label>Payee <input name="payee" value="${escapeHtml(transaction?.payee ?? "")}"></label>
-    <label>Amount <input name="amount" inputmode="decimal" value="${escapeHtml(transaction === undefined ? "" : formatAmount(transaction.amountCents))}" required></label>
-    <label>Transaction status
+    <label class="field">Date <input name="date" type="date" value="${escapeHtml(transaction?.date ?? "")}" required></label>
+    <label class="field">Description <input name="description" value="${escapeHtml(transaction?.description ?? "")}" required></label>
+    <label class="field">Payee <input name="payee" value="${escapeHtml(transaction?.payee ?? "")}"></label>
+    <label class="field">Amount <input name="amount" inputmode="decimal" value="${escapeHtml(transaction === undefined ? "" : formatAmount(transaction.amountCents))}" required></label>
+    <label class="field">Transaction status
       <select name="status">
         ${renderOption("booked", "booked", transaction?.status)}
         ${renderOption("planned", "planned", transaction?.status)}
       </select>
     </label>
-    <label>Fixed cost <input name="fixedCost" type="checkbox" ${transaction?.fixedCost === true ? "checked" : ""}></label>
-    <label>Note <textarea name="note">${escapeHtml(transaction?.note ?? "")}</textarea></label>
+    <label class="checkbox-field">Fixed cost <input name="fixedCost" type="checkbox" ${transaction?.fixedCost === true ? "checked" : ""}></label>
+    <label class="field">Note <textarea name="note">${escapeHtml(transaction?.note ?? "")}</textarea></label>
     <button type="submit">${button}</button>
-  </form>`;
+  </form>
+  </section>`;
 }
 
 function renderTransactionFilters(input: {
@@ -331,12 +637,14 @@ function renderTransactionFilters(input: {
   categories: RenderableCategory[];
   filters: TransactionFilters;
 }): string {
-  return `<form method="get" action="/transactions">
-    <label>Month <input name="month" type="month" value="${escapeHtml(input.filters.month ?? "")}"></label>
-    <label>Filter account
+  return `<section class="panel" aria-labelledby="transaction-filters-heading">
+    <h2 id="transaction-filters-heading">Filters</h2>
+    <form id="transaction-filters" class="grid-form" method="get" action="/transactions" hx-get="/transactions" hx-target="#transactions-list" hx-swap="outerHTML">
+    <label class="field">Month <input name="month" type="month" value="${escapeHtml(input.filters.month ?? "")}"></label>
+    <label class="field">Filter account
       <select name="accountId"><option value="">All accounts</option>${input.accounts.map((account) => renderOption(account.id, account.name, input.filters.accountId)).join("")}</select>
     </label>
-    <label>Owner context
+    <label class="field">Owner context
       <select name="ownerContext">
         <option value="">All owners</option>
         ${renderOption("person_a", "Person A", input.filters.ownerContext)}
@@ -344,25 +652,33 @@ function renderTransactionFilters(input: {
         ${renderOption("shared", "Shared", input.filters.ownerContext)}
       </select>
     </label>
-    <label>Category
+    <label class="field">Category
       <select name="categoryId"><option value="">All categories</option>${input.categories.map((category) => renderOption(category.id, category.name, input.filters.categoryId)).join("")}</select>
     </label>
-    <label>Filter status
+    <label class="field">Filter status
       <select name="status"><option value="">All statuses</option>${renderOption("booked", "booked", input.filters.status)}${renderOption("planned", "planned", input.filters.status)}</select>
     </label>
     <button type="submit">Apply filters</button>
-  </form>`;
+  </form>
+  </section>`;
+}
+
+function renderTransactionListSection(transactions: Transaction[]): string {
+  return `<section id="transactions-list" class="panel" aria-labelledby="transactions-list-heading">
+    <h2 id="transactions-list-heading">Transaction list</h2>
+    ${renderTransactionList(transactions)}
+  </section>`;
 }
 
 function renderTransactionList(transactions: Transaction[]): string {
   if (transactions.length === 0) {
-    return "<p>No transactions found.</p>";
+    return '<p class="empty-state">No transactions found.</p>';
   }
 
-  return `<table>
+  return `<div class="table-wrap"><table>
     <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th><th>Fixed cost</th><th>Actions</th></tr></thead>
     <tbody>${transactions.map(renderTransactionRow).join("")}</tbody>
-  </table>`;
+  </table></div>`;
 }
 
 function renderTransactionRow(transaction: Transaction): string {
@@ -374,7 +690,7 @@ function renderTransactionRow(transaction: Transaction): string {
     <td>${transaction.fixedCost ? "fixed" : "variable"}</td>
     <td>
       <a href="/transactions/${encodeURIComponent(transaction.id)}/edit">Edit ${escapeHtml(transaction.description)}</a>
-      <form method="post" action="/transactions/${encodeURIComponent(transaction.id)}/delete" style="display:inline">
+      <form class="inline-form" method="post" action="/transactions/${encodeURIComponent(transaction.id)}/delete" hx-post="/transactions/${encodeURIComponent(transaction.id)}/delete" hx-target="#transactions-list" hx-swap="outerHTML">
         <button type="submit">Delete ${escapeHtml(transaction.description)}</button>
       </form>
     </td>

@@ -93,7 +93,7 @@ test("transaction can be deleted", async ({ page }) => {
     await page.getByRole("button", { name: "Add transaction" }).click();
     await page.getByRole("button", { name: "Delete Delete me" }).click();
 
-    await expect(page.getByText("Delete me")).not.toBeVisible();
+    await expect(page.getByRole("cell", { name: "Delete me", exact: true })).not.toBeVisible();
   } finally {
     await server.close();
   }
@@ -121,7 +121,9 @@ test("transactions can be filtered by owner context", async ({ page }) => {
     await page.getByRole("button", { name: "Apply filters" }).click();
 
     await expect(page.getByRole("cell", { name: "Shared rent", exact: true })).toBeVisible();
-    await expect(page.getByText("Personal groceries")).not.toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: "Personal groceries", exact: true }),
+    ).not.toBeVisible();
   } finally {
     await server.close();
   }

@@ -153,6 +153,22 @@ Operational notes:
 - Use `/admin/master-data` to verify account and category seed data if transaction forms have missing options.
 - For manual correction issues, capture the visible `X-Request-Id` and inspect the matching request log entry. Do not log or paste broad financial exports when a single minimized transaction example is enough.
 
+## Static Assets And HTMX
+
+The app serves its own UI assets from `/assets/`.
+
+Current assets:
+
+- `/assets/app.css`: application stylesheet for all server-rendered pages.
+- `/assets/htmx.min.js`: local `htmx.org` runtime used by transaction interactions.
+
+Operational notes:
+
+- HTML responses must not include inline `style` attributes. Use stable IDs and CSS classes, then add styling in `/assets/app.css`.
+- Transaction create, delete, and filter interactions progressively enhance normal forms with HTMX. They must keep working as normal requests when JavaScript is disabled.
+- If an HTMX interaction does not update the page, inspect the browser network request for `HX-Request: true`, verify that the response is an HTML fragment, and use the `X-Request-Id` response header to find the matching request log entry.
+- Asset requests are public so browsers can load CSS and JavaScript before or during authentication redirects. Do not place secrets or user-specific financial data in static assets.
+
 ## Backup 
 
 PostgreSQL stores master data and manual transactions. A full backup runbook is still pending, but before destructive maintenance export the database with `pg_dump` from a trusted host or from the PostgreSQL container.
