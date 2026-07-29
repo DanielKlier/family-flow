@@ -4,6 +4,15 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.5.0] - 2026-07-29
+
+### Added
+
+- Add Dex as a lightweight local OIDC provider for development with a dedicated `.env.dev` file and `pnpm dev:oidc` command.
+- Add manual transaction creation, editing, deletion, and filtering by month, account, owner context, category, and status.
+- Add transaction core validation, repository port, in-memory and Drizzle repository adapters, and PostgreSQL migration.
+- Document manual transaction maintenance and local OIDC development workflows.
+
 ## [0.4.2] - 2026-07-28
 
 ### Fixed
