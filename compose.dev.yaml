@@ -1,4 +1,14 @@
 services:
+  dex:
+    image: dexidp/dex:v2.44.0
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    ports:
+      - "127.0.0.1:5556:5556"
+    volumes:
+      - ./dev/dex/config.yaml:/etc/dex/config.yaml:ro
+    networks:
+      - dev
+
   postgres:
     ports:
       - "127.0.0.1:5432:5432"

@@ -109,6 +109,19 @@ Authentik application settings:
 
 Local E2E tests and development without Authentik can use `AUTH_MODE=test`. In this mode `/auth/test-login` creates a signed session for the deterministic `test-user`. Do not run production with `AUTH_MODE=test`.
 
+Local development can also use Dex as a lightweight OIDC provider instead of Authentik. Start it with `docker compose --env-file .env.dev -f compose.yaml -f compose.dev.yaml up -d dex` and run the app on the host with `pnpm dev:oidc`.
+
+Dex development settings:
+
+- Issuer URL: `http://127.0.0.1:5556/dex`.
+- Client ID: `family-flow-dev`.
+- Client secret: `family-flow-dev-secret`.
+- Redirect URI: `http://127.0.0.1:3000/auth/callback`.
+- Test user email: `dev@example.invalid`.
+- Test user password: `family-flow-dev`.
+
+The committed `.env.dev` file contains these local-only OIDC values. Keep production Authentik settings in `.env`, and use `.env.dev` for the Dex development flow. This local Dex setup is not intended for production and must not be exposed outside the development host.
+
 ## Seeds
 
 The app seeds initial accounts and categories during startup after migrations. Seeds are idempotent: existing rows with the same stable ID are updated, and missing rows are inserted.

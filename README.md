@@ -18,6 +18,26 @@ FamilyFlow is a local web application for household and family finance planning.
 6. Open `http://127.0.0.1:3000/health` to verify the app is running.
 7. Open `http://127.0.0.1:3000/auth/test-login` in `AUTH_MODE=test`, then open `http://127.0.0.1:3000/admin/master-data` to verify seeded accounts and categories.
 
+## Local OIDC Development
+
+The development Compose override includes Dex as a lightweight local OIDC provider. This mode is intended for running PostgreSQL and Dex in Docker while running the app on the host with `pnpm dev:oidc`.
+
+Start local infrastructure with `docker compose --env-file .env.dev -f compose.yaml -f compose.dev.yaml up -d postgres dex`.
+
+The local Dex flow uses the committed `.env.dev` file:
+
+- `AUTH_MODE=oidc`
+- `BASE_URL=http://127.0.0.1:3000`
+- `OIDC_ISSUER_URL=http://127.0.0.1:5556/dex`
+- `OIDC_CLIENT_ID=family-flow-dev`
+- `OIDC_CLIENT_SECRET=family-flow-dev-secret`
+- `SESSION_SECRET=replace-with-at-least-32-random-characters`
+
+Start the app with `pnpm dev:oidc`, open `http://127.0.0.1:3000/`, and sign in through Dex with:
+
+- Email: `dev@example.invalid`
+- Password: `family-flow-dev`
+
 ## Commands
 
 - `pnpm format`: format files with Biome.
@@ -28,6 +48,7 @@ FamilyFlow is a local web application for household and family finance planning.
 - `pnpm test:e2e`: run E2E tests.
 - `pnpm build`: compile TypeScript.
 - `pnpm db:migrate`: run pending SQL migrations against `DATABASE_URL` during local development.
+- `pnpm dev:oidc`: run the local app with `.env.dev` for the Dex development OIDC flow.
 
 ## Versioning
 

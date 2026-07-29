@@ -1,0 +1,26 @@
+issuer: http://127.0.0.1:5556/dex
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+
+oauth2:
+  skipApprovalScreen: true
+
+staticClients:
+  - id: family-flow-dev
+    name: FamilyFlow Development
+    secret: family-flow-dev-secret
+    redirectURIs:
+      - http://127.0.0.1:3000/auth/callback
+
+enablePasswordDB: true
+
+staticPasswords:
+  - email: dev@example.invalid
+    username: dev
+    userID: family-flow-dev-user
+    # bcrypt for "family-flow-dev"
+    hash: $2y$10$EX/ySsJXoKdBmYt2vIGqBu9WtELdGNb8J9vv9g4eP5MsoSUTxe16C
