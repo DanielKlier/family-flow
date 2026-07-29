@@ -28,7 +28,24 @@ Der geplante Stack ist Node.js, TypeScript, Fastify, PostgreSQL, Drizzle, server
 - Fuer Adapter mit Datenbank, HTTP, OIDC, CSV oder Logging sind Integrationstests Pflicht.
 - Bugs werden zuerst durch einen reproduzierenden Test abgesichert.
 
-### 2. Ports And Adapters
+### 2. Red-Green-Refactor
+
+Jede fachliche Aenderung folgt einer kurzen Red-Green-Refactor-Schleife:
+
+- Red: Schreibe zuerst einen Test, der das gewuenschte Verhalten beschreibt und fehlschlaegt.
+- Green: Implementiere die kleinste korrekte Aenderung, die den Test gruen macht.
+- Refactor: Verbessere Struktur, Namen, Duplikate, Abhaengigkeiten und Tests, ohne Verhalten zu aendern.
+
+Waehrend Refactor gilt:
+
+- Keine neuen Features.
+- Keine Verhaltensaenderungen ohne neuen Test.
+- Tests muessen vor und nach dem Refactoring gruen sein.
+- Refactorings bleiben klein und reviewbar.
+- Wenn Refactoring Risiken fuer Verhalten birgt, werden zusaetzliche Charakterisierungstests ergaenzt.
+- Refactorings duerfen Architekturgrenzen schaerfen, aber nicht umgehen.
+
+### 3. Ports And Adapters
 
 - Die Anwendung wird als Ports-and-Adapters organisiert.
 - Der Core enthaelt die komplette Anwendungslogik.
@@ -38,7 +55,7 @@ Der geplante Stack ist Node.js, TypeScript, Fastify, PostgreSQL, Drizzle, server
 - Adapter implementieren technische Details wie HTTP, DB, Auth, Logging, CSV und Templates.
 - Business-Regeln gehoeren niemals in Routen, Templates oder Datenbankadapter.
 
-### 3. Formatierung Und Quality Gates
+### 4. Formatierung Und Quality Gates
 
 - Code wird automatisch mit Biome formatiert.
 - Vor jedem Commit muss der Code getestet, gelintet und formatiert sein.
@@ -51,7 +68,38 @@ Der geplante Stack ist Node.js, TypeScript, Fastify, PostgreSQL, Drizzle, server
 - Wenn Docker betroffen ist, muss auch `docker compose build` erfolgreich sein.
 - Wenn Deployment betroffen ist, muss ein Docker-Compose-Smoke-Test erfolgen.
 
-### 4. Conventional Commits
+### 5. Code Quality Metrics Und Tools
+
+Metriken sind Refactoring-Signale, keine blinden Ziele. Sie werden genutzt, um Code gezielt einfacher, testbarer und architekturell sauberer zu machen.
+
+Beobachtete Qualitaeten und Metriken:
+
+- Cyclomatic Complexity und Cognitive Complexity pro Funktion.
+- Laenge von Funktionen und Dateien.
+- Anzahl Parameter pro Funktion.
+- Anzahl oeffentlicher Exporte pro Modul.
+- Test-Coverage fuer Core-Logik.
+- Mutation Score fuer kritische Finanzlogik.
+- Code-Duplizierung.
+- Architekturverletzungen durch Imports ueber Schichtgrenzen hinweg.
+- Anzahl von `any`, Type Assertions und Non-Null Assertions.
+- Anzahl uebersprungener Tests.
+- Anzahl `TODO`- und `FIXME`-Kommentare.
+- Dauer und Flakiness der Test-Suite.
+
+Erlaubte oder empfohlene Tools:
+
+- Biome fuer Formatierung und grundlegendes Linting.
+- TypeScript `--noEmit` fuer strikte Typpruefung.
+- Vitest fuer Unit- und Integrationstests.
+- Playwright fuer E2E-Tests.
+- Vitest Coverage oder `c8` fuer Coverage-Messung.
+- StrykerJS fuer Mutation Testing kritischer Finanzlogik.
+- `dependency-cruiser` fuer Architekturgrenzen.
+- `knip` fuer ungenutzte Dateien, Exporte und Dependencies.
+- `jscpd` fuer Code-Duplizierung.
+
+### 6. Conventional Commits
 
 - Git Commits folgen Conventional Commits.
 - Beispiele:
@@ -64,7 +112,7 @@ Der geplante Stack ist Node.js, TypeScript, Fastify, PostgreSQL, Drizzle, server
 - Jeder Phasenabschluss aus `TASKS.md` endet in einem Commit.
 - Nicht committen, wenn Tests, Linting, Formatierung oder Build fehlschlagen.
 
-### 5. Operations Manual
+### 7. Operations Manual
 
 - Das Projekt braucht ein ausfuehrliches `OPERATIONS.md`.
 - Jedes Feature, das Betrieb, Deployment, Daten, Auth, Logs oder Debugging beeinflusst, muss das Operations Manual aktualisieren.
@@ -79,7 +127,7 @@ Der geplante Stack ist Node.js, TypeScript, Fastify, PostgreSQL, Drizzle, server
   - CSV-Import-Probleme.
   - Log-Analyse.
 
-### 6. Logging
+### 8. Logging
 
 - Jeder HTTP Request erzeugt exakt einen Log-Entry.
 - Logging ist strukturiert.
@@ -111,13 +159,42 @@ Logging-Regeln:
 - Fehler muessen im Request-Log-Kontext sichtbar sein.
 - Keine separaten Erfolgs- und Abschlusslogs pro Request erzeugen, wenn dadurch mehr als ein Request-Log-Entry entsteht.
 
-### 7. HTTP Responses Und Request ID
+### 9. HTTP Responses Und Request ID
 
 - Jede HTTP-Antwort enthaelt die Request ID im Header `X-Request-Id`.
 - Das gilt fuer erfolgreiche Responses, Redirects und Fehlerresponses.
 - Fehlerseiten sollen die Request ID sichtbar machen, damit Debugging ueber Logs moeglich ist.
 
 ## Architekturregeln
+
+### Refactoring Triggers
+
+Refactoring ist verpflichtend zu pruefen, wenn mindestens einer dieser Punkte zutrifft:
+
+- Eine Funktion ueberschreitet 40 Zeilen produktiven Code.
+- Eine Datei ueberschreitet 300 Zeilen produktiven Code.
+- Eine Funktion hat mehr als 4 Parameter.
+- Eine Funktion vermischt Validierung, Fachentscheidung, Persistenz und Rendering.
+- Business-Regeln befinden sich in HTTP-Routen, Templates oder Datenbankadaptern.
+- Derselbe fachliche Ablauf kommt an mehr als einer Stelle vor.
+- Tests benoetigen komplexes Mocking fuer eigentlich fachliche Logik.
+- Ein Modul importiert ueber eine verbotene Architekturgrenze hinweg.
+- Ein Bug wurde durch unklare Struktur, unklare Namen oder Kopplung verursacht.
+- Eine Aenderung erfordert Anpassungen an vielen unzusammenhaengenden Stellen.
+- Fehlerbehandlung, Validierung oder Mapping wird inkonsistent umgesetzt.
+
+### Code Structure Rules
+
+- Core-Code darf keine Adapter-Imports enthalten.
+- HTTP-Routen duerfen Use Cases orchestrieren, aber keine Business-Regeln enthalten.
+- Datenbankadapter mappen zwischen DB-Records und Core-Modellen.
+- Templates enthalten keine Berechnungen und keine fachlichen Entscheidungen.
+- Validierung fachlicher Regeln gehoert in den Core.
+- Validierung technischer Request-Formate gehoert in den HTTP-Adapter.
+- Neue Abhaengigkeiten werden nur eingefuehrt, wenn Standardbibliothek oder vorhandene Tools nicht ausreichen.
+- `any`, Type Assertions und Non-Null Assertions sind zu vermeiden und muessen lokal begruendet sein.
+- Fehler werden explizit modelliert oder kontrolliert behandelt, nicht verschluckt.
+- Module sollen klare Verantwortlichkeiten haben und nur die kleinste noetige API exportieren.
 
 ### Core
 
