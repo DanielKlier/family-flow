@@ -187,25 +187,24 @@ function readTransactionFilters(query: unknown): TransactionFilters {
     return {};
   }
 
-  const values = query as Record<string, unknown>;
   const filters: TransactionFilters = {};
-  const month = readOptionalQueryValue(values.month);
+  const month = readOptionalQueryValue(query, "month");
   if (month !== undefined && /^\d{4}-\d{2}$/.test(month)) {
     filters.month = month;
   }
-  const accountId = readOptionalQueryValue(values.accountId);
+  const accountId = readOptionalQueryValue(query, "accountId");
   if (accountId !== undefined) {
     filters.accountId = accountId;
   }
-  const categoryId = readOptionalQueryValue(values.categoryId);
+  const categoryId = readOptionalQueryValue(query, "categoryId");
   if (categoryId !== undefined) {
     filters.categoryId = categoryId;
   }
-  const status = readOptionalQueryValue(values.status);
+  const status = readOptionalQueryValue(query, "status");
   if (status === "booked" || status === "planned") {
     filters.status = status;
   }
-  const ownerContext = readOptionalQueryValue(values.ownerContext);
+  const ownerContext = readOptionalQueryValue(query, "ownerContext");
   if (ownerContext !== undefined) {
     filters.ownerContext = parseOwnerContext(ownerContext);
   }
@@ -213,7 +212,9 @@ function readTransactionFilters(query: unknown): TransactionFilters {
   return filters;
 }
 
-function readOptionalQueryValue(value: unknown): string | undefined {
+function readOptionalQueryValue(query: object, key: string): string | undefined {
+  const value = Object.entries(query).find(([candidate]) => candidate === key)?.[1];
+
   return typeof value === "string" && value.trim() !== "" ? value : undefined;
 }
 
@@ -222,7 +223,14 @@ function readForm(body: unknown): FormBody {
     return {};
   }
 
-  return body as FormBody;
+  const form: FormBody = {};
+  for (const [key, value] of Object.entries(body)) {
+    if (typeof value === "string" || value === undefined) {
+      form[key] = value;
+    }
+  }
+
+  return form;
 }
 
 function createTransactionFromForm(form: FormBody, id: string): Transaction {
@@ -260,15 +268,16 @@ function parseAmountCents(value: string): number {
 }
 
 function readRouteId(params: unknown): string {
-  if (
-    typeof params !== "object" ||
-    params === null ||
-    typeof (params as { id?: unknown }).id !== "string"
-  ) {
+  if (typeof params !== "object" || params === null || !("id" in params)) {
     throw new Error("Route id is required");
   }
 
-  return (params as { id: string }).id;
+  const { id } = params;
+  if (typeof id !== "string") {
+    throw new Error("Route id is required");
+  }
+
+  return id;
 }
 
 function isHtmxRequest(headers: Record<string, string | string[] | undefined>): boolean {

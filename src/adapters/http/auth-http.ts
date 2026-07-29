@@ -15,7 +15,7 @@ export function readSafeReturnTo(query: unknown): string {
     return "/";
   }
 
-  const returnTo = (query as { returnTo?: unknown }).returnTo;
+  const returnTo = readObjectValue(query, "returnTo");
   if (typeof returnTo !== "string" || !returnTo.startsWith("/") || returnTo.startsWith("//")) {
     return "/";
   }
@@ -28,14 +28,15 @@ export function readCallbackQuery(query: unknown): { code: string; state: string
     return null;
   }
 
-  const candidate = query as { code?: unknown; state?: unknown };
-  if (typeof candidate.code !== "string" || typeof candidate.state !== "string") {
+  const code = readObjectValue(query, "code");
+  const state = readObjectValue(query, "state");
+  if (typeof code !== "string" || typeof state !== "string") {
     return null;
   }
 
   return {
-    code: candidate.code,
-    state: candidate.state,
+    code,
+    state,
   };
 }
 
@@ -49,4 +50,8 @@ export function serializeExpiredNamedCookie(name: string, secure: boolean): stri
 
 export function getPath(url: string): string {
   return new URL(url, "http://localhost").pathname;
+}
+
+function readObjectValue(input: object, key: string): unknown {
+  return Object.entries(input).find(([candidate]) => candidate === key)?.[1];
 }

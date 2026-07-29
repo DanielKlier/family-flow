@@ -31,7 +31,7 @@ export async function discoverOidcProvider(
     throw new Error("OIDC discovery request failed");
   }
 
-  const metadata = (await response.json()) as Record<string, unknown>;
+  const metadata = await readJsonObject(response, "OIDC discovery response was invalid");
 
   return {
     authorizationEndpoint: readEndpoint(metadata, "authorization_endpoint"),
@@ -93,7 +93,7 @@ export async function exchangeAuthorizationCode(
     throw new Error("OIDC token exchange failed");
   }
 
-  const tokenPayload = (await tokenResponse.json()) as { access_token?: unknown };
+  const tokenPayload = await readJsonObject(tokenResponse, "OIDC token response was invalid");
   if (typeof tokenPayload.access_token !== "string") {
     throw new Error("OIDC token response did not include an access token");
   }
@@ -108,7 +108,7 @@ export async function exchangeAuthorizationCode(
     throw new Error("OIDC userinfo request failed");
   }
 
-  const userInfo = (await userInfoResponse.json()) as Partial<OidcUserInfo>;
+  const userInfo = await readJsonObject(userInfoResponse, "OIDC userinfo response was invalid");
   if (typeof userInfo.sub !== "string") {
     throw new Error("OIDC userinfo response did not include a subject");
   }
@@ -142,4 +142,16 @@ function readOptionalEndpoint(metadata: Record<string, unknown>, key: string): s
   }
 
   return value;
+}
+
+async function readJsonObject(
+  response: Response,
+  errorMessage: string,
+): Promise<Record<string, unknown>> {
+  const payload = await response.json();
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    throw new Error(errorMessage);
+  }
+
+  return payload;
 }

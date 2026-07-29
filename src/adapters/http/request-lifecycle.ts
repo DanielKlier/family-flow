@@ -50,7 +50,7 @@ export function registerRequestLifecycle(server: FastifyInstance, logger: Reques
       timestamp: new Date().toISOString(),
       method: request.method,
       path,
-      query: normalizeQueryForLog(request.query as Record<string, string | string[] | undefined>),
+      query: normalizeQueryForLog(request.query),
       statusCode: reply.statusCode,
       durationMs,
       user: request.userContext?.id ?? null,

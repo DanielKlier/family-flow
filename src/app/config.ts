@@ -23,8 +23,6 @@ export type OidcConfig = {
 
 type Environment = Record<string, string | undefined>;
 
-const nodeEnvs = new Set<NodeEnv>(["development", "test", "production"]);
-
 export function loadConfig(environment: Environment = process.env): AppConfig {
   const nodeEnv = readNodeEnv(environment.NODE_ENV ?? "development");
   const host = readRequiredString(environment.HOST, "HOST");
@@ -44,8 +42,8 @@ export function loadConfig(environment: Environment = process.env): AppConfig {
 }
 
 function readNodeEnv(value: string): NodeEnv {
-  if (nodeEnvs.has(value as NodeEnv)) {
-    return value as NodeEnv;
+  if (value === "development" || value === "test" || value === "production") {
+    return value;
   }
 
   throw new Error("NODE_ENV must be one of development, test or production");

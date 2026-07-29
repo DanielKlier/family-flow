@@ -34,10 +34,10 @@ export function readSessionCookieValue(
   }
 
   try {
-    const session = JSON.parse(
-      Buffer.from(payload, "base64url").toString("utf8"),
-    ) as Partial<SessionPayload>;
+    const session = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
     if (
+      typeof session !== "object" ||
+      session === null ||
       typeof session.id !== "string" ||
       typeof session.displayName !== "string" ||
       !(typeof session.email === "string" || session.email === null) ||
