@@ -4,6 +4,15 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.6.0] - 2026-07-29
+
+### Added
+
+- Add a shared stylesheet and shell layout for server-rendered pages.
+- Serve local HTMX assets and progressively enhance transaction create, delete, and filter interactions.
+- Add E2E coverage for stylesheet delivery, no inline styles, HTMX partial updates, and no-JavaScript fallback behavior.
+- Document static asset delivery and HTMX debugging in the operations manual.
+
 ## [0.5.0] - 2026-07-29
 
 ### Added
