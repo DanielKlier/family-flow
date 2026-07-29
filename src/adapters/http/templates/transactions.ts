@@ -3,6 +3,7 @@ import type { Category } from "../../../core/categories/category.js";
 import type { OwnerContext } from "../../../core/shared/owner-context.js";
 import type { Transaction } from "../../../core/transactions/transaction.js";
 import type { TransactionFilters } from "../../../ports/repositories/transaction-repository.js";
+import { escapeHtml } from "./html.js";
 
 export function renderTransactionsPage(input: {
   accounts: Account[];
@@ -190,13 +191,4 @@ function renderOption(
 
 function formatAmount(amountCents: number): string {
   return (Math.abs(amountCents) / 100).toFixed(2);
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

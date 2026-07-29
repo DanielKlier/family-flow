@@ -18,6 +18,7 @@ import {
   serializeSessionCookie,
   sessionCookieName,
 } from "./session.js";
+import { escapeHtml } from "./templates/html.js";
 
 export type AuthRuntimeConfig = {
   mode: "test" | "oidc";
@@ -254,13 +255,4 @@ function renderDashboard(user: UserContext): string {
     </main>
   </body>
 </html>`;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }

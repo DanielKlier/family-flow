@@ -1,5 +1,6 @@
 import type { Account } from "../../../core/accounts/account.js";
 import type { Category } from "../../../core/categories/category.js";
+import { escapeHtml } from "./html.js";
 
 export function renderMasterDataPage(accounts: Account[], categories: Category[]): string {
   return `<!doctype html>
@@ -27,13 +28,4 @@ export function renderMasterDataPage(accounts: Account[], categories: Category[]
     </main>
   </body>
 </html>`;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
