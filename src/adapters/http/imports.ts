@@ -11,14 +11,16 @@ import type { CsvParser } from "../../ports/csv/csv-parser.js";
 import type { ParsedCsvTransactionRow } from "../../ports/csv/csv-parser.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
+import type { ImportProfileRepository } from "../../ports/repositories/import-profile-repository.js";
 import type { TransactionRepository } from "../../ports/repositories/transaction-repository.js";
-import { readForm } from "./request-values.js";
+import { readForm, readOptionalQueryValue } from "./request-values.js";
 import { renderCsvImportPage } from "./templates/imports.js";
 import type { CsvImportPreviewRow } from "./templates/imports.js";
 
 type CsvImportRouteRepositories = {
   accounts: AccountRepository;
   categories: CategoryRepository;
+  importProfiles: ImportProfileRepository;
   transactions: TransactionRepository;
 };
 
@@ -27,15 +29,33 @@ export function registerCsvImportRoutes(
   repositories: CsvImportRouteRepositories,
   csvParser: CsvParser,
 ): void {
-  server.get("/imports/csv", async (_request, reply) => {
-    const [accounts, categories] = await Promise.all([
+  server.get("/imports/csv", async (request, reply) => {
+    const [accounts, categories, importProfiles] = await Promise.all([
       repositories.accounts.list(),
       repositories.categories.list(),
+      repositories.importProfiles.list(),
     ]);
+    const query = typeof request.query === "object" && request.query !== null ? request.query : {};
+    const selectedProfileId = readOptionalQueryValue(query, "profileId");
+    const profileSaved = readOptionalQueryValue(query, "saved") === "1";
+    const selectedProfile =
+      selectedProfileId === undefined
+        ? undefined
+        : await repositories.importProfiles.get(selectedProfileId);
 
-    return reply
-      .type("text/html; charset=utf-8")
-      .send(renderCsvImportPage({ accounts, categories }));
+    return reply.type("text/html; charset=utf-8").send(
+      renderCsvImportPage({
+        accounts,
+        categories,
+        importProfiles,
+        selectedProfile: selectedProfile ?? undefined,
+        profileSaved,
+      }),
+    );
+  });
+
+  server.post("/imports/csv/profiles", async (request, reply) => {
+    return handleSaveImportProfile(repositories, request, reply);
   });
 
   server.post("/imports/csv/preview", async (request, reply) => {
@@ -47,15 +67,64 @@ export function registerCsvImportRoutes(
   });
 }
 
+async function handleSaveImportProfile(
+  repositories: CsvImportRouteRepositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const [accounts, categories, importProfiles] = await Promise.all([
+    repositories.accounts.list(),
+    repositories.categories.list(),
+    repositories.importProfiles.list(),
+  ]);
+
+  try {
+    const form = readForm(request.body);
+    const profile = createImportProfile({
+      id: randomUUID(),
+      name: readRequiredFormText(form, "profileName", "Profile name is required"),
+      kind: "custom",
+      delimiter: ";",
+      encoding: readFormEncoding(form),
+      dateColumn: readRequiredFormText(form, "dateColumn", "Date column is required"),
+      amountColumn: readRequiredFormText(form, "amountColumn", "Amount column is required"),
+      descriptionColumn: readRequiredFormText(
+        form,
+        "descriptionColumn",
+        "Description column is required",
+      ),
+      payeeColumn: readOptionalFormText(form, "payeeColumn"),
+      categoryColumn: readOptionalFormText(form, "categoryColumn"),
+    });
+
+    await repositories.importProfiles.save(profile);
+
+    return reply.redirect(`/imports/csv?profileId=${encodeURIComponent(profile.id)}&saved=1`);
+  } catch (error: unknown) {
+    return reply
+      .status(400)
+      .type("text/html; charset=utf-8")
+      .send(
+        renderCsvImportPage({
+          accounts,
+          categories,
+          importProfiles,
+          formError: error instanceof Error ? error.message : "Import profile could not be saved",
+        }),
+      );
+  }
+}
+
 async function handleCsvImportPreview(
   repositories: CsvImportRouteRepositories,
   csvParser: CsvParser,
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const [accounts, categories] = await Promise.all([
+  const [accounts, categories, importProfiles] = await Promise.all([
     repositories.accounts.list(),
     repositories.categories.list(),
+    repositories.importProfiles.list(),
   ]);
 
   try {
@@ -88,7 +157,7 @@ async function handleCsvImportPreview(
 
     return reply
       .type("text/html; charset=utf-8")
-      .send(renderCsvImportPage({ accounts, categories, previewRows }));
+      .send(renderCsvImportPage({ accounts, categories, importProfiles, previewRows }));
   } catch (error: unknown) {
     return reply
       .status(400)
@@ -97,6 +166,7 @@ async function handleCsvImportPreview(
         renderCsvImportPage({
           accounts,
           categories,
+          importProfiles,
           formError: error instanceof Error ? error.message : "CSV import preview failed",
         }),
       );
@@ -295,6 +365,40 @@ function readEncoding(form: MultipartForm): ImportProfileEncoding {
   }
 
   return encoding;
+}
+
+function readFormEncoding(form: Record<string, string | undefined>): ImportProfileEncoding {
+  const encoding = readRequiredFormText(form, "encoding", "CSV encoding is required");
+  if (encoding !== "utf8" && encoding !== "latin1") {
+    throw new Error("CSV encoding is invalid");
+  }
+
+  return encoding;
+}
+
+function readRequiredFormText(
+  form: Record<string, string | undefined>,
+  key: string,
+  message: string,
+): string {
+  const value = form[key];
+  if (value === undefined || value.trim() === "") {
+    throw new Error(message);
+  }
+
+  return value.trim();
+}
+
+function readOptionalFormText(
+  form: Record<string, string | undefined>,
+  key: string,
+): string | null {
+  const value = form[key];
+  if (value === undefined || value.trim() === "") {
+    return null;
+  }
+
+  return value.trim();
 }
 
 function readRequiredFile(form: MultipartForm, key: string): Buffer {

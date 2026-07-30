@@ -171,7 +171,7 @@ Operational notes:
 
 ## Backup 
 
-PostgreSQL stores master data and manual transactions. A full backup runbook is still pending, but before destructive maintenance export the database with `pg_dump` from a trusted host or from the PostgreSQL container.
+PostgreSQL stores master data, transactions, and CSV import profiles. A full backup runbook is still pending, but before destructive maintenance export the database with `pg_dump` from a trusted host or from the PostgreSQL container.
 
 ## Restore 
 
@@ -201,7 +201,25 @@ Never log OIDC tokens, session cookies, client secrets, or complete callback URL
 
 ## CSV Import Problems
 
-CSV import is not implemented in Phase 0. Future import issues will be diagnosed with minimized metadata and without logging full CSV files.
+Authenticated users can import expense CSV files at `/imports/csv`.
+
+Supported import flow:
+
+- Select an import account.
+- Select CSV encoding, currently `UTF-8` or `Latin1`.
+- Map date, amount, description, optional payee, and optional category columns.
+- Save reusable custom import profiles without bank-specific default data.
+- Preview normalized rows before writing transactions.
+- Confirm the preview to store non-duplicate expenses.
+
+Operational notes:
+
+- Only expense rows are imported. Zero amounts and positive amounts are ignored by the importer.
+- Supported date formats are `DD.MM.YY`, `DD.MM.YYYY`, and `YYYY-MM-DD`.
+- Duplicate detection uses account, date, amount, normalized description, and normalized payee.
+- Category matching uses exact normalized names when a category column is mapped; unmatched rows fall back to `Sonstiges`.
+- If an import fails, reproduce the problem with a minimized CSV containing only representative rows. Do not log or paste complete bank exports.
+- Use the visible `X-Request-Id` response header to find the matching request log entry in `docker compose logs app`.
 
 ## Log Analysis
 

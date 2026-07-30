@@ -16,7 +16,7 @@ export function renderDashboard(user: UserContext): string {
     title: "FamilyFlow Dashboard",
     heading: "Dashboard",
     navigation:
-      '<nav class="app-nav"><a href="/admin/master-data">Master Data</a><a href="/transactions">Transactions</a><a href="/auth/logout">Logout</a></nav>',
+      '<nav class="app-nav"><a href="/admin/master-data">Master Data</a><a href="/transactions">Transactions</a><a href="/imports/csv">CSV Import</a><a href="/auth/logout">Logout</a></nav>',
     body: `<section class="panel">
         <p>Signed in as ${escapeHtml(user.displayName)}</p>
       </section>`,

@@ -1,5 +1,6 @@
 import type { Account } from "../../../core/accounts/account.js";
 import type { Category } from "../../../core/categories/category.js";
+import type { ImportProfile } from "../../../core/imports/import-profile.js";
 import { escapeHtml, renderPage } from "./html.js";
 
 export type CsvImportPreviewRow = {
@@ -17,7 +18,10 @@ export type CsvImportPreviewRow = {
 export function renderCsvImportPage(input: {
   accounts: Account[];
   categories: Category[];
+  importProfiles: ImportProfile[];
+  selectedProfile?: ImportProfile;
   previewRows?: CsvImportPreviewRow[];
+  profileSaved?: boolean;
   formError?: string;
 }): string {
   return renderPage({
@@ -32,30 +36,51 @@ export function renderCsvImportPage(input: {
 function renderCsvImportForm(input: {
   accounts: Account[];
   categories: Category[];
+  importProfiles: ImportProfile[];
+  selectedProfile?: ImportProfile;
+  profileSaved?: boolean;
   formError?: string;
 }): string {
+  const profile = input.selectedProfile;
+
   return `<section class="panel" aria-labelledby="csv-import-form-heading">
     <h2 id="csv-import-form-heading">Upload CSV</h2>
+    ${input.profileSaved === true ? '<p class="success-message">Import profile saved.</p>' : ""}
     ${input.formError === undefined ? "" : `<p class="form-error">${escapeHtml(input.formError)}</p>`}
+    <form class="grid-form" method="get" action="/imports/csv">
+      <label class="field">Import profile
+        <select name="profileId">${renderProfileOptions(input.importProfiles, profile?.id)}</select>
+      </label>
+      <button type="submit">Load import profile</button>
+    </form>
     <form id="csv-import-form" class="grid-form" method="post" action="/imports/csv/preview" enctype="multipart/form-data">
+      <label class="field">Profile name <input name="profileName" value="${escapeHtml(profile?.name ?? "")}"></label>
       <label class="field">Import account
         <select name="accountId">${input.accounts.map((account) => renderOption(account.id, account.name)).join("")}</select>
       </label>
       <label class="field">CSV encoding
         <select name="encoding">
-          <option value="utf8">UTF-8</option>
-          <option value="latin1">Latin1</option>
+          ${renderOption("utf8", "UTF-8", profile?.encoding)}
+          ${renderOption("latin1", "Latin1", profile?.encoding)}
         </select>
       </label>
-      <label class="field">Date column <input name="dateColumn" value="Date" required></label>
-      <label class="field">Amount column <input name="amountColumn" value="Amount" required></label>
-      <label class="field">Description column <input name="descriptionColumn" value="Description" required></label>
-      <label class="field">Payee column <input name="payeeColumn" value="Payee"></label>
-      <label class="field">Category column <input name="categoryColumn" value=""></label>
+      <label class="field">Date column <input name="dateColumn" value="${escapeHtml(profile?.dateColumn ?? "Date")}" required></label>
+      <label class="field">Amount column <input name="amountColumn" value="${escapeHtml(profile?.amountColumn ?? "Amount")}" required></label>
+      <label class="field">Description column <input name="descriptionColumn" value="${escapeHtml(profile?.descriptionColumn ?? "Description")}" required></label>
+      <label class="field">Payee column <input name="payeeColumn" value="${escapeHtml(profile?.payeeColumn ?? "Payee")}"></label>
+      <label class="field">Category column <input name="categoryColumn" value="${escapeHtml(profile?.categoryColumn ?? "")}"></label>
       <label class="field">CSV file <input name="csvFile" type="file" accept=".csv,text/csv" required></label>
       <button type="submit">Preview import</button>
+      <button type="submit" formmethod="post" formaction="/imports/csv/profiles" formenctype="application/x-www-form-urlencoded" formnovalidate>Save import profile</button>
     </form>
   </section>`;
+}
+
+function renderProfileOptions(
+  profiles: ImportProfile[],
+  selectedProfileId: string | undefined,
+): string {
+  return `<option value="">Manual mapping</option>${profiles.map((profile) => renderOption(profile.id, profile.name, selectedProfileId)).join("")}`;
 }
 
 function renderPreview(rows: CsvImportPreviewRow[] | undefined): string {

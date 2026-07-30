@@ -17,7 +17,8 @@ FamilyFlow is a local web application for household and family finance planning.
 5. Start the development server with `pnpm dev`.
 6. Open `http://127.0.0.1:3000/health` to verify the app is running.
 7. Open `http://127.0.0.1:3000/auth/test-login` in `AUTH_MODE=test`, then open `http://127.0.0.1:3000/admin/master-data` to verify seeded accounts and categories.
-8. Open `http://127.0.0.1:3000/transactions` to create, edit, delete, and filter manual expenses.
+8. Open `http://127.0.0.1:3000/transactions` to create, edit, delete, and filter expenses.
+9. Open `http://127.0.0.1:3000/imports/csv` to save CSV import profiles, preview CSV expenses, and confirm imports.
 
 ## Local OIDC Development
 
@@ -66,7 +67,7 @@ Build the image with `docker compose build`.
 
 Start the app and PostgreSQL with `docker compose up`.
 
-The app applies SQL migrations from `drizzle/` and seeds initial accounts and categories during startup. Manual transactions are stored in PostgreSQL and are available at `/transactions` after login.
+The app applies SQL migrations from `drizzle/` and seeds initial accounts and categories during startup. Transactions and CSV import profiles are stored in PostgreSQL. Transactions are available at `/transactions`, and CSV imports are available at `/imports/csv` after login.
 
 The app protects all non-health app routes. Production Compose defaults to `AUTH_MODE=oidc` and requires Authentik OIDC settings plus `SESSION_SECRET`.
 

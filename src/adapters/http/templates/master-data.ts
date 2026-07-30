@@ -7,7 +7,7 @@ export function renderMasterDataPage(accounts: Account[], categories: Category[]
     title: "FamilyFlow Master Data",
     heading: "Master Data",
     navigation:
-      '<nav class="app-nav"><a href="/">Dashboard</a><a href="/transactions">Transactions</a></nav>',
+      '<nav class="app-nav"><a href="/">Dashboard</a><a href="/transactions">Transactions</a><a href="/imports/csv">CSV Import</a></nav>',
     body: `<section class="panel" aria-labelledby="accounts-heading">
         <h2 id="accounts-heading">Accounts</h2>
         <ul>${accounts.map((account) => `<li>${escapeHtml(account.name)} (${escapeHtml(account.ownerContext)})</li>`).join("")}</ul>

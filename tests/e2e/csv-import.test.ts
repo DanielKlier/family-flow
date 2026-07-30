@@ -97,3 +97,90 @@ test("CSV import confirmation stores previewed transactions", async ({ page }) =
     await server.close();
   }
 });
+
+test("CSV import marks duplicates and confirms only new transactions", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/imports/csv`);
+    await page.getByLabel("Import account").selectOption("account-shared-checking");
+    await page.getByLabel("Date column").fill("Date");
+    await page.getByLabel("Amount column").fill("Amount");
+    await page.getByLabel("Description column").fill("Description");
+    await page.getByLabel("Payee column").fill("Payee");
+    await page.getByLabel("CSV file").setInputFiles({
+      name: "transactions.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(
+        [
+          "Date;Payee;Description;Amount",
+          "15.07.2026;Shop;Imported duplicate;-42,99",
+          "15.07.2026;Shop;Imported duplicate;-42,99",
+        ].join("\n"),
+      ),
+    });
+    await page.getByRole("button", { name: "Preview import" }).click();
+
+    await expect(page.getByRole("cell", { name: "new", exact: true })).toHaveCount(1);
+    await expect(page.getByRole("cell", { name: "duplicate", exact: true })).toHaveCount(1);
+    await page.getByRole("button", { name: "Confirm import" }).click();
+
+    await expect(page).toHaveURL(`${baseUrl}/transactions`);
+    await expect(page.getByRole("cell", { name: "Imported duplicate", exact: true })).toHaveCount(
+      1,
+    );
+  } finally {
+    await server.close();
+  }
+});
+
+test("CSV import profiles can be saved and reused", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/imports/csv`);
+    await page.getByLabel("Profile name").fill("Generic grocery profile");
+    await page.getByLabel("CSV encoding").selectOption("latin1");
+    await page.getByLabel("Date column").fill("Booking date");
+    await page.getByLabel("Amount column").fill("Value");
+    await page.getByLabel("Description column").fill("Purpose");
+    await page.getByLabel("Payee column").fill("Counterparty");
+    await page.getByLabel("Category column").fill("Group");
+    await page.getByRole("button", { name: "Save import profile" }).click();
+
+    await expect(page.getByText("Import profile saved.")).toBeVisible();
+
+    await page.goto(`${baseUrl}/imports/csv`);
+    await page.getByLabel("Import profile").selectOption({ label: "Generic grocery profile" });
+    await page.getByRole("button", { name: "Load import profile" }).click();
+
+    await expect(page.getByLabel("CSV encoding")).toHaveValue("latin1");
+    await expect(page.getByLabel("Date column")).toHaveValue("Booking date");
+    await expect(page.getByLabel("Amount column")).toHaveValue("Value");
+    await expect(page.getByLabel("Description column")).toHaveValue("Purpose");
+    await expect(page.getByLabel("Payee column")).toHaveValue("Counterparty");
+    await expect(page.getByLabel("Category column")).toHaveValue("Group");
+  } finally {
+    await server.close();
+  }
+});
+
+test("CSV import profile errors are shown on the import page", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/imports/csv`);
+    await page.getByLabel("Profile name").fill("");
+    await page.getByRole("button", { name: "Save import profile" }).click();
+
+    await expect(page.getByText("Profile name is required")).toBeVisible();
+  } finally {
+    await server.close();
+  }
+});

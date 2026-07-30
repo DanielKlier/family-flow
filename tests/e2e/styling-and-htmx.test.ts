@@ -17,6 +17,7 @@ test("transaction page includes the stylesheet and no inline style attributes", 
 
     expect(response.status()).toBe(200);
     expect(body).toContain('<link rel="stylesheet" href="/assets/app.css">');
+    expect(body).toContain('<a href="/imports/csv">CSV Import</a>');
     expect(body).not.toMatch(/\sstyle=/i);
   } finally {
     await server.close();

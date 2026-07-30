@@ -15,7 +15,7 @@ export function renderTransactionsPage(input: {
     title: "FamilyFlow Transactions",
     heading: "Transactions",
     navigation:
-      '<nav class="app-nav"><a href="/">Dashboard</a><a href="/admin/master-data">Master Data</a></nav>',
+      '<nav class="app-nav"><a href="/">Dashboard</a><a href="/admin/master-data">Master Data</a><a href="/imports/csv">CSV Import</a></nav>',
     scripts: '<script src="/assets/htmx.min.js" defer></script>\n    ',
     body: renderTransactionsPanel(input),
   });
