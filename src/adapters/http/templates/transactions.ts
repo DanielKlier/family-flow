@@ -3,7 +3,7 @@ import type { Category } from "../../../core/categories/category.js";
 import type { OwnerContext } from "../../../core/shared/owner-context.js";
 import type { Transaction } from "../../../core/transactions/transaction.js";
 import type { TransactionFilters } from "../../../ports/repositories/transaction-repository.js";
-import { escapeHtml } from "./html.js";
+import { escapeHtml, renderPage } from "./html.js";
 
 export function renderTransactionsPage(input: {
   accounts: Account[];
@@ -11,25 +11,14 @@ export function renderTransactionsPage(input: {
   transactions: Transaction[];
   filters: TransactionFilters;
 }): string {
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/assets/app.css">
-    <script src="/assets/htmx.min.js" defer></script>
-    <title>FamilyFlow Transactions</title>
-  </head>
-  <body>
-    <main class="app-shell">
-      <header class="app-header">
-        <h1 class="app-title">Transactions</h1>
-        <nav class="app-nav"><a href="/">Dashboard</a><a href="/admin/master-data">Master Data</a></nav>
-      </header>
-      ${renderTransactionsPanel(input)}
-    </main>
-  </body>
-</html>`;
+  return renderPage({
+    title: "FamilyFlow Transactions",
+    heading: "Transactions",
+    navigation:
+      '<nav class="app-nav"><a href="/">Dashboard</a><a href="/admin/master-data">Master Data</a></nav>',
+    scripts: '<script src="/assets/htmx.min.js" defer></script>\n    ',
+    body: renderTransactionsPanel(input),
+  });
 }
 
 export function renderTransactionsPanel(input: {
@@ -51,25 +40,13 @@ export function renderTransactionEditPage(input: {
   categories: Category[];
   transaction: Transaction;
 }): string {
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/assets/app.css">
-    <script src="/assets/htmx.min.js" defer></script>
-    <title>Edit Transaction</title>
-  </head>
-  <body>
-    <main class="app-shell">
-      <header class="app-header">
-        <h1 class="app-title">Edit Transaction</h1>
-        <nav class="app-nav"><a href="/transactions">Transactions</a></nav>
-      </header>
-      ${renderTransactionForm(input)}
-    </main>
-  </body>
-</html>`;
+  return renderPage({
+    title: "Edit Transaction",
+    heading: "Edit Transaction",
+    navigation: '<nav class="app-nav"><a href="/transactions">Transactions</a></nav>',
+    scripts: '<script src="/assets/htmx.min.js" defer></script>\n    ',
+    body: renderTransactionForm(input),
+  });
 }
 
 function renderTransactionForm(input: {
