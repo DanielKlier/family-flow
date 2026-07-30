@@ -4,6 +4,22 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.7.0] - 2026-07-30
+
+### Added
+
+- Add CSV import profiles for reusable custom column mappings without bank-specific defaults.
+- Add CSV upload preview, Latin1 decoding, category matching, duplicate marking, and import confirmation for expense rows.
+- Add CSV import navigation links and E2E coverage for profile reuse, duplicate handling, and user-visible import errors.
+
+### Fixed
+
+- Add additive migrations for existing import profile tables and remove obsolete non-custom import profile rows.
+
+### Changed
+
+- Document CSV import operations, troubleshooting, and stored import profile data.
+
 ## [0.6.0] - 2026-07-29
 
 ### Added
