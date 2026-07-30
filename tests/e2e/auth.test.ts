@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { buildServer } from "../../src/app/server.js";
+import { loginAsTestUserRequest } from "../support/auth.js";
 import { listen } from "../support/server.js";
 
 test("unauthenticated app access redirects to login", async ({ request }) => {
@@ -25,7 +26,7 @@ test("authenticated test user sees the dashboard shell", async ({ request }) => 
   try {
     const baseUrl = await listen(server);
 
-    await request.get(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserRequest(request, baseUrl);
     const response = await request.get(`${baseUrl}/`);
     const body = await response.text();
 
@@ -43,7 +44,7 @@ test("logout ends the session", async ({ request }) => {
   try {
     const baseUrl = await listen(server);
 
-    await request.get(`${baseUrl}/auth/test-login?returnTo=/admin/master-data`);
+    await loginAsTestUserRequest(request, baseUrl, "/admin/master-data");
     const authenticatedResponse = await request.get(`${baseUrl}/admin/master-data`);
     expect(authenticatedResponse.status()).toBe(200);
 

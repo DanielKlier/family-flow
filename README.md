@@ -43,11 +43,12 @@ Start the app with `pnpm dev:oidc`, open `http://127.0.0.1:3000/`, and sign in t
 
 - `pnpm format`: format files with Biome.
 - `pnpm format:check`: check formatting.
-- `pnpm lint`: run Biome linting.
+- `pnpm lint`: run Biome linting and the architecture import check.
+- `pnpm arch:check`: verify core import boundaries.
 - `pnpm test`: run unit and integration tests.
 - `TEST_DATABASE_URL=postgres://... pnpm test`: include Drizzle repository integration tests against a test database.
 - `pnpm test:e2e`: run E2E tests.
-- `pnpm build`: compile TypeScript.
+- `pnpm build`: compile TypeScript and copy runtime assets into `dist`.
 - `pnpm db:migrate`: run pending SQL migrations against `DATABASE_URL` during local development.
 - `pnpm dev:oidc`: run the local app with `.env.dev` for the Dex development OIDC flow.
 

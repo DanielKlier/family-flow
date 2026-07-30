@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { buildServer } from "../../src/app/server.js";
+import { loginAsTestUserPage } from "../support/auth.js";
 import { listen } from "../support/server.js";
 
 test("manual booked expense can be created", async ({ page }) => {
@@ -8,7 +9,7 @@ test("manual booked expense can be created", async ({ page }) => {
 
   try {
     const baseUrl = await listen(server);
-    await page.goto(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
     await page.getByLabel("Description").fill("Groceries");
     await page.getByLabel("Amount").fill("42.99");
@@ -29,7 +30,7 @@ test("planned expense can be created", async ({ page }) => {
 
   try {
     const baseUrl = await listen(server);
-    await page.goto(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
     await page.getByLabel("Description").fill("Planned rent");
     await page.getByLabel("Amount").fill("1200.00");
@@ -51,7 +52,7 @@ test("transaction can be edited", async ({ page }) => {
 
   try {
     const baseUrl = await listen(server);
-    await page.goto(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
     await page.getByLabel("Description").fill("Old description");
     await page.getByLabel("Amount").fill("10.00");
@@ -75,7 +76,7 @@ test("transaction can be deleted", async ({ page }) => {
 
   try {
     const baseUrl = await listen(server);
-    await page.goto(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
     await page.getByLabel("Description").fill("Delete me");
     await page.getByLabel("Amount").fill("10.00");
@@ -94,7 +95,7 @@ test("transactions can be filtered by owner context", async ({ page }) => {
 
   try {
     const baseUrl = await listen(server);
-    await page.goto(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
     await page.getByLabel("Description").fill("Personal groceries");
     await page.getByLabel("Amount").fill("42.99");

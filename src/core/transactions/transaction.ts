@@ -20,6 +20,35 @@ export type TransactionInput = Omit<Transaction, "importHash"> & {
   importHash?: string | null;
 };
 
+export type ManualExpenseInput = {
+  id: string;
+  accountId: string;
+  categoryId: string;
+  date: string;
+  amount: string;
+  description: string;
+  payee?: string | null;
+  status?: TransactionStatus;
+  fixedCost?: boolean;
+  note?: string | null;
+};
+
+export function createManualExpense(input: ManualExpenseInput): Transaction {
+  return createTransaction({
+    id: input.id,
+    accountId: input.accountId,
+    categoryId: input.categoryId,
+    date: input.date,
+    amountCents: -parsePositiveDecimalCents(input.amount),
+    description: input.description,
+    payee: input.payee ?? null,
+    source: "manual",
+    status: input.status ?? "booked",
+    fixedCost: input.fixedCost ?? false,
+    note: input.note ?? null,
+  });
+}
+
 export function createTransaction(input: TransactionInput): Transaction {
   const id = input.id.trim();
   const accountId = input.accountId.trim();
@@ -77,4 +106,13 @@ function normalizeOptionalText(value: string | null | undefined): string | null 
 
   const trimmed = value.trim();
   return trimmed === "" ? null : trimmed;
+}
+
+function parsePositiveDecimalCents(value: string): number {
+  const normalized = value.trim().replace(",", ".");
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
+    throw new Error("Amount must be a positive decimal expense");
+  }
+
+  return Math.round(Number(normalized) * 100);
 }

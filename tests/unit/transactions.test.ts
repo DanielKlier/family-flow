@@ -1,24 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { createTransaction } from "../../src/core/transactions/transaction.js";
+import { createManualExpense } from "../../src/core/transactions/transaction.js";
+import { aTransaction } from "../support/transactions.js";
 
 describe("transactions", () => {
   it("creates a valid manual booked expense", () => {
-    expect(
-      createTransaction({
-        id: "transaction-1",
-        accountId: "account-person-a-checking",
-        categoryId: "category-groceries",
-        date: "2026-07-15",
-        amountCents: -4299,
-        description: "Groceries",
-        payee: "Market",
-        source: "manual",
-        status: "booked",
-        fixedCost: false,
-        note: "weekly shop",
-      }),
-    ).toMatchObject({
+    expect(aTransaction({ note: "weekly shop" })).toMatchObject({
       id: "transaction-1",
       amountCents: -4299,
       source: "manual",
@@ -27,38 +14,49 @@ describe("transactions", () => {
   });
 
   it("rejects non-expense amounts", () => {
-    expect(() =>
-      createTransaction({
+    expect(() => aTransaction({ amountCents: 100, description: "Refund" })).toThrow(
+      "Transaction amount must be a negative expense",
+    );
+  });
+
+  it("rejects invalid dates", () => {
+    expect(() => aTransaction({ date: "15.07.2026", amountCents: -100 })).toThrow(
+      "Transaction date must use YYYY-MM-DD",
+    );
+  });
+
+  it("creates manual expenses from positive decimal input", () => {
+    expect(
+      createManualExpense({
         id: "transaction-1",
         accountId: "account-person-a-checking",
         categoryId: "category-groceries",
         date: "2026-07-15",
-        amountCents: 100,
-        description: "Refund",
-        payee: null,
-        source: "manual",
-        status: "booked",
-        fixedCost: false,
-        note: null,
+        amount: "42,99",
+        description: "Groceries",
+        payee: "Market",
+        status: "planned",
+        fixedCost: true,
+        note: "weekly shop",
       }),
-    ).toThrow("Transaction amount must be a negative expense");
+    ).toMatchObject({
+      amountCents: -4299,
+      source: "manual",
+      status: "planned",
+      fixedCost: true,
+    });
   });
 
-  it("rejects invalid dates and statuses", () => {
+  it("rejects invalid manual expense amounts", () => {
     expect(() =>
-      createTransaction({
+      createManualExpense({
         id: "transaction-1",
         accountId: "account-person-a-checking",
         categoryId: "category-groceries",
-        date: "15.07.2026",
-        amountCents: -100,
+        date: "2026-07-15",
+        amount: "-42.99",
         description: "Groceries",
-        payee: null,
-        source: "manual",
-        status: "paid",
-        fixedCost: false,
-        note: null,
       }),
-    ).toThrow("Transaction date must use YYYY-MM-DD");
+    ).toThrow("Amount must be a positive decimal expense");
   });
 });

@@ -1,19 +1,15 @@
 import { expect, test } from "@playwright/test";
 
 import { buildServer } from "../../src/app/server.js";
+import { loginAsTestUserRequest } from "../support/auth.js";
+import { listen } from "../support/server.js";
 
 test("successful responses include X-Request-Id", async ({ request }) => {
   const server = buildServer();
 
-  await server.listen({ host: "127.0.0.1", port: 0 });
-
   try {
-    const address = server.server.address();
-    if (address === null || typeof address === "string") {
-      throw new Error("Expected the test server to listen on a TCP port");
-    }
-
-    const response = await request.get(`http://127.0.0.1:${address.port}/health`);
+    const baseUrl = await listen(server);
+    const response = await request.get(`${baseUrl}/health`);
 
     expect(response.status()).toBe(200);
     expect(response.headers()["x-request-id"]).toMatch(
@@ -27,16 +23,9 @@ test("successful responses include X-Request-Id", async ({ request }) => {
 test("error responses include X-Request-Id", async ({ request }) => {
   const server = buildServer();
 
-  await server.listen({ host: "127.0.0.1", port: 0 });
-
   try {
-    const address = server.server.address();
-    if (address === null || typeof address === "string") {
-      throw new Error("Expected the test server to listen on a TCP port");
-    }
-
-    const baseUrl = `http://127.0.0.1:${address.port}`;
-    await request.get(`${baseUrl}/auth/test-login`);
+    const baseUrl = await listen(server);
+    await loginAsTestUserRequest(request, baseUrl);
     const response = await request.get(`${baseUrl}/missing`);
 
     expect(response.status()).toBe(404);

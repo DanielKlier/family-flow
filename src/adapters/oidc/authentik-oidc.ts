@@ -1,3 +1,5 @@
+import { readJsonObject } from "./json.js";
+
 export type OidcRuntimeConfig = {
   issuerUrl: string;
   clientId: string;
@@ -142,16 +144,4 @@ function readOptionalEndpoint(metadata: Record<string, unknown>, key: string): s
   }
 
   return value;
-}
-
-async function readJsonObject(
-  response: Response,
-  errorMessage: string,
-): Promise<Record<string, unknown>> {
-  const payload = await response.json();
-  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
-    throw new Error(errorMessage);
-  }
-
-  return payload;
 }

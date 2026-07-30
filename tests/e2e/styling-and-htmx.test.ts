@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { buildServer } from "../../src/app/server.js";
+import { loginAsTestUserPage, loginAsTestUserRequest } from "../support/auth.js";
 import { listen } from "../support/server.js";
 
 test("transaction page includes the stylesheet and no inline style attributes", async ({
@@ -10,7 +11,7 @@ test("transaction page includes the stylesheet and no inline style attributes", 
 
   try {
     const baseUrl = await listen(server);
-    await request.get(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserRequest(request, baseUrl);
     const response = await request.get(`${baseUrl}/transactions`);
     const body = await response.text();
 
@@ -29,7 +30,7 @@ test("transaction creation updates the list with HTMX without a full page reload
 
   try {
     const baseUrl = await listen(server);
-    await page.goto(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
     await page.evaluate(() => {
       (window as unknown as { familyFlowPageMarker: string }).familyFlowPageMarker = "kept";
@@ -61,7 +62,7 @@ test("transaction filters update the list with HTMX without a full page reload",
 
   try {
     const baseUrl = await listen(server);
-    await page.goto(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
     await page.getByLabel("Description").fill("HTMX personal groceries");
     await page.getByLabel("Amount").fill("42.99");
@@ -103,7 +104,7 @@ test("transaction form remains usable without JavaScript", async ({ browser }) =
 
   try {
     const baseUrl = await listen(server);
-    await page.goto(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
     await page.getByLabel("Description").fill("No JS groceries");
     await page.getByLabel("Amount").fill("42.99");

@@ -3,13 +3,20 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { parseOwnerContext } from "../../core/shared/owner-context.js";
-import { createTransaction, type Transaction } from "../../core/transactions/transaction.js";
+import { createManualExpense, type Transaction } from "../../core/transactions/transaction.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type {
   TransactionFilters,
   TransactionRepository,
 } from "../../ports/repositories/transaction-repository.js";
+import {
+  type FormBody,
+  isHtmxRequest,
+  readForm,
+  readOptionalQueryValue,
+  readRouteId,
+} from "./request-values.js";
 import {
   renderTransactionEditPage,
   renderTransactionListSection,
@@ -22,8 +29,6 @@ type TransactionRouteRepositories = {
   categories: CategoryRepository;
   transactions: TransactionRepository;
 };
-
-type FormBody = Record<string, string | undefined>;
 
 export function registerTransactionRoutes(
   server: FastifyInstance,
@@ -212,37 +217,15 @@ function readTransactionFilters(query: unknown): TransactionFilters {
   return filters;
 }
 
-function readOptionalQueryValue(query: object, key: string): string | undefined {
-  const value = Object.entries(query).find(([candidate]) => candidate === key)?.[1];
-
-  return typeof value === "string" && value.trim() !== "" ? value : undefined;
-}
-
-function readForm(body: unknown): FormBody {
-  if (typeof body !== "object" || body === null) {
-    return {};
-  }
-
-  const form: FormBody = {};
-  for (const [key, value] of Object.entries(body)) {
-    if (typeof value === "string" || value === undefined) {
-      form[key] = value;
-    }
-  }
-
-  return form;
-}
-
 function createTransactionFromForm(form: FormBody, id: string): Transaction {
-  return createTransaction({
+  return createManualExpense({
     id,
     accountId: requireFormValue(form, "accountId"),
     categoryId: requireFormValue(form, "categoryId"),
     date: requireFormValue(form, "date"),
-    amountCents: -parseAmountCents(requireFormValue(form, "amount")),
+    amount: requireFormValue(form, "amount"),
     description: requireFormValue(form, "description"),
     payee: form.payee ?? null,
-    source: "manual",
     status: form.status === "planned" ? "planned" : "booked",
     fixedCost: form.fixedCost === "on",
     note: form.note ?? null,
@@ -256,30 +239,4 @@ function requireFormValue(form: FormBody, name: string): string {
   }
 
   return value;
-}
-
-function parseAmountCents(value: string): number {
-  const normalized = value.trim().replace(",", ".");
-  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
-    throw new Error("Amount must be a positive decimal expense");
-  }
-
-  return Math.round(Number(normalized) * 100);
-}
-
-function readRouteId(params: unknown): string {
-  if (typeof params !== "object" || params === null || !("id" in params)) {
-    throw new Error("Route id is required");
-  }
-
-  const { id } = params;
-  if (typeof id !== "string") {
-    throw new Error("Route id is required");
-  }
-
-  return id;
-}
-
-function isHtmxRequest(headers: Record<string, string | string[] | undefined>): boolean {
-  return headers["hx-request"] === "true";
 }

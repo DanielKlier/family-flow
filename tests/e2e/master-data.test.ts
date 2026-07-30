@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { buildServer } from "../../src/app/server.js";
+import { loginAsTestUserRequest } from "../support/auth.js";
 import { listen } from "../support/server.js";
 
 test("accounts list is visible after seeding", async ({ request }) => {
@@ -8,7 +9,7 @@ test("accounts list is visible after seeding", async ({ request }) => {
 
   try {
     const baseUrl = await listen(server);
-    await request.get(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserRequest(request, baseUrl);
     const response = await request.get(`${baseUrl}/admin/master-data`);
     const body = await response.text();
 
@@ -27,7 +28,7 @@ test("categories list is visible after seeding", async ({ request }) => {
 
   try {
     const baseUrl = await listen(server);
-    await request.get(`${baseUrl}/auth/test-login`);
+    await loginAsTestUserRequest(request, baseUrl);
     const response = await request.get(`${baseUrl}/admin/master-data`);
     const body = await response.text();
 

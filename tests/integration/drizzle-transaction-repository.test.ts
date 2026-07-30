@@ -4,9 +4,10 @@ import { DrizzleTransactionRepository } from "../../src/adapters/db/drizzle-tran
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
-import { createTransaction } from "../../src/core/transactions/transaction.js";
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
+import { expectTransactionFilterContract } from "../support/transaction-repository-contract.js";
+import { aTransaction } from "../support/transactions.js";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
@@ -29,7 +30,7 @@ describe("Drizzle transaction repository", () => {
           categories: new DrizzleCategoryRepository(connection.db),
         });
 
-        const rent = createTransaction({
+        const rent = aTransaction({
           id: "transaction-drizzle-rent",
           accountId: "account-shared-checking",
           categoryId: "category-housing-rent",
@@ -37,10 +38,8 @@ describe("Drizzle transaction repository", () => {
           amountCents: -120000,
           description: "Drizzle rent",
           payee: "Landlord",
-          source: "manual",
           status: "planned",
           fixedCost: true,
-          note: null,
         });
 
         await transactions.save(rent);
@@ -57,8 +56,12 @@ describe("Drizzle transaction repository", () => {
 
         await transactions.delete(rent.id);
         await expect(transactions.get(rent.id)).resolves.toBeNull();
+
+        await expectTransactionFilterContract(transactions);
       } finally {
         await transactions.delete("transaction-drizzle-rent");
+        await transactions.delete("transaction-filter-groceries");
+        await transactions.delete("transaction-filter-rent");
         await connection.client.end();
       }
     },
