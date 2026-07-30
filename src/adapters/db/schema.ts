@@ -29,3 +29,16 @@ export const transactions = pgTable("transactions", {
   note: text("note"),
   importHash: text("import_hash"),
 });
+
+export const importProfiles = pgTable("import_profiles", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  kind: text("kind").notNull().$type<"custom">(),
+  delimiter: text("delimiter").notNull(),
+  encoding: text("encoding").notNull().$type<"utf8" | "latin1">(),
+  dateColumn: text("date_column").notNull(),
+  amountColumn: text("amount_column").notNull(),
+  descriptionColumn: text("description_column").notNull(),
+  payeeColumn: text("payee_column"),
+  categoryColumn: text("category_column"),
+});
