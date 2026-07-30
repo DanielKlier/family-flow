@@ -3,7 +3,7 @@ import type { Category } from "../../../core/categories/category.js";
 import type { OwnerContext } from "../../../core/shared/owner-context.js";
 import type { Transaction } from "../../../core/transactions/transaction.js";
 import type { TransactionFilters } from "../../../ports/repositories/transaction-repository.js";
-import { escapeHtml, renderPage } from "./html.js";
+import { escapeHtml, renderNavigation, renderPage } from "./html.js";
 
 export function renderTransactionsPage(input: {
   accounts: Account[];
@@ -14,8 +14,11 @@ export function renderTransactionsPage(input: {
   return renderPage({
     title: "FamilyFlow Transactions",
     heading: "Transactions",
-    navigation:
-      '<nav class="app-nav"><a href="/">Dashboard</a><a href="/admin/master-data">Master Data</a><a href="/imports/csv">CSV Import</a></nav>',
+    navigation: renderNavigation([
+      { href: "/", label: "Dashboard" },
+      { href: "/admin/master-data", label: "Master Data" },
+      { href: "/imports/csv", label: "CSV Import" },
+    ]),
     scripts: '<script src="/assets/htmx.min.js" defer></script>\n    ',
     body: renderTransactionsPanel(input),
   });
@@ -43,7 +46,7 @@ export function renderTransactionEditPage(input: {
   return renderPage({
     title: "Edit Transaction",
     heading: "Edit Transaction",
-    navigation: '<nav class="app-nav"><a href="/transactions">Transactions</a></nav>',
+    navigation: renderNavigation([{ href: "/transactions", label: "Transactions" }]),
     scripts: '<script src="/assets/htmx.min.js" defer></script>\n    ',
     body: renderTransactionForm(input),
   });

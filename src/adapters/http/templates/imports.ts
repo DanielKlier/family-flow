@@ -1,7 +1,7 @@
 import type { Account } from "../../../core/accounts/account.js";
 import type { Category } from "../../../core/categories/category.js";
 import type { ImportProfile } from "../../../core/imports/import-profile.js";
-import { escapeHtml, renderPage } from "./html.js";
+import { escapeHtml, renderNavigation, renderPage } from "./html.js";
 
 export type CsvImportPreviewRow = {
   accountId: string;
@@ -27,8 +27,11 @@ export function renderCsvImportPage(input: {
   return renderPage({
     title: "CSV Import",
     heading: "CSV Import",
-    navigation:
-      '<nav class="app-nav"><a href="/">Dashboard</a><a href="/transactions">Transactions</a><a href="/admin/master-data">Master Data</a></nav>',
+    navigation: renderNavigation([
+      { href: "/", label: "Dashboard" },
+      { href: "/transactions", label: "Transactions" },
+      { href: "/admin/master-data", label: "Master Data" },
+    ]),
     body: `${renderCsvImportForm(input)}${renderPreview(input.previewRows)}`,
   });
 }

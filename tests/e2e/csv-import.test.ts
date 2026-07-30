@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { buildServer } from "../../src/app/server.js";
 import { loginAsTestUserPage } from "../support/auth.js";
@@ -9,18 +10,9 @@ test("CSV upload shows a normalized transaction preview", async ({ page }) => {
 
   try {
     const baseUrl = await listen(server);
-    await loginAsTestUserPage(page, baseUrl);
-    await page.goto(`${baseUrl}/imports/csv`);
-    await page.getByLabel("Import account").selectOption("account-shared-checking");
-    await page.getByLabel("Date column").fill("Date");
-    await page.getByLabel("Amount column").fill("Amount");
-    await page.getByLabel("Description column").fill("Description");
-    await page.getByLabel("Payee column").fill("Payee");
-    await page.getByLabel("CSV file").setInputFiles({
-      name: "transactions.csv",
-      mimeType: "text/csv",
-      buffer: Buffer.from("Date;Payee;Description;Amount\n15.07.2026;Shop;Card payment;-42,99"),
-    });
+    await openCsvImportPage(page, baseUrl);
+    await fillDefaultCsvMapping(page);
+    await uploadCsv(page, "Date;Payee;Description;Amount\n15.07.2026;Shop;Card payment;-42,99");
     await page.getByRole("button", { name: "Preview import" }).click();
 
     await expect(page.getByRole("heading", { name: "Import preview" })).toBeVisible();
@@ -38,22 +30,14 @@ test("CSV upload decodes Latin1 umlauts in the preview", async ({ page }) => {
 
   try {
     const baseUrl = await listen(server);
-    await loginAsTestUserPage(page, baseUrl);
-    await page.goto(`${baseUrl}/imports/csv`);
-    await page.getByLabel("Import account").selectOption("account-shared-checking");
+    await openCsvImportPage(page, baseUrl);
     await page.getByLabel("CSV encoding").selectOption("latin1");
-    await page.getByLabel("Date column").fill("Date");
-    await page.getByLabel("Amount column").fill("Amount");
-    await page.getByLabel("Description column").fill("Description");
-    await page.getByLabel("Payee column").fill("Payee");
-    await page.getByLabel("CSV file").setInputFiles({
-      name: "transactions-latin1.csv",
-      mimeType: "text/csv",
-      buffer: Buffer.from(
-        "Date;Payee;Description;Amount\n15.07.26;München;Bäckerei;-4,20",
-        "latin1",
-      ),
-    });
+    await fillDefaultCsvMapping(page);
+    await uploadCsv(
+      page,
+      Buffer.from("Date;Payee;Description;Amount\n15.07.26;München;Bäckerei;-4,20", "latin1"),
+      "transactions-latin1.csv",
+    );
     await page.getByRole("button", { name: "Preview import" }).click();
 
     await expect(page.getByRole("cell", { name: "München", exact: true })).toBeVisible();
@@ -69,21 +53,13 @@ test("CSV import confirmation stores previewed transactions", async ({ page }) =
 
   try {
     const baseUrl = await listen(server);
-    await loginAsTestUserPage(page, baseUrl);
-    await page.goto(`${baseUrl}/imports/csv`);
-    await page.getByLabel("Import account").selectOption("account-shared-checking");
-    await page.getByLabel("Date column").fill("Date");
-    await page.getByLabel("Amount column").fill("Amount");
-    await page.getByLabel("Description column").fill("Description");
-    await page.getByLabel("Payee column").fill("Payee");
+    await openCsvImportPage(page, baseUrl);
+    await fillDefaultCsvMapping(page);
     await page.getByLabel("Category column").fill("Category");
-    await page.getByLabel("CSV file").setInputFiles({
-      name: "transactions.csv",
-      mimeType: "text/csv",
-      buffer: Buffer.from(
-        "Date;Payee;Description;Amount;Category\n15.07.2026;Shop;Imported groceries;-42,99;Lebensmittel",
-      ),
-    });
+    await uploadCsv(
+      page,
+      "Date;Payee;Description;Amount;Category\n15.07.2026;Shop;Imported groceries;-42,99;Lebensmittel",
+    );
     await page.getByRole("button", { name: "Preview import" }).click();
     await expect(page.getByRole("cell", { name: "Lebensmittel", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Confirm import" }).click();
@@ -103,24 +79,16 @@ test("CSV import marks duplicates and confirms only new transactions", async ({ 
 
   try {
     const baseUrl = await listen(server);
-    await loginAsTestUserPage(page, baseUrl);
-    await page.goto(`${baseUrl}/imports/csv`);
-    await page.getByLabel("Import account").selectOption("account-shared-checking");
-    await page.getByLabel("Date column").fill("Date");
-    await page.getByLabel("Amount column").fill("Amount");
-    await page.getByLabel("Description column").fill("Description");
-    await page.getByLabel("Payee column").fill("Payee");
-    await page.getByLabel("CSV file").setInputFiles({
-      name: "transactions.csv",
-      mimeType: "text/csv",
-      buffer: Buffer.from(
-        [
-          "Date;Payee;Description;Amount",
-          "15.07.2026;Shop;Imported duplicate;-42,99",
-          "15.07.2026;Shop;Imported duplicate;-42,99",
-        ].join("\n"),
-      ),
-    });
+    await openCsvImportPage(page, baseUrl);
+    await fillDefaultCsvMapping(page);
+    await uploadCsv(
+      page,
+      [
+        "Date;Payee;Description;Amount",
+        "15.07.2026;Shop;Imported duplicate;-42,99",
+        "15.07.2026;Shop;Imported duplicate;-42,99",
+      ].join("\n"),
+    );
     await page.getByRole("button", { name: "Preview import" }).click();
 
     await expect(page.getByRole("cell", { name: "new", exact: true })).toHaveCount(1);
@@ -141,8 +109,7 @@ test("CSV import profiles can be saved and reused", async ({ page }) => {
 
   try {
     const baseUrl = await listen(server);
-    await loginAsTestUserPage(page, baseUrl);
-    await page.goto(`${baseUrl}/imports/csv`);
+    await openCsvImportPage(page, baseUrl);
     await page.getByLabel("Profile name").fill("Generic grocery profile");
     await page.getByLabel("CSV encoding").selectOption("latin1");
     await page.getByLabel("Date column").fill("Booking date");
@@ -174,8 +141,7 @@ test("CSV import profile errors are shown on the import page", async ({ page }) 
 
   try {
     const baseUrl = await listen(server);
-    await loginAsTestUserPage(page, baseUrl);
-    await page.goto(`${baseUrl}/imports/csv`);
+    await openCsvImportPage(page, baseUrl);
     await page.getByLabel("Profile name").fill("");
     await page.getByRole("button", { name: "Save import profile" }).click();
 
@@ -184,3 +150,28 @@ test("CSV import profile errors are shown on the import page", async ({ page }) 
     await server.close();
   }
 });
+
+async function openCsvImportPage(page: Page, baseUrl: string): Promise<void> {
+  await loginAsTestUserPage(page, baseUrl);
+  await page.goto(`${baseUrl}/imports/csv`);
+}
+
+async function fillDefaultCsvMapping(page: Page): Promise<void> {
+  await page.getByLabel("Import account").selectOption("account-shared-checking");
+  await page.getByLabel("Date column").fill("Date");
+  await page.getByLabel("Amount column").fill("Amount");
+  await page.getByLabel("Description column").fill("Description");
+  await page.getByLabel("Payee column").fill("Payee");
+}
+
+async function uploadCsv(
+  page: Page,
+  content: string | Buffer,
+  name = "transactions.csv",
+): Promise<void> {
+  await page.getByLabel("CSV file").setInputFiles({
+    name,
+    mimeType: "text/csv",
+    buffer: Buffer.isBuffer(content) ? content : Buffer.from(content),
+  });
+}

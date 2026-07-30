@@ -33,3 +33,9 @@ export function renderPage(input: {
   </body>
 </html>`;
 }
+
+export function renderNavigation(links: { href: string; label: string }[]): string {
+  return `<nav class="app-nav">${links
+    .map((link) => `<a href="${escapeHtml(link.href)}">${escapeHtml(link.label)}</a>`)
+    .join("")}</nav>`;
+}

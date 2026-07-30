@@ -4,15 +4,21 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { detectDuplicateImportRows } from "../../core/imports/csv-import.js";
 import type { CsvTransactionImportRow } from "../../core/imports/csv-import.js";
-import { createImportProfile } from "../../core/imports/import-profile.js";
 import { createTransaction } from "../../core/transactions/transaction.js";
-import type { ImportProfileEncoding } from "../../core/imports/import-profile.js";
 import type { CsvParser } from "../../ports/csv/csv-parser.js";
 import type { ParsedCsvTransactionRow } from "../../ports/csv/csv-parser.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type { ImportProfileRepository } from "../../ports/repositories/import-profile-repository.js";
 import type { TransactionRepository } from "../../ports/repositories/transaction-repository.js";
+import {
+  createImportProfileFromForm,
+  createPreviewImportProfile,
+  parsePreviewRows,
+  readImportAccountId,
+  readMultipartForm,
+  readRequiredFile,
+} from "./import-request.js";
 import { readForm, readOptionalQueryValue } from "./request-values.js";
 import { renderCsvImportPage } from "./templates/imports.js";
 import type { CsvImportPreviewRow } from "./templates/imports.js";
@@ -80,22 +86,7 @@ async function handleSaveImportProfile(
 
   try {
     const form = readForm(request.body);
-    const profile = createImportProfile({
-      id: randomUUID(),
-      name: readRequiredFormText(form, "profileName", "Profile name is required"),
-      kind: "custom",
-      delimiter: ";",
-      encoding: readFormEncoding(form),
-      dateColumn: readRequiredFormText(form, "dateColumn", "Date column is required"),
-      amountColumn: readRequiredFormText(form, "amountColumn", "Amount column is required"),
-      descriptionColumn: readRequiredFormText(
-        form,
-        "descriptionColumn",
-        "Description column is required",
-      ),
-      payeeColumn: readOptionalFormText(form, "payeeColumn"),
-      categoryColumn: readOptionalFormText(form, "categoryColumn"),
-    });
+    const profile = createImportProfileFromForm(form, randomUUID());
 
     await repositories.importProfiles.save(profile);
 
@@ -129,24 +120,9 @@ async function handleCsvImportPreview(
 
   try {
     const form = readMultipartForm(request.body);
-    const profile = createImportProfile({
-      id: "preview-profile",
-      name: "Preview profile",
-      kind: "custom",
-      delimiter: ";",
-      encoding: readEncoding(form),
-      dateColumn: readRequiredText(form, "dateColumn", "Date column is required"),
-      amountColumn: readRequiredText(form, "amountColumn", "Amount column is required"),
-      descriptionColumn: readRequiredText(
-        form,
-        "descriptionColumn",
-        "Description column is required",
-      ),
-      payeeColumn: readOptionalText(form, "payeeColumn"),
-      categoryColumn: readOptionalText(form, "categoryColumn"),
-    });
+    const profile = createPreviewImportProfile(form);
     const rows = await csvParser.parse(readRequiredFile(form, "csvFile"), {
-      accountId: readRequiredText(form, "accountId", "Import account is required"),
+      accountId: readImportAccountId(form),
       profile,
     });
     const previewRows = createPreviewRows(
@@ -209,10 +185,6 @@ async function handleCsvImportConfirm(
   return reply.redirect("/transactions");
 }
 
-type PreviewRowPayload = CsvTransactionImportRow & {
-  categoryId: string;
-};
-
 function createPreviewRows(
   parsedRows: ParsedCsvTransactionRow[],
   importRows: CsvTransactionImportRow[],
@@ -258,154 +230,4 @@ async function readExistingImportHashes(
       .map((transaction) => transaction.importHash)
       .filter((importHash): importHash is string => importHash !== null),
   );
-}
-
-function parsePreviewRows(value: string | undefined): PreviewRowPayload[] {
-  if (value === undefined || value.trim() === "") {
-    throw new Error("Import preview rows are required");
-  }
-
-  const parsed = JSON.parse(value) as unknown;
-  if (!Array.isArray(parsed)) {
-    throw new Error("Import preview rows are invalid");
-  }
-
-  return parsed.map(readPreviewRowPayload);
-}
-
-function readPreviewRowPayload(value: unknown): PreviewRowPayload {
-  if (typeof value !== "object" || value === null) {
-    throw new Error("Import preview row is invalid");
-  }
-
-  const row = value as Record<string, unknown>;
-  return {
-    accountId: readString(row, "accountId"),
-    categoryId: readString(row, "categoryId"),
-    date: readString(row, "date"),
-    amountCents: readNumber(row, "amountCents"),
-    description: readString(row, "description"),
-    payee: readNullableString(row, "payee"),
-    importHash: readString(row, "importHash"),
-    duplicate: readBoolean(row, "duplicate"),
-  };
-}
-
-function readString(row: Record<string, unknown>, key: string): string {
-  const value = row[key];
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new Error("Import preview row is invalid");
-  }
-
-  return value;
-}
-
-function readNullableString(row: Record<string, unknown>, key: string): string | null {
-  const value = row[key];
-  if (value === null) {
-    return null;
-  }
-  if (typeof value !== "string") {
-    throw new Error("Import preview row is invalid");
-  }
-
-  return value;
-}
-
-function readNumber(row: Record<string, unknown>, key: string): number {
-  const value = row[key];
-  if (typeof value !== "number" || !Number.isInteger(value)) {
-    throw new Error("Import preview row is invalid");
-  }
-
-  return value;
-}
-
-function readBoolean(row: Record<string, unknown>, key: string): boolean {
-  const value = row[key];
-  if (typeof value !== "boolean") {
-    throw new Error("Import preview row is invalid");
-  }
-
-  return value;
-}
-
-type MultipartForm = Record<string, string | Buffer | undefined>;
-
-function readMultipartForm(body: unknown): MultipartForm {
-  if (typeof body !== "object" || body === null) {
-    return {};
-  }
-
-  return body as MultipartForm;
-}
-
-function readRequiredText(form: MultipartForm, key: string, message: string): string {
-  const value = form[key];
-  if (typeof value !== "string" || value.trim() === "") {
-    throw new Error(message);
-  }
-
-  return value.trim();
-}
-
-function readOptionalText(form: MultipartForm, key: string): string | null {
-  const value = form[key];
-  if (typeof value !== "string" || value.trim() === "") {
-    return null;
-  }
-
-  return value.trim();
-}
-
-function readEncoding(form: MultipartForm): ImportProfileEncoding {
-  const encoding = readRequiredText(form, "encoding", "CSV encoding is required");
-  if (encoding !== "utf8" && encoding !== "latin1") {
-    throw new Error("CSV encoding is invalid");
-  }
-
-  return encoding;
-}
-
-function readFormEncoding(form: Record<string, string | undefined>): ImportProfileEncoding {
-  const encoding = readRequiredFormText(form, "encoding", "CSV encoding is required");
-  if (encoding !== "utf8" && encoding !== "latin1") {
-    throw new Error("CSV encoding is invalid");
-  }
-
-  return encoding;
-}
-
-function readRequiredFormText(
-  form: Record<string, string | undefined>,
-  key: string,
-  message: string,
-): string {
-  const value = form[key];
-  if (value === undefined || value.trim() === "") {
-    throw new Error(message);
-  }
-
-  return value.trim();
-}
-
-function readOptionalFormText(
-  form: Record<string, string | undefined>,
-  key: string,
-): string | null {
-  const value = form[key];
-  if (value === undefined || value.trim() === "") {
-    return null;
-  }
-
-  return value.trim();
-}
-
-function readRequiredFile(form: MultipartForm, key: string): Buffer {
-  const value = form[key];
-  if (!Buffer.isBuffer(value) || value.length === 0) {
-    throw new Error("CSV file is required");
-  }
-
-  return value;
 }
