@@ -39,10 +39,14 @@ export type MasterDataRepositories = {
 
 export async function seedMasterData(repositories: MasterDataRepositories): Promise<void> {
   for (const account of initialAccounts) {
-    await repositories.accounts.save(account);
+    if ((await repositories.accounts.get(account.id)) === null) {
+      await repositories.accounts.save(account);
+    }
   }
 
   for (const category of initialCategories) {
-    await repositories.categories.save(category);
+    if ((await repositories.categories.get(category.id)) === null) {
+      await repositories.categories.save(category);
+    }
   }
 }

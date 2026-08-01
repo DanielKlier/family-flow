@@ -4,12 +4,20 @@ export type Account = {
   id: string;
   name: string;
   ownerContext: OwnerContext;
+  active: boolean;
 };
 
 export type AccountInput = {
   id: string;
   name: string;
   ownerContext: string;
+  active?: boolean;
+};
+
+export type AccountUpdateInput = {
+  name: string;
+  ownerContext: string;
+  active: boolean;
 };
 
 export function createAccount(input: AccountInput): Account {
@@ -28,5 +36,15 @@ export function createAccount(input: AccountInput): Account {
     id,
     name,
     ownerContext: parseOwnerContext(input.ownerContext),
+    active: input.active ?? true,
   };
+}
+
+export function updateAccount(account: Account, input: AccountUpdateInput): Account {
+  return createAccount({
+    id: account.id,
+    name: input.name,
+    ownerContext: input.ownerContext,
+    active: input.active,
+  });
 }

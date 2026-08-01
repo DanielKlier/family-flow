@@ -51,8 +51,8 @@ async function handleListTransactions(
   reply: FastifyReply,
 ) {
   const [accounts, categories] = await Promise.all([
-    repositories.accounts.list(),
-    repositories.categories.list(),
+    repositories.accounts.listActive(),
+    repositories.categories.listActive(),
   ]);
   const filters = readTransactionFilters(request.query);
   const transactions = await repositories.transactions.list(filters);
@@ -115,8 +115,8 @@ async function handleEditTransactionForm(
   }
 
   const [accounts, categories] = await Promise.all([
-    repositories.accounts.list(),
-    repositories.categories.list(),
+    repositories.accounts.listActive(),
+    repositories.categories.listActive(),
   ]);
 
   return reply
@@ -169,8 +169,8 @@ async function renderTransactionsPanelState(
   formError?: string,
 ): Promise<string> {
   const [accounts, categories, transactions] = await Promise.all([
-    repositories.accounts.list(),
-    repositories.categories.list(),
+    repositories.accounts.listActive(),
+    repositories.categories.listActive(),
     repositories.transactions.list({}),
   ]);
 

@@ -21,8 +21,8 @@ import { registerAuth, type AuthRuntimeConfig } from "../adapters/http/auth.js";
 import { registerCategorizationRuleRoutes } from "../adapters/http/categorization-rules.js";
 import { registerFormParser } from "../adapters/http/form-parser.js";
 import { registerCsvImportRoutes } from "../adapters/http/imports.js";
+import { registerMasterDataRoutes } from "../adapters/http/master-data.js";
 import { registerRequestLifecycle } from "../adapters/http/request-lifecycle.js";
-import { renderMasterDataPage } from "../adapters/http/templates/master-data.js";
 import { registerTransactionRoutes } from "../adapters/http/transactions.js";
 import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-logger.js";
 import type { RequestLogger } from "../ports/logging/logger.js";
@@ -66,14 +66,7 @@ export function buildServer(options: ServerOptions = {}) {
 
   registerStaticAssets(server);
   server.get("/health", async () => ({ status: "ok" }));
-  server.get("/admin/master-data", async (_request, reply) => {
-    const [accounts, categories] = await Promise.all([
-      repositories.accounts.list(),
-      repositories.categories.list(),
-    ]);
-
-    return reply.type("text/html; charset=utf-8").send(renderMasterDataPage(accounts, categories));
-  });
+  registerMasterDataRoutes(server, repositories);
   registerTransactionRoutes(server, repositories);
   registerCategorizationRuleRoutes(server, repositories);
   registerCsvImportRoutes(server, repositories, csvParser);

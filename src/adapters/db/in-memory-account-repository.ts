@@ -11,10 +11,22 @@ export class InMemoryAccountRepository implements AccountRepository {
   }
 
   async list(): Promise<Account[]> {
-    return [...this.#accounts.values()].sort((left, right) => left.name.localeCompare(right.name));
+    return sortAccounts([...this.#accounts.values()]);
+  }
+
+  async listActive(): Promise<Account[]> {
+    return sortAccounts([...this.#accounts.values()].filter((account) => account.active));
+  }
+
+  async get(id: string): Promise<Account | null> {
+    return this.#accounts.get(id) ?? null;
   }
 
   async save(account: Account): Promise<void> {
     this.#accounts.set(account.id, account);
   }
+}
+
+function sortAccounts(accounts: Account[]): Account[] {
+  return accounts.sort((left, right) => left.name.localeCompare(right.name));
 }

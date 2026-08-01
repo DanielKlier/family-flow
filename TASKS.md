@@ -330,26 +330,26 @@ Ziel: Konten und Kategorien koennen nach dem initialen Seed ueber die Web-Oberfl
 
 Tasks:
 
-- Account-Core-Regeln fuer Bearbeiten, Aktivieren und Deaktivieren ergaenzen.
-- Category-Core-Regeln fuer Bearbeiten, Aktivieren und Deaktivieren ergaenzen.
-- Repository Ports und Drizzle Adapter um notwendige Schreiboperationen erweitern.
-- Migrationen nur ergaenzen, falls fuer Aktiv-/Sortierstatus oder fachliche Constraints notwendig.
-- UI fuer Kontenverwaltung um Anlegen, Bearbeiten und Deaktivieren erweitern.
-- UI fuer Kategorienverwaltung um Anlegen, Bearbeiten und Deaktivieren erweitern.
-- Validierungsfehler nutzerfreundlich in Stammdatenformularen anzeigen.
-- Sicherstellen, dass deaktivierte Stammdaten bestehende Transaktionen nicht beschaedigen.
-- Operations Manual um Stammdatenpflege erweitern.
+- [x] Account-Core-Regeln fuer Bearbeiten, Aktivieren und Deaktivieren ergaenzen.
+- [x] Category-Core-Regeln fuer Bearbeiten, Aktivieren und Deaktivieren ergaenzen.
+- [x] Repository Ports und Drizzle Adapter um notwendige Schreiboperationen erweitern.
+- [x] Migrationen nur ergaenzen, falls fuer Aktiv-/Sortierstatus oder fachliche Constraints notwendig.
+- [x] UI fuer Kontenverwaltung um Anlegen, Bearbeiten und Deaktivieren erweitern.
+- [x] UI fuer Kategorienverwaltung um Anlegen, Bearbeiten und Deaktivieren erweitern.
+- [x] Validierungsfehler nutzerfreundlich in Stammdatenformularen anzeigen.
+- [x] Sicherstellen, dass deaktivierte Stammdaten bestehende Transaktionen nicht beschaedigen.
+- [x] Operations Manual um Stammdatenpflege erweitern.
 
 Tests:
 
-- Fehlschlagender E2E Test: Konto anlegen und in Transaktionsformular verwenden.
-- Fehlschlagender E2E Test: Konto bearbeiten.
-- Fehlschlagender E2E Test: Konto deaktivieren, ohne bestehende Transaktionen zu verlieren.
-- Fehlschlagender E2E Test: Kategorie anlegen und in Transaktionsformular verwenden.
-- Fehlschlagender E2E Test: Kategorie bearbeiten.
-- Fehlschlagender E2E Test: Kategorie deaktivieren, ohne bestehende Transaktionen zu verlieren.
-- Unit-Tests fuer Account- und Category-Core-Regeln.
-- Integrationstests fuer Account- und Category-Repository-Schreiboperationen.
+- [x] Fehlschlagender E2E Test: Konto anlegen und in Transaktionsformular verwenden.
+- [x] Fehlschlagender E2E Test: Konto bearbeiten.
+- [x] Fehlschlagender E2E Test: Konto deaktivieren, ohne bestehende Transaktionen zu verlieren.
+- [x] Fehlschlagender E2E Test: Kategorie anlegen und in Transaktionsformular verwenden.
+- [x] Fehlschlagender E2E Test: Kategorie bearbeiten.
+- [x] Fehlschlagender E2E Test: Kategorie deaktivieren, ohne bestehende Transaktionen zu verlieren.
+- [x] Unit-Tests fuer Account- und Category-Core-Regeln.
+- [x] Integrationstests fuer Account- und Category-Repository-Schreiboperationen.
 
 Quality Gate:
 

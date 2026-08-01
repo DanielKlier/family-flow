@@ -4,11 +4,13 @@ export const accounts = pgTable("accounts", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   ownerContext: text("owner_context").notNull(),
+  active: boolean("active").notNull().default(true),
 });
 
 export const categories = pgTable("categories", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  active: boolean("active").notNull().default(true),
 });
 
 export const transactions = pgTable("transactions", {

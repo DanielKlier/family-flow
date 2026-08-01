@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createCategory } from "../../src/core/categories/category.js";
+import { createCategory, updateCategory } from "../../src/core/categories/category.js";
 
 describe("Category", () => {
   it("creates a category with a trimmed name", () => {
@@ -12,6 +12,26 @@ describe("Category", () => {
     ).toEqual({
       id: "category-groceries",
       name: "Groceries",
+      active: true,
+    });
+  });
+
+  it("updates category editable fields", () => {
+    expect(
+      updateCategory(
+        createCategory({
+          id: "category-groceries",
+          name: "Groceries",
+        }),
+        {
+          name: "Food",
+          active: false,
+        },
+      ),
+    ).toEqual({
+      id: "category-groceries",
+      name: "Food",
+      active: false,
     });
   });
 

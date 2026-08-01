@@ -124,7 +124,7 @@ The committed `.env.dev` file contains these local-only OIDC values. Keep produc
 
 ## Seeds
 
-The app seeds initial accounts and categories during startup after migrations. Seeds are idempotent: existing rows with the same stable ID are updated, and missing rows are inserted.
+The app seeds initial accounts and categories during startup after migrations. Seeds are idempotent: existing rows with the same stable ID are kept unchanged, and missing rows are inserted. This preserves renamed or deactivated seeded master data across restarts.
 
 Initial accounts:
 
@@ -133,6 +133,27 @@ Initial accounts:
 - `Shared checking` with owner context `shared`.
 
 Initial categories include `Wohnen/Miete`, `Lebensmittel`, `Drogerie`, `Versicherungen`, `Mobilitaet`, `Gesundheit`, `Kind/Baby`, `Abos`, `Freizeit`, `Urlaub`, `Kleidung`, and `Sonstiges`.
+
+## Master Data Maintenance
+
+Authenticated users can maintain accounts and categories at `/admin/master-data`.
+
+Supported maintenance actions:
+
+- Create accounts with a name and owner context.
+- Edit account name, owner context, and active status.
+- Deactivate accounts from the list without deleting them.
+- Create categories with a name.
+- Edit category name and active status.
+- Deactivate categories from the list without deleting them.
+
+Operational notes:
+
+- Deactivated accounts and categories remain in PostgreSQL so existing transactions keep valid foreign keys and continue to render in transaction lists.
+- New transaction forms show only active accounts and categories. Existing transactions still display inactive category names from stored IDs.
+- Use the edit page to reactivate a deactivated account or category.
+- Validation errors are shown in the master data form. Use the visible `X-Request-Id` to inspect the matching request log entry if saving fails unexpectedly.
+- Before broad cleanup of master data, create a database backup because deactivation is reversible through the UI, but direct database edits are not protected by the application.
 
 ## Manual Transaction Maintenance
 
@@ -150,7 +171,7 @@ Operational notes:
 
 - Amounts are entered as positive expense amounts in the UI and stored as negative cents in PostgreSQL.
 - Owner-context filtering is derived from the selected account, not from a separate transaction field.
-- Use `/admin/master-data` to verify account and category seed data if transaction forms have missing options.
+- Use `/admin/master-data` to verify account and category status if transaction forms have missing options.
 - For manual correction issues, capture the visible `X-Request-Id` and inspect the matching request log entry. Do not log or paste broad financial exports when a single minimized transaction example is enough.
 
 ## Categorization Rule Maintenance
