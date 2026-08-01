@@ -4,6 +4,20 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.8.0] - 2026-08-01
+
+### Added
+
+- Add categorization rule management with account restrictions, matching modes, fixed-cost flags, and automatic application to imports and existing transactions.
+- Add master data management for accounts and categories, including active/inactive state handling.
+- Add repository, migration, unit, integration, and E2E coverage for categorization rules and master data changes.
+- Add a release skill for repeatable release preparation.
+
+### Changed
+
+- Improve transaction, import, and categorization rule actions and navigation.
+- Document categorization rule and master data operations, troubleshooting, and phase progress.
+
 ## [0.7.0] - 2026-07-30
 
 ### Added
