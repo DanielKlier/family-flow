@@ -324,7 +324,47 @@ Commit:
 
 - `feat: add categorization rules`
 
-## Phase 8: Einnahmenplanung
+## Phase 8: Stammdaten Bearbeiten
+
+Ziel: Konten und Kategorien koennen nach dem initialen Seed ueber die Web-Oberflaeche gepflegt werden.
+
+Tasks:
+
+- Account-Core-Regeln fuer Bearbeiten, Aktivieren und Deaktivieren ergaenzen.
+- Category-Core-Regeln fuer Bearbeiten, Aktivieren und Deaktivieren ergaenzen.
+- Repository Ports und Drizzle Adapter um notwendige Schreiboperationen erweitern.
+- Migrationen nur ergaenzen, falls fuer Aktiv-/Sortierstatus oder fachliche Constraints notwendig.
+- UI fuer Kontenverwaltung um Anlegen, Bearbeiten und Deaktivieren erweitern.
+- UI fuer Kategorienverwaltung um Anlegen, Bearbeiten und Deaktivieren erweitern.
+- Validierungsfehler nutzerfreundlich in Stammdatenformularen anzeigen.
+- Sicherstellen, dass deaktivierte Stammdaten bestehende Transaktionen nicht beschaedigen.
+- Operations Manual um Stammdatenpflege erweitern.
+
+Tests:
+
+- Fehlschlagender E2E Test: Konto anlegen und in Transaktionsformular verwenden.
+- Fehlschlagender E2E Test: Konto bearbeiten.
+- Fehlschlagender E2E Test: Konto deaktivieren, ohne bestehende Transaktionen zu verlieren.
+- Fehlschlagender E2E Test: Kategorie anlegen und in Transaktionsformular verwenden.
+- Fehlschlagender E2E Test: Kategorie bearbeiten.
+- Fehlschlagender E2E Test: Kategorie deaktivieren, ohne bestehende Transaktionen zu verlieren.
+- Unit-Tests fuer Account- und Category-Core-Regeln.
+- Integrationstests fuer Account- und Category-Repository-Schreiboperationen.
+
+Quality Gate:
+
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
+- `docker compose build`
+
+Commit:
+
+- `feat: add master data management`
+
+## Phase 9: Einnahmenplanung
 
 Ziel: Wiederkehrende Einnahmen und monatliche Abweichungen koennen gepflegt und ausgewertet werden.
 
@@ -361,7 +401,7 @@ Commit:
 
 - `feat: add income planning`
 
-## Phase 9: Dashboard Und Monatsprognose
+## Phase 10: Dashboard Und Monatsprognose
 
 Ziel: Dashboard zeigt Ist-Ausgaben, Einnahmen, Saldo, Kategorien und Monatsprognose.
 
@@ -398,7 +438,7 @@ Commit:
 
 - `feat: add dashboard forecasting`
 
-## Phase 10: Szenarienplanung
+## Phase 11: Szenarienplanung
 
 Ziel: Elternzeit-, Elterngeld- und Teilzeit-Szenarien koennen ueber 18 bis 24 Monate geplant werden.
 
@@ -440,7 +480,7 @@ Commit:
 
 - `feat: add scenario planning`
 
-## Phase 11: Deployment Hardening Und MVP Release
+## Phase 12: Deployment Hardening Und MVP Release
 
 Ziel: Der MVP ist lokal stabil deploybar, dokumentiert und betreibbar.
 
