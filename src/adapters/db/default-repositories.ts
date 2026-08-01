@@ -4,6 +4,7 @@ import {
   type MasterDataRepositories,
 } from "./seeds/master-data.js";
 import { InMemoryAccountRepository } from "./in-memory-account-repository.js";
+import { InMemoryCategorizationRuleRepository } from "./in-memory-categorization-rule-repository.js";
 import { InMemoryCategoryRepository } from "./in-memory-category-repository.js";
 import { InMemoryImportProfileRepository } from "./in-memory-import-profile-repository.js";
 import { InMemoryTransactionRepository } from "./in-memory-transaction-repository.js";
@@ -11,11 +12,13 @@ import { initialImportProfiles, type ImportProfileRepositories } from "./seeds/i
 
 export function createSeededInMemoryRepositories(): MasterDataRepositories &
   ImportProfileRepositories & {
+    categorizationRules: InMemoryCategorizationRuleRepository;
     transactions: InMemoryTransactionRepository;
   } {
   return {
     accounts: new InMemoryAccountRepository(initialAccounts),
     categories: new InMemoryCategoryRepository(initialCategories),
+    categorizationRules: new InMemoryCategorizationRuleRepository(),
     importProfiles: new InMemoryImportProfileRepository(initialImportProfiles),
     transactions: new InMemoryTransactionRepository(initialAccounts),
   };

@@ -42,3 +42,15 @@ export const importProfiles = pgTable("import_profiles", {
   payeeColumn: text("payee_column"),
   categoryColumn: text("category_column"),
 });
+
+export const categorizationRules = pgTable("categorization_rules", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  searchText: text("search_text").notNull(),
+  categoryId: text("category_id")
+    .notNull()
+    .references(() => categories.id),
+  accountId: text("account_id").references(() => accounts.id),
+  priority: integer("priority").notNull(),
+  enabled: boolean("enabled").notNull().default(true),
+});
