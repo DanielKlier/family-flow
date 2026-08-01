@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  applyCategorizationRules,
   createCategorizationRule,
   findCategorizationMatch,
 } from "../../src/core/categorization/categorization-rule.js";
+import { createTransaction } from "../../src/core/transactions/transaction.js";
 
 describe("categorization rules", () => {
   it("creates a valid categorization rule", () => {
@@ -114,5 +116,37 @@ describe("categorization rules", () => {
     );
 
     expect(match?.id).toBe("rule-high");
+  });
+
+  it("applies matching rules to existing transactions", () => {
+    const transaction = createTransaction({
+      id: "transaction-supermarket",
+      accountId: "account-shared-checking",
+      categoryId: "category-other",
+      date: "2026-07-15",
+      amountCents: -4299,
+      description: "Supermarket purchase",
+      payee: "Shop",
+      source: "manual",
+      status: "booked",
+      fixedCost: false,
+      note: null,
+    });
+
+    expect(
+      applyCategorizationRules(
+        [
+          createCategorizationRule({
+            id: "rule-groceries",
+            name: "Groceries",
+            searchText: "supermarket",
+            categoryId: "category-groceries",
+            priority: 1,
+            enabled: true,
+          }),
+        ],
+        [transaction],
+      ),
+    ).toEqual([{ ...transaction, categoryId: "category-groceries" }]);
   });
 });

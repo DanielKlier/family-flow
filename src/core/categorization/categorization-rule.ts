@@ -1,3 +1,5 @@
+import type { Transaction } from "../transactions/transaction.js";
+
 export type CategorizationRule = {
   id: string;
   name: string;
@@ -64,6 +66,21 @@ export function findCategorizationMatch(
   });
 
   return [...matches].sort((left, right) => left.priority - right.priority)[0] ?? null;
+}
+
+export function applyCategorizationRules(
+  rules: CategorizationRule[],
+  transactions: Transaction[],
+): Transaction[] {
+  return transactions.map((transaction) => {
+    const match = findCategorizationMatch(rules, {
+      accountId: transaction.accountId,
+      description: transaction.description,
+      payee: transaction.payee,
+    });
+
+    return match === null ? transaction : { ...transaction, categoryId: match.categoryId };
+  });
 }
 
 function requireTrimmed(value: string, message: string): string {

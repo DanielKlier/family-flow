@@ -48,6 +48,9 @@ function renderRuleList(
 ): string {
   return `<section class="panel" aria-labelledby="categorization-rules-list-heading">
     <h2 id="categorization-rules-list-heading">Rule list</h2>
+    <form class="inline-form" method="post" action="/categorization-rules/apply">
+      <button type="submit">Apply rules to existing transactions</button>
+    </form>
     ${rules.length === 0 ? '<p class="empty-state">No categorization rules found.</p>' : renderRuleTable(rules, accounts, categories)}
   </section>`;
 }
