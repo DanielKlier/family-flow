@@ -25,6 +25,7 @@ describe("categorization rules", () => {
       searchText: "supermarket",
       categoryId: "category-groceries",
       accountId: "checking",
+      fixedCost: null,
       priority: 10,
       enabled: true,
     });
@@ -148,5 +149,38 @@ describe("categorization rules", () => {
         [transaction],
       ),
     ).toEqual([{ ...transaction, categoryId: "category-groceries" }]);
+  });
+
+  it("applies fixed-cost actions from matching rules", () => {
+    const transaction = createTransaction({
+      id: "transaction-rent",
+      accountId: "account-shared-checking",
+      categoryId: "category-other",
+      date: "2026-07-01",
+      amountCents: -120000,
+      description: "Monthly landlord payment",
+      payee: "Landlord",
+      source: "manual",
+      status: "booked",
+      fixedCost: false,
+      note: null,
+    });
+
+    expect(
+      applyCategorizationRules(
+        [
+          createCategorizationRule({
+            id: "rule-rent",
+            name: "Rent",
+            searchText: "landlord",
+            categoryId: "category-housing-rent",
+            fixedCost: true,
+            priority: 1,
+            enabled: true,
+          }),
+        ],
+        [transaction],
+      ),
+    ).toEqual([{ ...transaction, categoryId: "category-housing-rent", fixedCost: true }]);
   });
 });

@@ -79,6 +79,9 @@ function buildConditions(filters: TransactionFilters) {
   if (filters.status !== undefined) {
     conditions.push(eq(transactions.status, filters.status));
   }
+  if (filters.fixedCost !== undefined) {
+    conditions.push(eq(transactions.fixedCost, filters.fixedCost));
+  }
 
   return conditions;
 }

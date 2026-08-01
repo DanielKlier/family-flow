@@ -30,6 +30,13 @@ export function readTransactionFilters(query: unknown): TransactionFilters {
   if (ownerContext !== undefined) {
     filters.ownerContext = parseOwnerContext(ownerContext);
   }
+  const fixedCost = readOptionalQueryValue(query, "fixedCost");
+  if (fixedCost === "fixed") {
+    filters.fixedCost = true;
+  }
+  if (fixedCost === "variable") {
+    filters.fixedCost = false;
+  }
 
   return filters;
 }

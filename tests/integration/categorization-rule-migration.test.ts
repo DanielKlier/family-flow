@@ -10,4 +10,12 @@ describe("categorization rule migration", () => {
     expect(migration).toContain("category_id text NOT NULL REFERENCES categories(id)");
     expect(migration).toContain("account_id text REFERENCES accounts(id)");
   });
+
+  it("adds the fixed-cost action column", async () => {
+    const migration = await readFile("drizzle/0007_categorization_rule_fixed_cost.sql", "utf8");
+
+    expect(migration).toContain(
+      "ALTER TABLE categorization_rules ADD COLUMN IF NOT EXISTS fixed_cost boolean",
+    );
+  });
 });

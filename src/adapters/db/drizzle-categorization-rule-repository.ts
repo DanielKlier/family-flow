@@ -40,6 +40,7 @@ export class DrizzleCategorizationRuleRepository implements CategorizationRuleRe
           searchText: rule.searchText,
           categoryId: rule.categoryId,
           accountId: rule.accountId,
+          fixedCost: rule.fixedCost,
           priority: rule.priority,
           enabled: rule.enabled,
         },
@@ -60,6 +61,7 @@ function mapCategorizationRuleRow(row: CategorizationRuleRow): CategorizationRul
     searchText: row.searchText,
     categoryId: row.categoryId,
     accountId: row.accountId,
+    fixedCost: row.fixedCost,
     priority: row.priority,
     enabled: row.enabled,
   });

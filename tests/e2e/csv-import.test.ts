@@ -175,6 +175,37 @@ test("CSV import applies categorization rules", async ({ page }) => {
   }
 });
 
+test("CSV import applies fixed-cost actions from categorization rules", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/categorization-rules`);
+    await page.getByLabel("Rule name").fill("Rent import rule");
+    await page.getByLabel("Search text").fill("landlord");
+    await page.getByLabel("Rule category").selectOption("category-housing-rent");
+    await page.getByLabel("Fixed cost action").selectOption("fixed");
+    await page.getByLabel("Priority").fill("1");
+    await page.getByRole("button", { name: "Add rule" }).click();
+
+    await page.goto(`${baseUrl}/imports/csv`);
+    await fillDefaultCsvMapping(page);
+    await uploadCsv(
+      page,
+      "Date;Payee;Description;Amount\n01.07.2026;Landlord;Monthly landlord payment;-1200,00",
+    );
+    await page.getByRole("button", { name: "Preview import" }).click();
+    await page.getByRole("button", { name: "Confirm import" }).click();
+
+    const row = page.getByRole("row").filter({ hasText: "Monthly landlord payment" });
+    await expect(row.getByRole("cell", { name: "Wohnen/Miete", exact: true })).toBeVisible();
+    await expect(row.getByRole("cell", { name: "fixed", exact: true })).toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
 test("CSV import profile errors are shown on the import page", async ({ page }) => {
   const server = buildServer();
 

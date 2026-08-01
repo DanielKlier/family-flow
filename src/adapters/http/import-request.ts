@@ -6,6 +6,7 @@ export type MultipartForm = Record<string, string | Buffer | undefined>;
 
 export type PreviewRowPayload = CsvTransactionImportRow & {
   categoryId: string;
+  fixedCost: boolean;
 };
 
 export function createImportProfileFromForm(form: Record<string, string | undefined>, id: string) {
@@ -93,6 +94,7 @@ function readPreviewRowPayload(value: unknown): PreviewRowPayload {
     amountCents: readNumber(row, "amountCents"),
     description: readString(row, "description"),
     payee: readNullableString(row, "payee"),
+    fixedCost: readBoolean(row, "fixedCost"),
     importHash: readString(row, "importHash"),
     duplicate: readBoolean(row, "duplicate"),
   };

@@ -48,7 +48,7 @@ test("planned expense can be created", async ({ page }) => {
     await page.getByLabel("Amount").fill("1200.00");
     await page.getByLabel("Date").fill("2026-07-01");
     await page.getByLabel("Transaction status").selectOption("planned");
-    await page.getByLabel("Fixed cost").check();
+    await page.locator("#transaction-form").getByLabel("Fixed cost").check();
     await page.getByRole("button", { name: "Add transaction" }).click();
 
     await expect(page.getByRole("cell", { name: "Planned rent", exact: true })).toBeVisible();
@@ -134,6 +134,35 @@ test("transactions can be filtered by owner context", async ({ page }) => {
     await expect(page.getByRole("cell", { name: "Shared rent", exact: true })).toBeVisible();
     await expect(
       page.getByRole("cell", { name: "Personal groceries", exact: true }),
+    ).not.toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
+test("transactions can be filtered by fixed-cost flag", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/transactions`);
+    await page.getByLabel("Description").fill("Variable groceries");
+    await page.getByLabel("Amount").fill("42.99");
+    await page.getByLabel("Date").fill("2026-07-15");
+    await page.getByRole("button", { name: "Add transaction" }).click();
+    await page.getByLabel("Description").fill("Fixed rent");
+    await page.getByLabel("Amount").fill("1200.00");
+    await page.getByLabel("Date").fill("2026-07-01");
+    await page.locator("#transaction-form").getByLabel("Fixed cost").check();
+    await page.getByRole("button", { name: "Add transaction" }).click();
+
+    await page.getByLabel("Fixed cost filter").selectOption("fixed");
+    await page.getByRole("button", { name: "Apply filters" }).click();
+
+    await expect(page.getByRole("cell", { name: "Fixed rent", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("cell", { name: "Variable groceries", exact: true }),
     ).not.toBeVisible();
   } finally {
     await server.close();

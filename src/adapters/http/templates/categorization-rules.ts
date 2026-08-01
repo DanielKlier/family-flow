@@ -57,6 +57,13 @@ function renderRuleForm(
       <label class="field">Rule account
         <select name="accountId"><option value="" ${rule?.accountId === null ? "selected" : ""}>All accounts</option>${accounts.map((account) => renderOption(account.id, account.name, rule?.accountId ?? undefined)).join("")}</select>
       </label>
+      <label class="field">Fixed cost action
+        <select name="fixedCost">
+          ${renderOption("unchanged", "leave unchanged", renderFixedCostValue(rule?.fixedCost ?? null))}
+          ${renderOption("fixed", "mark fixed", renderFixedCostValue(rule?.fixedCost ?? null))}
+          ${renderOption("variable", "mark variable", renderFixedCostValue(rule?.fixedCost ?? null))}
+        </select>
+      </label>
       <label class="field">Priority <input name="priority" type="number" min="0" step="1" value="${rule?.priority ?? 100}" required></label>
       <button type="submit">${button}</button>
     </form>
@@ -83,7 +90,7 @@ function renderRuleTable(
   categories: Category[],
 ): string {
   return `<div class="table-wrap"><table>
-    <thead><tr><th>Name</th><th>Search text</th><th>Category</th><th>Account</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Name</th><th>Search text</th><th>Category</th><th>Account</th><th>Fixed cost</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
     <tbody>${rules.map((rule) => renderRuleRow(rule, accounts, categories)).join("")}</tbody>
   </table></div>`;
 }
@@ -98,6 +105,7 @@ function renderRuleRow(
     <td>${escapeHtml(rule.searchText)}</td>
     <td>${escapeHtml(categories.find((category) => category.id === rule.categoryId)?.name ?? rule.categoryId)}</td>
     <td>${escapeHtml(rule.accountId === null ? "All accounts" : (accounts.find((account) => account.id === rule.accountId)?.name ?? rule.accountId))}</td>
+    <td>${escapeHtml(renderFixedCostLabel(rule.fixedCost))}</td>
     <td>${rule.priority}</td>
     <td>${rule.enabled ? "enabled" : "disabled"}</td>
     <td class="actions-cell">
@@ -111,4 +119,26 @@ function renderRuleRow(
 
 function renderOption(value: string, label: string, selectedValue?: string): string {
   return `<option value="${escapeHtml(value)}" ${selectedValue === value ? "selected" : ""}>${escapeHtml(label)}</option>`;
+}
+
+function renderFixedCostValue(fixedCost: boolean | null): string {
+  if (fixedCost === true) {
+    return "fixed";
+  }
+  if (fixedCost === false) {
+    return "variable";
+  }
+
+  return "unchanged";
+}
+
+function renderFixedCostLabel(fixedCost: boolean | null): string {
+  if (fixedCost === true) {
+    return "mark fixed";
+  }
+  if (fixedCost === false) {
+    return "mark variable";
+  }
+
+  return "leave unchanged";
 }

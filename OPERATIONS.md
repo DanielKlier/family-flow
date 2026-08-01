@@ -144,7 +144,7 @@ Supported maintenance actions:
 - Mark planned or booked expenses as fixed costs.
 - Edit account, category, date, description, payee, amount, status, fixed-cost flag, and note.
 - Delete incorrectly entered manual transactions.
-- Filter by month, account, owner context, category, and status.
+- Filter by month, account, owner context, category, status, and fixed-cost flag.
 
 Operational notes:
 
@@ -159,17 +159,17 @@ Authenticated users can maintain automatic transaction categorization rules at `
 
 Supported maintenance actions:
 
-- Create text rules with a name, search text, target category, optional account restriction, and numeric priority.
+- Create text rules with a name, search text, target category, optional account restriction, optional fixed-cost action, and numeric priority.
 - Use a lower priority number for more specific rules when multiple rules match the same transaction.
 - Leave the account restriction as `All accounts` for household-wide rules, or select one account when the same text should only apply to a specific account.
-- Use `Apply rules to existing transactions` after creating or changing rules to re-categorize already stored transactions.
+- Use `Apply rules to existing transactions` after creating or changing rules to re-categorize already stored transactions and apply fixed-cost actions.
 
 Operational notes:
 
 - Rules match case-insensitively against transaction description and payee.
 - Disabled rule support is represented in the data model; the current UI creates enabled rules only.
-- CSV import preview applies exact CSV category-name matching first, then categorization rules, then the `Sonstiges` fallback.
-- Re-applying rules can overwrite a transaction category when a rule matches. Review broad search text and priority before applying rules to existing data.
+- CSV import preview applies exact CSV category-name matching first, then categorization rules, then the `Sonstiges` fallback. Matching rules can still set the fixed-cost flag when the category comes from the CSV file.
+- Re-applying rules can overwrite a transaction category and fixed-cost flag when a rule matches. Review broad search text, fixed-cost action, and priority before applying rules to existing data.
 - If rule application gives unexpected results, capture the visible `X-Request-Id`, inspect the matching request log entry, and verify the affected transaction with a minimized example instead of exporting broad financial data.
 
 ## Static Assets And HTMX

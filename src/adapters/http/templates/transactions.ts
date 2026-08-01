@@ -123,6 +123,9 @@ function renderTransactionFilters(input: {
     <label class="field">Filter status
       <select name="status"><option value="">All statuses</option>${renderOption("booked", "booked", input.filters.status)}${renderOption("planned", "planned", input.filters.status)}</select>
     </label>
+    <label class="field">Fixed cost filter
+      <select name="fixedCost"><option value="">All costs</option>${renderOption("fixed", "fixed", renderFixedCostFilterValue(input.filters.fixedCost))}${renderOption("variable", "variable", renderFixedCostFilterValue(input.filters.fixedCost))}</select>
+    </label>
     <button type="submit">Apply filters</button>
   </form>
   </section>`;
@@ -178,4 +181,15 @@ function renderOption(
 
 function formatAmount(amountCents: number): string {
   return (Math.abs(amountCents) / 100).toFixed(2);
+}
+
+function renderFixedCostFilterValue(fixedCost: boolean | undefined): string | undefined {
+  if (fixedCost === true) {
+    return "fixed";
+  }
+  if (fixedCost === false) {
+    return "variable";
+  }
+
+  return undefined;
 }

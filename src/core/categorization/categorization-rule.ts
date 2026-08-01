@@ -6,12 +6,14 @@ export type CategorizationRule = {
   searchText: string;
   categoryId: string;
   accountId: string | null;
+  fixedCost: boolean | null;
   priority: number;
   enabled: boolean;
 };
 
-export type CategorizationRuleInput = Omit<CategorizationRule, "accountId"> & {
+export type CategorizationRuleInput = Omit<CategorizationRule, "accountId" | "fixedCost"> & {
   accountId?: string | null;
+  fixedCost?: boolean | null;
 };
 
 export type CategorizationCandidate = {
@@ -40,6 +42,7 @@ export function createCategorizationRule(input: CategorizationRuleInput): Catego
     searchText,
     categoryId,
     accountId,
+    fixedCost: input.fixedCost ?? null,
     priority: input.priority,
     enabled: input.enabled,
   };
@@ -79,7 +82,13 @@ export function applyCategorizationRules(
       payee: transaction.payee,
     });
 
-    return match === null ? transaction : { ...transaction, categoryId: match.categoryId };
+    return match === null
+      ? transaction
+      : {
+          ...transaction,
+          categoryId: match.categoryId,
+          fixedCost: match.fixedCost ?? transaction.fixedCost,
+        };
   });
 }
 

@@ -182,7 +182,7 @@ Tasks:
 - Routen und Templates fuer Transaktionsliste anlegen.
 - HTMX-Formular fuer neue manuelle Ausgabe anlegen.
 - Bearbeiten und Loeschen implementieren.
-- Filter fuer Monat, Konto, Besitzer-Kontext, Kategorie und Status implementieren.
+- Filter fuer Monat, Konto, Besitzer-Kontext, Kategorie, Status und Fixkostenstatus implementieren.
 - Fixkosten-Markierung unterstuetzen.
 - Operations Manual um manuelle Korrektur und Datenpflege erweitern.
 
@@ -534,6 +534,7 @@ Commit:
 - Interner Brutto-Netto- oder Teilzeit-Rechner.
 - Interner Elterngeldrechner.
 - Bessere Prognosemodelle fuer variable Ausgaben.
+- Wiederkehrende Ausgaben automatisch erkennen und als Fixkosten vorschlagen.
 - Matching von geplanten und gebuchten Transaktionen.
 - Export nach CSV oder PDF.
 - Diagramme fuer Szenarien und Kategorieentwicklung.

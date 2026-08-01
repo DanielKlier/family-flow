@@ -33,6 +33,7 @@ describe("Drizzle categorization rule repository", () => {
         searchText: "supermarket",
         categoryId: "category-groceries",
         accountId: "account-shared-checking",
+        fixedCost: true,
         priority: 10,
         enabled: true,
       });

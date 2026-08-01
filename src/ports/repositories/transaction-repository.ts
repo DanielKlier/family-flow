@@ -7,6 +7,7 @@ export type TransactionFilters = {
   ownerContext?: OwnerContext;
   categoryId?: string;
   status?: TransactionStatus;
+  fixedCost?: boolean;
 };
 
 export type TransactionRepository = {

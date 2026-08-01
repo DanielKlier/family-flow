@@ -120,7 +120,11 @@ async function handleApplyRules(
 
   await Promise.all(
     updatedTransactions
-      .filter((transaction, index) => transaction.categoryId !== transactions[index]?.categoryId)
+      .filter(
+        (transaction, index) =>
+          transaction.categoryId !== transactions[index]?.categoryId ||
+          transaction.fixedCost !== transactions[index]?.fixedCost,
+      )
       .map((transaction) => repositories.transactions.save(transaction)),
   );
 
@@ -150,7 +154,19 @@ function createRuleFromForm(form: FormBody, id: string = randomUUID()) {
     searchText: form.searchText ?? "",
     categoryId: form.categoryId ?? "",
     accountId: form.accountId ?? null,
+    fixedCost: readFixedCostAction(form.fixedCost),
     priority: Number(form.priority ?? ""),
     enabled: true,
   });
+}
+
+function readFixedCostAction(value: string | undefined): boolean | null {
+  if (value === "fixed") {
+    return true;
+  }
+  if (value === "variable") {
+    return false;
+  }
+
+  return null;
 }

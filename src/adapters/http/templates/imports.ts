@@ -11,6 +11,7 @@ export type CsvImportPreviewRow = {
   amountCents: number;
   description: string;
   payee: string | null;
+  fixedCost: boolean;
   importHash: string;
   duplicate: boolean;
 };
@@ -98,7 +99,7 @@ function renderPreview(rows: CsvImportPreviewRow[] | undefined): string {
       rows.length === 0
         ? '<p class="empty-state">No CSV rows found.</p>'
         : `<div class="table-wrap"><table>
-          <thead><tr><th>Date</th><th>Description</th><th>Payee</th><th>Category</th><th>Amount</th><th>Duplicate</th></tr></thead>
+          <thead><tr><th>Date</th><th>Description</th><th>Payee</th><th>Category</th><th>Amount</th><th>Fixed cost</th><th>Duplicate</th></tr></thead>
           <tbody>${rows.map(renderPreviewRow).join("")}</tbody>
         </table></div>${renderConfirmForm(rows)}`
     }
@@ -119,6 +120,7 @@ function renderPreviewRow(row: CsvImportPreviewRow): string {
     <td>${escapeHtml(row.payee ?? "")}</td>
     <td>${escapeHtml(row.categoryName)}</td>
     <td>${formatAmount(row.amountCents)}</td>
+    <td>${row.fixedCost ? "fixed" : "variable"}</td>
     <td>${row.duplicate ? "duplicate" : "new"}</td>
   </tr>`;
 }

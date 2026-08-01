@@ -19,6 +19,7 @@ describe("categorization rule repositories", () => {
       name: "Rent",
       searchText: "landlord",
       categoryId: "category-housing-rent",
+      fixedCost: true,
       priority: 1,
       enabled: true,
     });

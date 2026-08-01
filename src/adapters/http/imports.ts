@@ -181,7 +181,7 @@ async function handleCsvImportConfirm(
         payee: row.payee,
         source: "csv",
         status: "booked",
-        fixedCost: false,
+        fixedCost: row.fixedCost,
         note: null,
         importHash: row.importHash,
       }),
@@ -211,6 +211,7 @@ function createPreviewRows(input: {
       ...row,
       categoryId: matchedCategory.id,
       categoryName: matchedCategory.name,
+      fixedCost: matchedCategory.fixedCost,
     };
   });
 }
@@ -220,26 +221,29 @@ function matchCategory(
   rules: CategorizationRule[],
   row: CsvTransactionImportRow,
   csvCategoryName: string | null,
-): { id: string; name: string } {
-  const normalizedCsvCategoryName = normalizeMatchText(csvCategoryName ?? "");
-  const matchedCategory = categories.find(
-    (category) => normalizeMatchText(category.name) === normalizedCsvCategoryName,
-  );
-  if (matchedCategory !== undefined) {
-    return matchedCategory;
-  }
-
+): { id: string; name: string; fixedCost: boolean } {
   const matchedRule = findCategorizationMatch(rules, {
     accountId: row.accountId,
     description: row.description,
     payee: row.payee,
   });
-  const ruleCategory = categories.find((category) => category.id === matchedRule?.categoryId);
-  if (ruleCategory !== undefined) {
-    return ruleCategory;
+  const normalizedCsvCategoryName = normalizeMatchText(csvCategoryName ?? "");
+  const matchedCategory = categories.find(
+    (category) => normalizeMatchText(category.name) === normalizedCsvCategoryName,
+  );
+  if (matchedCategory !== undefined) {
+    return { ...matchedCategory, fixedCost: matchedRule?.fixedCost ?? false };
   }
 
-  return categories.find((category) => category.id === "category-other") ?? categories[0];
+  const ruleCategory = categories.find((category) => category.id === matchedRule?.categoryId);
+  if (ruleCategory !== undefined) {
+    return { ...ruleCategory, fixedCost: matchedRule?.fixedCost ?? false };
+  }
+
+  const fallbackCategory = categories.find((category) => category.id === "category-other") ??
+    categories[0] ?? { id: "category-other", name: "Other" };
+
+  return { ...fallbackCategory, fixedCost: false };
 }
 
 function normalizeMatchText(value: string): string {

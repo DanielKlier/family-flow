@@ -57,6 +57,9 @@ function matchesFilters(
   if (filters.status !== undefined && transaction.status !== filters.status) {
     return false;
   }
+  if (filters.fixedCost !== undefined && transaction.fixedCost !== filters.fixedCost) {
+    return false;
+  }
   if (filters.ownerContext !== undefined) {
     return accounts.get(transaction.accountId)?.ownerContext === filters.ownerContext;
   }
