@@ -10,8 +10,11 @@ import type { AccountRepository } from "../../ports/repositories/account-reposit
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
 import type { TransactionRepository } from "../../ports/repositories/transaction-repository.js";
-import { readForm, type FormBody } from "./request-values.js";
-import { renderCategorizationRulesPage } from "./templates/categorization-rules.js";
+import { readForm, readRouteId, type FormBody } from "./request-values.js";
+import {
+  renderCategorizationRuleEditPage,
+  renderCategorizationRulesPage,
+} from "./templates/categorization-rules.js";
 
 type CategorizationRuleRouteRepositories = {
   accounts: AccountRepository;
@@ -30,6 +33,20 @@ export function registerCategorizationRuleRoutes(
 
   server.post("/categorization-rules", async (request, reply) => {
     return handleCreateRule(repositories, request, reply);
+  });
+
+  server.get("/categorization-rules/:id/edit", async (request, reply) => {
+    return handleEditRuleForm(repositories, request, reply);
+  });
+
+  server.post("/categorization-rules/:id", async (request, reply) => {
+    return handleUpdateRule(repositories, request, reply);
+  });
+
+  server.post("/categorization-rules/:id/delete", async (request, reply) => {
+    await repositories.categorizationRules.delete(readRouteId(request.params));
+
+    return reply.redirect("/categorization-rules");
   });
 
   server.post("/categorization-rules/apply", async (_request, reply) => {
@@ -51,6 +68,42 @@ async function handleCreateRule(
       error instanceof Error ? error.message : "Categorization rule could not be saved",
     );
   }
+
+  return reply.redirect("/categorization-rules");
+}
+
+async function handleEditRuleForm(
+  repositories: CategorizationRuleRouteRepositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const rule = await repositories.categorizationRules.get(readRouteId(request.params));
+  if (rule === null) {
+    return reply.status(404).send("Categorization rule not found");
+  }
+
+  const [accounts, categories] = await Promise.all([
+    repositories.accounts.list(),
+    repositories.categories.list(),
+  ]);
+
+  return reply
+    .type("text/html; charset=utf-8")
+    .send(renderCategorizationRuleEditPage({ accounts, categories, rule }));
+}
+
+async function handleUpdateRule(
+  repositories: CategorizationRuleRouteRepositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const id = readRouteId(request.params);
+  const existing = await repositories.categorizationRules.get(id);
+  if (existing === null) {
+    return reply.status(404).send("Categorization rule not found");
+  }
+
+  await repositories.categorizationRules.save(createRuleFromForm(readForm(request.body), id));
 
   return reply.redirect("/categorization-rules");
 }
@@ -90,9 +143,9 @@ async function renderRulePage(
     .send(renderCategorizationRulesPage({ accounts, categories, rules, formError }));
 }
 
-function createRuleFromForm(form: FormBody) {
+function createRuleFromForm(form: FormBody, id: string = randomUUID()) {
   return createCategorizationRule({
-    id: randomUUID(),
+    id,
     name: form.name ?? "",
     searchText: form.searchText ?? "",
     categoryId: form.categoryId ?? "",

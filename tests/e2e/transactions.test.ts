@@ -11,6 +11,10 @@ test("manual booked expense can be created", async ({ page }) => {
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
+    await page
+      .locator("#transaction-form")
+      .getByLabel("Category")
+      .selectOption("category-groceries");
     await page.getByLabel("Description").fill("Groceries");
     await page.getByLabel("Amount").fill("42.99");
     await page.getByLabel("Date").fill("2026-07-15");
@@ -18,8 +22,16 @@ test("manual booked expense can be created", async ({ page }) => {
     await page.getByRole("button", { name: "Add transaction" }).click();
 
     await expect(page.getByRole("cell", { name: "Groceries", exact: true })).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "Category" })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Lebensmittel", exact: true })).toBeVisible();
     await expect(page.getByRole("cell", { name: "booked", exact: true })).toBeVisible();
     await expect(page.getByRole("cell", { name: "42.99", exact: true })).toBeVisible();
+
+    const row = page.getByRole("row").filter({ hasText: "Groceries" });
+    await expect(row.getByRole("link", { name: "Edit", exact: true })).toBeVisible();
+    await expect(row.getByRole("button", { name: "Delete", exact: true })).toBeVisible();
+    await expect(row.getByRole("link", { name: "Edit Groceries" })).not.toBeVisible();
+    await expect(row.getByRole("button", { name: "Delete Groceries" })).not.toBeVisible();
   } finally {
     await server.close();
   }
@@ -58,7 +70,11 @@ test("transaction can be edited", async ({ page }) => {
     await page.getByLabel("Amount").fill("10.00");
     await page.getByLabel("Date").fill("2026-07-10");
     await page.getByRole("button", { name: "Add transaction" }).click();
-    await page.getByRole("link", { name: "Edit Old description" }).click();
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Old description" })
+      .getByRole("link", { name: "Edit", exact: true })
+      .click();
     await page.getByLabel("Description").fill("Updated description");
     await page.getByRole("button", { name: "Save transaction" }).click();
 
@@ -82,7 +98,11 @@ test("transaction can be deleted", async ({ page }) => {
     await page.getByLabel("Amount").fill("10.00");
     await page.getByLabel("Date").fill("2026-07-10");
     await page.getByRole("button", { name: "Add transaction" }).click();
-    await page.getByRole("button", { name: "Delete Delete me" }).click();
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Delete me" })
+      .getByRole("button", { name: "Delete", exact: true })
+      .click();
 
     await expect(page.getByRole("cell", { name: "Delete me", exact: true })).not.toBeVisible();
   } finally {

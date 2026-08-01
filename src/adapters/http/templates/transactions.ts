@@ -35,7 +35,7 @@ export function renderTransactionsPanel(input: {
   return `<section id="transactions-panel">
     ${renderTransactionForm({ accounts: input.accounts, categories: input.categories, formError: input.formError })}
     ${renderTransactionFilters(input)}
-    ${renderTransactionListSection(input.transactions)}
+    ${renderTransactionListSection(input.transactions, input.categories)}
   </section>`;
 }
 
@@ -128,35 +128,41 @@ function renderTransactionFilters(input: {
   </section>`;
 }
 
-export function renderTransactionListSection(transactions: Transaction[]): string {
+export function renderTransactionListSection(
+  transactions: Transaction[],
+  categories: Category[],
+): string {
   return `<section id="transactions-list" class="panel" aria-labelledby="transactions-list-heading">
     <h2 id="transactions-list-heading">Transaction list</h2>
-    ${renderTransactionList(transactions)}
+    ${renderTransactionList(transactions, categories)}
   </section>`;
 }
 
-function renderTransactionList(transactions: Transaction[]): string {
+function renderTransactionList(transactions: Transaction[], categories: Category[]): string {
   if (transactions.length === 0) {
     return '<p class="empty-state">No transactions found.</p>';
   }
 
   return `<div class="table-wrap"><table>
-    <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th><th>Fixed cost</th><th>Actions</th></tr></thead>
-    <tbody>${transactions.map(renderTransactionRow).join("")}</tbody>
+    <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Status</th><th>Fixed cost</th><th>Actions</th></tr></thead>
+    <tbody>${transactions.map((transaction) => renderTransactionRow(transaction, categories)).join("")}</tbody>
   </table></div>`;
 }
 
-function renderTransactionRow(transaction: Transaction): string {
+function renderTransactionRow(transaction: Transaction, categories: Category[]): string {
+  const categoryName = categories.find((category) => category.id === transaction.categoryId)?.name;
+
   return `<tr>
     <td>${escapeHtml(transaction.date)}</td>
     <td>${escapeHtml(transaction.description)}</td>
+    <td>${escapeHtml(categoryName ?? transaction.categoryId)}</td>
     <td>${formatAmount(transaction.amountCents)}</td>
     <td>${escapeHtml(transaction.status)}</td>
     <td>${transaction.fixedCost ? "fixed" : "variable"}</td>
-    <td>
-      <a href="/transactions/${encodeURIComponent(transaction.id)}/edit">Edit ${escapeHtml(transaction.description)}</a>
+    <td class="actions-cell">
+      <a class="action-link" href="/transactions/${encodeURIComponent(transaction.id)}/edit" aria-label="Edit" title="Edit">Edit</a>
       <form class="inline-form" method="post" action="/transactions/${encodeURIComponent(transaction.id)}/delete" hx-post="/transactions/${encodeURIComponent(transaction.id)}/delete" hx-target="#transactions-list" hx-swap="outerHTML">
-        <button type="submit">Delete ${escapeHtml(transaction.description)}</button>
+        <button class="link-button" type="submit" aria-label="Delete" title="Delete">Delete</button>
       </form>
     </td>
   </tr>`;

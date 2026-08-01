@@ -163,6 +163,33 @@ th {
   display: inline;
 }
 
+.actions-cell {
+  white-space: nowrap;
+}
+
+.action-link,
+.link-button {
+  display: inline;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-accent-dark);
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.action-link + .inline-form {
+  margin-left: 10px;
+}
+
+.action-link:hover,
+.link-button:hover {
+  background: transparent;
+  color: var(--color-accent);
+}
+
 .empty-state,
 .form-error {
   color: var(--color-muted);

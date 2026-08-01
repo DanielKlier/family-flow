@@ -67,7 +67,11 @@ test("CSV import confirmation stores previewed transactions", async ({ page }) =
     await expect(page).toHaveURL(`${baseUrl}/transactions`);
     await expect(page.getByRole("cell", { name: "Imported groceries", exact: true })).toBeVisible();
     await expect(page.getByRole("cell", { name: "42.99", exact: true })).toBeVisible();
-    await page.getByRole("link", { name: "Edit Imported groceries" }).click();
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Imported groceries" })
+      .getByRole("link", { name: "Edit", exact: true })
+      .click();
     await expect(page.getByLabel("Category")).toHaveValue("category-groceries");
   } finally {
     await server.close();
@@ -159,7 +163,11 @@ test("CSV import applies categorization rules", async ({ page }) => {
 
     await expect(page.getByRole("cell", { name: "Lebensmittel", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Confirm import" }).click();
-    await page.getByRole("link", { name: "Edit Supermarket purchase" }).click();
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Supermarket purchase" })
+      .getByRole("link", { name: "Edit", exact: true })
+      .click();
 
     await expect(page.getByLabel("Category")).toHaveValue("category-groceries");
   } finally {

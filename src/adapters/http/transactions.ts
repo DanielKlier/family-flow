@@ -58,7 +58,9 @@ async function handleListTransactions(
   const transactions = await repositories.transactions.list(filters);
 
   if (isHtmxRequest(request.headers)) {
-    return reply.type("text/html; charset=utf-8").send(renderTransactionListSection(transactions));
+    return reply
+      .type("text/html; charset=utf-8")
+      .send(renderTransactionListSection(transactions, categories));
   }
 
   return reply
@@ -92,9 +94,11 @@ async function handleCreateTransaction(
   }
 
   if (isHtmxRequest(request.headers)) {
+    const categories = await repositories.categories.list();
+
     return reply
       .type("text/html; charset=utf-8")
-      .send(renderTransactionListSection(await repositories.transactions.list({})));
+      .send(renderTransactionListSection(await repositories.transactions.list({}), categories));
   }
 
   return reply.redirect("/transactions");
@@ -150,9 +154,11 @@ async function handleDeleteTransaction(
   await repositories.transactions.delete(readRouteId(request.params));
 
   if (isHtmxRequest(request.headers)) {
+    const categories = await repositories.categories.list();
+
     return reply
       .type("text/html; charset=utf-8")
-      .send(renderTransactionListSection(await repositories.transactions.list({})));
+      .send(renderTransactionListSection(await repositories.transactions.list({}), categories));
   }
 
   return reply.redirect("/transactions");

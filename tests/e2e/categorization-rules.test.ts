@@ -50,6 +50,68 @@ test("categorization rules can be restricted to an account", async ({ page }) =>
   }
 });
 
+test("categorization rules can be edited", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/categorization-rules`);
+    await page.getByLabel("Rule name").fill("Old groceries rule");
+    await page.getByLabel("Search text").fill("market");
+    await page.getByLabel("Rule category").selectOption("category-groceries");
+    await page.getByLabel("Priority").fill("10");
+    await page.getByRole("button", { name: "Add rule" }).click();
+
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Old groceries rule" })
+      .getByRole("link", { name: "Edit", exact: true })
+      .click();
+
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Edit Categorization Rule" }),
+    ).toBeVisible();
+    await page.getByLabel("Rule name").fill("Updated groceries rule");
+    await page.getByLabel("Search text").fill("supermarket");
+    await page.getByLabel("Priority").fill("1");
+    await page.getByRole("button", { name: "Save rule" }).click();
+
+    await expect(
+      page.getByRole("cell", { name: "Updated groceries rule", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("cell", { name: "supermarket", exact: true })).toBeVisible();
+    await expect(page.getByText("Old groceries rule")).not.toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
+test("categorization rules can be deleted", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/categorization-rules`);
+    await page.getByLabel("Rule name").fill("Delete groceries rule");
+    await page.getByLabel("Search text").fill("market");
+    await page.getByLabel("Rule category").selectOption("category-groceries");
+    await page.getByLabel("Priority").fill("10");
+    await page.getByRole("button", { name: "Add rule" }).click();
+
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Delete groceries rule" })
+      .getByRole("button", { name: "Delete", exact: true })
+      .click();
+
+    await expect(page.getByText("Delete groceries rule")).not.toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
 test("categorization rules can be applied to existing transactions", async ({ page }) => {
   const server = buildServer();
 
@@ -73,7 +135,11 @@ test("categorization rules can be applied to existing transactions", async ({ pa
     await page.getByRole("button", { name: "Apply rules to existing transactions" }).click();
 
     await page.goto(`${baseUrl}/transactions`);
-    await page.getByRole("link", { name: "Edit Supermarket purchase" }).click();
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Supermarket purchase" })
+      .getByRole("link", { name: "Edit", exact: true })
+      .click();
 
     await expect(page.locator("#transaction-form").getByLabel("Category")).toHaveValue(
       "category-groceries",

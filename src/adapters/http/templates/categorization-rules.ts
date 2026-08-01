@@ -22,21 +22,43 @@ export function renderCategorizationRulesPage(input: {
   });
 }
 
-function renderRuleForm(accounts: Account[], categories: Category[], formError?: string): string {
+export function renderCategorizationRuleEditPage(input: {
+  accounts: Account[];
+  categories: Category[];
+  rule: CategorizationRule;
+}): string {
+  return renderPage({
+    title: "Edit Categorization Rule",
+    heading: "Edit Categorization Rule",
+    navigation: renderNavigation([{ href: "/categorization-rules", label: "Rules" }]),
+    body: renderRuleForm(input.accounts, input.categories, undefined, input.rule),
+  });
+}
+
+function renderRuleForm(
+  accounts: Account[],
+  categories: Category[],
+  formError?: string,
+  rule?: CategorizationRule,
+): string {
+  const action = rule === undefined ? "/categorization-rules" : `/categorization-rules/${rule.id}`;
+  const heading = rule === undefined ? "Add categorization rule" : "Edit categorization rule";
+  const button = rule === undefined ? "Add rule" : "Save rule";
+
   return `<section class="panel" aria-labelledby="categorization-rule-form-heading">
-    <h2 id="categorization-rule-form-heading">Add categorization rule</h2>
+    <h2 id="categorization-rule-form-heading">${heading}</h2>
     ${formError === undefined ? "" : `<p class="form-error">${escapeHtml(formError)}</p>`}
-    <form id="categorization-rule-form" class="grid-form" method="post" action="/categorization-rules">
-      <label class="field">Rule name <input name="name" required></label>
-      <label class="field">Search text <input name="searchText" required></label>
+    <form id="categorization-rule-form" class="grid-form" method="post" action="${escapeHtml(action)}">
+      <label class="field">Rule name <input name="name" value="${escapeHtml(rule?.name ?? "")}" required></label>
+      <label class="field">Search text <input name="searchText" value="${escapeHtml(rule?.searchText ?? "")}" required></label>
       <label class="field">Rule category
-        <select name="categoryId">${categories.map((category) => renderOption(category.id, category.name)).join("")}</select>
+        <select name="categoryId">${categories.map((category) => renderOption(category.id, category.name, rule?.categoryId)).join("")}</select>
       </label>
       <label class="field">Rule account
-        <select name="accountId"><option value="">All accounts</option>${accounts.map((account) => renderOption(account.id, account.name)).join("")}</select>
+        <select name="accountId"><option value="" ${rule?.accountId === null ? "selected" : ""}>All accounts</option>${accounts.map((account) => renderOption(account.id, account.name, rule?.accountId ?? undefined)).join("")}</select>
       </label>
-      <label class="field">Priority <input name="priority" type="number" min="0" step="1" value="100" required></label>
-      <button type="submit">Add rule</button>
+      <label class="field">Priority <input name="priority" type="number" min="0" step="1" value="${rule?.priority ?? 100}" required></label>
+      <button type="submit">${button}</button>
     </form>
   </section>`;
 }
@@ -61,7 +83,7 @@ function renderRuleTable(
   categories: Category[],
 ): string {
   return `<div class="table-wrap"><table>
-    <thead><tr><th>Name</th><th>Search text</th><th>Category</th><th>Account</th><th>Priority</th><th>Status</th></tr></thead>
+    <thead><tr><th>Name</th><th>Search text</th><th>Category</th><th>Account</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
     <tbody>${rules.map((rule) => renderRuleRow(rule, accounts, categories)).join("")}</tbody>
   </table></div>`;
 }
@@ -78,9 +100,15 @@ function renderRuleRow(
     <td>${escapeHtml(rule.accountId === null ? "All accounts" : (accounts.find((account) => account.id === rule.accountId)?.name ?? rule.accountId))}</td>
     <td>${rule.priority}</td>
     <td>${rule.enabled ? "enabled" : "disabled"}</td>
+    <td class="actions-cell">
+      <a class="action-link" href="/categorization-rules/${encodeURIComponent(rule.id)}/edit">Edit</a>
+      <form class="inline-form" method="post" action="/categorization-rules/${encodeURIComponent(rule.id)}/delete">
+        <button class="link-button" type="submit">Delete</button>
+      </form>
+    </td>
   </tr>`;
 }
 
-function renderOption(value: string, label: string): string {
-  return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+function renderOption(value: string, label: string, selectedValue?: string): string {
+  return `<option value="${escapeHtml(value)}" ${selectedValue === value ? "selected" : ""}>${escapeHtml(label)}</option>`;
 }
