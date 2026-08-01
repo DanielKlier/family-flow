@@ -3,12 +3,14 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { createCategorizationRule } from "../../core/categorization/categorization-rule.js";
+import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
 import { readForm, type FormBody } from "./request-values.js";
 import { renderCategorizationRulesPage } from "./templates/categorization-rules.js";
 
 type CategorizationRuleRouteRepositories = {
+  accounts: AccountRepository;
   categories: CategoryRepository;
   categorizationRules: CategorizationRuleRepository;
 };
@@ -49,14 +51,15 @@ async function renderRulePage(
   reply: FastifyReply,
   formError?: string,
 ) {
-  const [categories, rules] = await Promise.all([
+  const [accounts, categories, rules] = await Promise.all([
+    repositories.accounts.list(),
     repositories.categories.list(),
     repositories.categorizationRules.list(),
   ]);
 
   return reply
     .type("text/html; charset=utf-8")
-    .send(renderCategorizationRulesPage({ categories, rules, formError }));
+    .send(renderCategorizationRulesPage({ accounts, categories, rules, formError }));
 }
 
 function createRuleFromForm(form: FormBody) {
@@ -65,7 +68,7 @@ function createRuleFromForm(form: FormBody) {
     name: form.name ?? "",
     searchText: form.searchText ?? "",
     categoryId: form.categoryId ?? "",
-    accountId: null,
+    accountId: form.accountId ?? null,
     priority: Number(form.priority ?? ""),
     enabled: true,
   });

@@ -27,3 +27,25 @@ test("categorization rules can be created and listed", async ({ page }) => {
     await server.close();
   }
 });
+
+test("categorization rules can be restricted to an account", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/categorization-rules`);
+
+    await page.getByLabel("Rule name").fill("Shared rent rule");
+    await page.getByLabel("Search text").fill("landlord");
+    await page.getByLabel("Rule category").selectOption("category-housing-rent");
+    await page.getByLabel("Rule account").selectOption("account-shared-checking");
+    await page.getByLabel("Priority").fill("1");
+    await page.getByRole("button", { name: "Add rule" }).click();
+
+    await expect(page.getByRole("cell", { name: "Shared rent rule", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Shared checking", exact: true })).toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
