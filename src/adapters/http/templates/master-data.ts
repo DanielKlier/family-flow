@@ -10,6 +10,7 @@ export function renderMasterDataPage(accounts: Account[], categories: Category[]
       { href: "/", label: "Dashboard" },
       { href: "/transactions", label: "Transactions" },
       { href: "/imports/csv", label: "CSV Import" },
+      { href: "/categorization-rules", label: "Rules" },
     ]),
     body: `<section class="panel" aria-labelledby="accounts-heading">
         <h2 id="accounts-heading">Accounts</h2>

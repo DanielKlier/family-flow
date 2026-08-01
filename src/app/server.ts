@@ -5,6 +5,7 @@ import Fastify from "fastify";
 import { createSeededInMemoryRepositories } from "../adapters/db/default-repositories.js";
 import { SimpleCsvParser } from "../adapters/csv/simple-csv-parser.js";
 import { DrizzleAccountRepository } from "../adapters/db/drizzle-account-repository.js";
+import { DrizzleCategorizationRuleRepository } from "../adapters/db/drizzle-categorization-rule-repository.js";
 import { DrizzleCategoryRepository } from "../adapters/db/drizzle-category-repository.js";
 import { DrizzleImportProfileRepository } from "../adapters/db/drizzle-import-profile-repository.js";
 import { DrizzleTransactionRepository } from "../adapters/db/drizzle-transaction-repository.js";
@@ -17,6 +18,7 @@ import {
 import { seedMasterData, type MasterDataRepositories } from "../adapters/db/seeds/master-data.js";
 import { registerStaticAssets } from "../adapters/http/assets.js";
 import { registerAuth, type AuthRuntimeConfig } from "../adapters/http/auth.js";
+import { registerCategorizationRuleRoutes } from "../adapters/http/categorization-rules.js";
 import { registerFormParser } from "../adapters/http/form-parser.js";
 import { registerCsvImportRoutes } from "../adapters/http/imports.js";
 import { registerRequestLifecycle } from "../adapters/http/request-lifecycle.js";
@@ -25,11 +27,13 @@ import { registerTransactionRoutes } from "../adapters/http/transactions.js";
 import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-logger.js";
 import type { RequestLogger } from "../ports/logging/logger.js";
 import type { CsvParser } from "../ports/csv/csv-parser.js";
+import type { CategorizationRuleRepository } from "../ports/repositories/categorization-rule-repository.js";
 import type { TransactionRepository } from "../ports/repositories/transaction-repository.js";
 import { loadConfig } from "./config.js";
 
 type AppRepositories = MasterDataRepositories &
   ImportProfileRepositories & {
+    categorizationRules: CategorizationRuleRepository;
     transactions: TransactionRepository;
   };
 
@@ -71,6 +75,7 @@ export function buildServer(options: ServerOptions = {}) {
     return reply.type("text/html; charset=utf-8").send(renderMasterDataPage(accounts, categories));
   });
   registerTransactionRoutes(server, repositories);
+  registerCategorizationRuleRoutes(server, repositories);
   registerCsvImportRoutes(server, repositories, csvParser);
 
   return server;
@@ -84,6 +89,7 @@ async function main() {
   const repositories = {
     accounts: new DrizzleAccountRepository(connection.db),
     categories: new DrizzleCategoryRepository(connection.db),
+    categorizationRules: new DrizzleCategorizationRuleRepository(connection.db),
     importProfiles: new DrizzleImportProfileRepository(connection.db),
     transactions: new DrizzleTransactionRepository(connection.db),
   };

@@ -19,6 +19,7 @@ export function renderDashboard(user: UserContext): string {
       { href: "/admin/master-data", label: "Master Data" },
       { href: "/transactions", label: "Transactions" },
       { href: "/imports/csv", label: "CSV Import" },
+      { href: "/categorization-rules", label: "Rules" },
       { href: "/auth/logout", label: "Logout" },
     ]),
     body: `<section class="panel">

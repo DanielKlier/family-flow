@@ -18,6 +18,7 @@ export function renderTransactionsPage(input: {
       { href: "/", label: "Dashboard" },
       { href: "/admin/master-data", label: "Master Data" },
       { href: "/imports/csv", label: "CSV Import" },
+      { href: "/categorization-rules", label: "Rules" },
     ]),
     scripts: '<script src="/assets/htmx.min.js" defer></script>\n    ',
     body: renderTransactionsPanel(input),
