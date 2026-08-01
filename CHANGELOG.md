@@ -4,6 +4,12 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.8.1] - 2026-08-01
+
+### Fixed
+
+- Pin the transitive `esbuild` dependency used by `drizzle-kit` tooling to a patched version.
+
 ## [0.8.0] - 2026-08-01
 
 ### Added
