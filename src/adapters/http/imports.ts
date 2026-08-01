@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
+import {
+  findCategorizationMatch,
+  type CategorizationRule,
+} from "../../core/categorization/categorization-rule.js";
 import { detectDuplicateImportRows } from "../../core/imports/csv-import.js";
 import type { CsvTransactionImportRow } from "../../core/imports/csv-import.js";
 import { createTransaction } from "../../core/transactions/transaction.js";
@@ -9,6 +13,7 @@ import type { CsvParser } from "../../ports/csv/csv-parser.js";
 import type { ParsedCsvTransactionRow } from "../../ports/csv/csv-parser.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
+import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
 import type { ImportProfileRepository } from "../../ports/repositories/import-profile-repository.js";
 import type { TransactionRepository } from "../../ports/repositories/transaction-repository.js";
 import {
@@ -26,6 +31,7 @@ import type { CsvImportPreviewRow } from "./templates/imports.js";
 type CsvImportRouteRepositories = {
   accounts: AccountRepository;
   categories: CategoryRepository;
+  categorizationRules: CategorizationRuleRepository;
   importProfiles: ImportProfileRepository;
   transactions: TransactionRepository;
 };
@@ -125,11 +131,12 @@ async function handleCsvImportPreview(
       accountId: readImportAccountId(form),
       profile,
     });
-    const previewRows = createPreviewRows(
-      rows,
-      detectDuplicateImportRows(rows, await readExistingImportHashes(repositories)),
+    const previewRows = createPreviewRows({
+      parsedRows: rows,
+      importRows: detectDuplicateImportRows(rows, await readExistingImportHashes(repositories)),
       categories,
-    );
+      rules: await repositories.categorizationRules.list(),
+    });
 
     return reply
       .type("text/html; charset=utf-8")
@@ -185,13 +192,20 @@ async function handleCsvImportConfirm(
   return reply.redirect("/transactions");
 }
 
-function createPreviewRows(
-  parsedRows: ParsedCsvTransactionRow[],
-  importRows: CsvTransactionImportRow[],
-  categories: { id: string; name: string }[],
-): CsvImportPreviewRow[] {
-  return importRows.map((row, index) => {
-    const matchedCategory = matchCategory(categories, parsedRows[index]?.categoryName ?? null);
+function createPreviewRows(input: {
+  parsedRows: ParsedCsvTransactionRow[];
+  importRows: CsvTransactionImportRow[];
+  categories: { id: string; name: string }[];
+  rules: CategorizationRule[];
+}): CsvImportPreviewRow[] {
+  return input.importRows.map((row, index) => {
+    const parsedRow = input.parsedRows[index];
+    const matchedCategory = matchCategory(
+      input.categories,
+      input.rules,
+      row,
+      parsedRow?.categoryName ?? null,
+    );
 
     return {
       ...row,
@@ -203,18 +217,29 @@ function createPreviewRows(
 
 function matchCategory(
   categories: { id: string; name: string }[],
+  rules: CategorizationRule[],
+  row: CsvTransactionImportRow,
   csvCategoryName: string | null,
 ): { id: string; name: string } {
   const normalizedCsvCategoryName = normalizeMatchText(csvCategoryName ?? "");
   const matchedCategory = categories.find(
     (category) => normalizeMatchText(category.name) === normalizedCsvCategoryName,
   );
+  if (matchedCategory !== undefined) {
+    return matchedCategory;
+  }
 
-  return (
-    matchedCategory ??
-    categories.find((category) => category.id === "category-other") ??
-    categories[0]
-  );
+  const matchedRule = findCategorizationMatch(rules, {
+    accountId: row.accountId,
+    description: row.description,
+    payee: row.payee,
+  });
+  const ruleCategory = categories.find((category) => category.id === matchedRule?.categoryId);
+  if (ruleCategory !== undefined) {
+    return ruleCategory;
+  }
+
+  return categories.find((category) => category.id === "category-other") ?? categories[0];
 }
 
 function normalizeMatchText(value: string): string {

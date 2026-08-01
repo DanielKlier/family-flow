@@ -136,6 +136,37 @@ test("CSV import profiles can be saved and reused", async ({ page }) => {
   }
 });
 
+test("CSV import applies categorization rules", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/categorization-rules`);
+    await page.getByLabel("Rule name").fill("Groceries import rule");
+    await page.getByLabel("Search text").fill("supermarket");
+    await page.getByLabel("Rule category").selectOption("category-groceries");
+    await page.getByLabel("Priority").fill("1");
+    await page.getByRole("button", { name: "Add rule" }).click();
+
+    await page.goto(`${baseUrl}/imports/csv`);
+    await fillDefaultCsvMapping(page);
+    await uploadCsv(
+      page,
+      "Date;Payee;Description;Amount\n15.07.2026;Shop;Supermarket purchase;-42,99",
+    );
+    await page.getByRole("button", { name: "Preview import" }).click();
+
+    await expect(page.getByRole("cell", { name: "Lebensmittel", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Confirm import" }).click();
+    await page.getByRole("link", { name: "Edit Supermarket purchase" }).click();
+
+    await expect(page.getByLabel("Category")).toHaveValue("category-groceries");
+  } finally {
+    await server.close();
+  }
+});
+
 test("CSV import profile errors are shown on the import page", async ({ page }) => {
   const server = buildServer();
 
