@@ -153,6 +153,25 @@ Operational notes:
 - Use `/admin/master-data` to verify account and category seed data if transaction forms have missing options.
 - For manual correction issues, capture the visible `X-Request-Id` and inspect the matching request log entry. Do not log or paste broad financial exports when a single minimized transaction example is enough.
 
+## Categorization Rule Maintenance
+
+Authenticated users can maintain automatic transaction categorization rules at `/categorization-rules`.
+
+Supported maintenance actions:
+
+- Create text rules with a name, search text, target category, optional account restriction, and numeric priority.
+- Use a lower priority number for more specific rules when multiple rules match the same transaction.
+- Leave the account restriction as `All accounts` for household-wide rules, or select one account when the same text should only apply to a specific account.
+- Use `Apply rules to existing transactions` after creating or changing rules to re-categorize already stored transactions.
+
+Operational notes:
+
+- Rules match case-insensitively against transaction description and payee.
+- Disabled rule support is represented in the data model; the current UI creates enabled rules only.
+- CSV import preview applies exact CSV category-name matching first, then categorization rules, then the `Sonstiges` fallback.
+- Re-applying rules can overwrite a transaction category when a rule matches. Review broad search text and priority before applying rules to existing data.
+- If rule application gives unexpected results, capture the visible `X-Request-Id`, inspect the matching request log entry, and verify the affected transaction with a minimized example instead of exporting broad financial data.
+
 ## Static Assets And HTMX
 
 The app serves its own UI assets from `/assets/`.
@@ -217,7 +236,7 @@ Operational notes:
 - Only expense rows are imported. Zero amounts and positive amounts are ignored by the importer.
 - Supported date formats are `DD.MM.YY`, `DD.MM.YYYY`, and `YYYY-MM-DD`.
 - Duplicate detection uses account, date, amount, normalized description, and normalized payee.
-- Category matching uses exact normalized names when a category column is mapped; unmatched rows fall back to `Sonstiges`.
+- Category matching uses exact normalized names when a category column is mapped; unmatched rows are checked against categorization rules before falling back to `Sonstiges`.
 - If an import fails, reproduce the problem with a minimized CSV containing only representative rows. Do not log or paste complete bank exports.
 - Use the visible `X-Request-Id` response header to find the matching request log entry in `docker compose logs app`.
 
