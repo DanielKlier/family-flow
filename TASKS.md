@@ -407,21 +407,21 @@ Ziel: Die Anzeigenamen der fachlichen Account-Owner koennen bearbeitet werden; d
 
 Tasks:
 
-- OwnerContext Core Entity oder Value Object fuer stabile Owner-Schluessel und editierbare Anzeigenamen implementieren.
-- Repository Port und Drizzle Adapter fuer Owner-Anzeigenamen implementieren.
-- Migration fuer persistierte Owner-Anzeigenamen anlegen und idempotente Defaults fuer `person_a`, `person_b` und `shared` bereitstellen.
-- Account-Core-Regeln so anpassen, dass Konten weiterhin stabile Owner-Schluessel referenzieren.
-- UI fuer Owner-Namen in der Stammdatenverwaltung implementieren.
-- Owner-Anzeigenamen in Kontenlisten, Transaktionsfiltern, Einnahmenfiltern und Auswertungen anzeigen.
-- Sicherstellen, dass Owner-Anzeigenamen nicht aus OIDC Claims oder eingeloggten Nutzern abgeleitet werden.
-- Operations Manual um Pflege der Owner-Anzeigenamen erweitern.
+- [x] OwnerContext Core Entity oder Value Object fuer stabile Owner-Schluessel und editierbare Anzeigenamen implementieren.
+- [x] Repository Port und Drizzle Adapter fuer Owner-Anzeigenamen implementieren.
+- [x] Migration fuer persistierte Owner-Anzeigenamen anlegen und idempotente Defaults fuer `person_a`, `person_b` und `shared` bereitstellen.
+- [x] Account-Core-Regeln so anpassen, dass Konten weiterhin stabile Owner-Schluessel referenzieren.
+- [x] UI fuer Owner-Namen in der Stammdatenverwaltung implementieren.
+- [x] Owner-Anzeigenamen in Kontenlisten, Transaktionsfiltern, Einnahmenfiltern und Auswertungen anzeigen.
+- [x] Sicherstellen, dass Owner-Anzeigenamen nicht aus OIDC Claims oder eingeloggten Nutzern abgeleitet werden.
+- [x] Operations Manual um Pflege der Owner-Anzeigenamen erweitern.
 
 Tests:
 
-- Fehlschlagender E2E Test: Owner-Anzeigenamen bearbeiten und in der Kontenverwaltung sehen.
-- Fehlschlagender E2E Test: geaenderte Owner-Anzeigenamen erscheinen in Transaktions- und Einnahmenfiltern.
-- Unit-Tests fuer OwnerContext-Core-Regeln und stabile Owner-Schluessel.
-- Integrationstests fuer OwnerContext Repository.
+- [x] Fehlschlagender E2E Test: Owner-Anzeigenamen bearbeiten und in der Kontenverwaltung sehen.
+- [x] Fehlschlagender E2E Test: geaenderte Owner-Anzeigenamen erscheinen in Transaktions- und Einnahmenfiltern.
+- [x] Unit-Tests fuer OwnerContext-Core-Regeln und stabile Owner-Schluessel.
+- [x] Integrationstests fuer OwnerContext Repository.
 
 Quality Gate:
 

@@ -9,12 +9,14 @@ import {
   parsePositiveIncomeCents,
 } from "../../core/income/income-plan.js";
 import type { IncomeRepository } from "../../ports/repositories/income-repository.js";
+import type { OwnerContextRepository } from "../../ports/repositories/owner-context-repository.js";
 import { isHtmxRequest, readForm, readRouteId } from "./request-values.js";
 import { readIncomeFilters, requireFormValue } from "./income-request.js";
 import { renderIncomeEditPage, renderIncomePage, renderIncomePanel } from "./templates/income.js";
 
 type IncomeRouteRepositories = {
   income: IncomeRepository;
+  ownerContexts: OwnerContextRepository;
 };
 
 export function registerIncomeRoutes(
@@ -78,12 +80,15 @@ async function handleEditIncomeForm(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const plan = await repositories.income.getPlan(readRouteId(request.params));
+  const [plan, ownerContexts] = await Promise.all([
+    repositories.income.getPlan(readRouteId(request.params)),
+    repositories.ownerContexts.list(),
+  ]);
   if (plan === null) {
     return reply.status(404).send("Income plan not found");
   }
 
-  return reply.type("text/html; charset=utf-8").send(renderIncomeEditPage({ plan }));
+  return reply.type("text/html; charset=utf-8").send(renderIncomeEditPage({ plan, ownerContexts }));
 }
 
 async function handleUpdateIncome(
@@ -170,14 +175,15 @@ async function readIncomePanelState(
   filters: ReturnType<typeof readIncomeFilters>,
   formError?: string,
 ) {
-  const [plans, allPlans, overrides] = await Promise.all([
+  const [plans, allPlans, overrides, ownerContexts] = await Promise.all([
     repositories.income.listPlans(filters),
     repositories.income.listPlans({}),
     repositories.income.listOverrides({ month: filters.month }),
+    repositories.ownerContexts.list(),
   ]);
   const monthlyIncome = calculateMonthlyIncome(plans, overrides, filters);
 
-  return { plans, allPlans, overrides, filters, monthlyIncome, formError };
+  return { plans, allPlans, overrides, ownerContexts, filters, monthlyIncome, formError };
 }
 
 function createIncomePlanFromForm(form: ReturnType<typeof readForm>, id: string) {

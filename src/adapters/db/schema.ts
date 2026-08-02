@@ -7,6 +7,11 @@ export const accounts = pgTable("accounts", {
   active: boolean("active").notNull().default(true),
 });
 
+export const ownerContextLabels = pgTable("owner_context_labels", {
+  ownerContext: text("owner_context").primaryKey(),
+  label: text("label").notNull(),
+});
+
 export const categories = pgTable("categories", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),

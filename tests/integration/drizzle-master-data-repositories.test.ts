@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
+import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
@@ -22,6 +23,7 @@ describe("Drizzle master data repositories", () => {
       const repositories = {
         accounts: new DrizzleAccountRepository(connection.db),
         categories: new DrizzleCategoryRepository(connection.db),
+        ownerContexts: new DrizzleOwnerContextRepository(connection.db),
       };
 
       try {
@@ -34,6 +36,11 @@ describe("Drizzle master data repositories", () => {
             expect.objectContaining({ id: "account-shared-checking", name: "Shared checking" }),
           ]),
         );
+        await expect(repositories.ownerContexts.list()).resolves.toEqual([
+          { ownerContext: "person_a", label: "Person A" },
+          { ownerContext: "person_b", label: "Person B" },
+          { ownerContext: "shared", label: "Shared" },
+        ]);
         await expect(repositories.categories.list()).resolves.toEqual(
           expect.arrayContaining([
             expect.objectContaining({ id: "category-housing-rent", name: "Wohnen/Miete" }),
@@ -60,6 +67,7 @@ describe("Drizzle master data repositories", () => {
       const repositories = {
         accounts: new DrizzleAccountRepository(connection.db),
         categories: new DrizzleCategoryRepository(connection.db),
+        ownerContexts: new DrizzleOwnerContextRepository(connection.db),
       };
 
       try {

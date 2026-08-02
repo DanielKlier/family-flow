@@ -1,6 +1,6 @@
 import type { Account } from "../../../core/accounts/account.js";
 import type { Category } from "../../../core/categories/category.js";
-import type { OwnerContext } from "../../../core/shared/owner-context.js";
+import type { OwnerContext, OwnerContextLabel } from "../../../core/shared/owner-context.js";
 import type { Transaction } from "../../../core/transactions/transaction.js";
 import type { TransactionFilters } from "../../../ports/repositories/transaction-repository.js";
 import { escapeHtml, renderNavigation, renderPage } from "./html.js";
@@ -8,6 +8,7 @@ import { escapeHtml, renderNavigation, renderPage } from "./html.js";
 export function renderTransactionsPage(input: {
   accounts: Account[];
   categories: Category[];
+  ownerContexts: OwnerContextLabel[];
   transactions: Transaction[];
   filters: TransactionFilters;
 }): string {
@@ -29,12 +30,13 @@ export function renderTransactionsPage(input: {
 export function renderTransactionsPanel(input: {
   accounts: Account[];
   categories: Category[];
+  ownerContexts: OwnerContextLabel[];
   transactions: Transaction[];
   filters: TransactionFilters;
   formError?: string;
 }): string {
   return `<section id="transactions-panel">
-    ${renderTransactionForm({ accounts: input.accounts, categories: input.categories, formError: input.formError })}
+    ${renderTransactionForm({ accounts: input.accounts, categories: input.categories, ownerContexts: input.ownerContexts, formError: input.formError })}
     ${renderTransactionFilters(input)}
     ${renderTransactionListSection(input.transactions, input.categories)}
   </section>`;
@@ -43,6 +45,7 @@ export function renderTransactionsPanel(input: {
 export function renderTransactionEditPage(input: {
   accounts: Account[];
   categories: Category[];
+  ownerContexts: OwnerContextLabel[];
   transaction: Transaction;
 }): string {
   return renderPage({
@@ -57,6 +60,7 @@ export function renderTransactionEditPage(input: {
 function renderTransactionForm(input: {
   accounts: Account[];
   categories: Category[];
+  ownerContexts: OwnerContextLabel[];
   transaction?: Transaction;
   formError?: string;
 }): string {
@@ -101,6 +105,7 @@ function renderTransactionForm(input: {
 function renderTransactionFilters(input: {
   accounts: Account[];
   categories: Category[];
+  ownerContexts: OwnerContextLabel[];
   filters: TransactionFilters;
 }): string {
   return `<section class="panel" aria-labelledby="transaction-filters-heading">
@@ -113,9 +118,7 @@ function renderTransactionFilters(input: {
     <label class="field">Owner context
       <select name="ownerContext">
         <option value="">All owners</option>
-        ${renderOption("person_a", "Person A", input.filters.ownerContext)}
-        ${renderOption("person_b", "Person B", input.filters.ownerContext)}
-        ${renderOption("shared", "Shared", input.filters.ownerContext)}
+        ${input.ownerContexts.map((label) => renderOption(label.ownerContext, label.label, input.filters.ownerContext)).join("")}
       </select>
     </label>
     <label class="field">Category

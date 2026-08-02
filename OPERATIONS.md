@@ -124,7 +124,13 @@ The committed `.env.dev` file contains these local-only OIDC values. Keep produc
 
 ## Seeds
 
-The app seeds initial accounts and categories during startup after migrations. Seeds are idempotent: existing rows with the same stable ID are kept unchanged, and missing rows are inserted. This preserves renamed or deactivated seeded master data across restarts.
+The app seeds initial account owner labels, accounts, and categories during startup after migrations. Seeds are idempotent: existing rows with the same stable ID are kept unchanged, and missing rows are inserted. This preserves renamed owner labels, renamed accounts, or deactivated seeded master data across restarts.
+
+Initial account owner labels:
+
+- `person_a`: `Person A`.
+- `person_b`: `Person B`.
+- `shared`: `Shared`.
 
 Initial accounts:
 
@@ -136,13 +142,14 @@ Initial categories include `Wohnen/Miete`, `Lebensmittel`, `Drogerie`, `Versiche
 
 ## Master Data Maintenance
 
-Authenticated users can maintain accounts and categories at `/admin/master-data`.
+Authenticated users can maintain account owner display names, accounts, and categories at `/admin/master-data`.
 
 Supported maintenance actions:
 
 - Create accounts with a name and owner context.
 - Edit account name, owner context, and active status.
 - Deactivate accounts from the list without deleting them.
+- Edit account owner display names for `person_a`, `person_b`, and `shared`.
 - Create categories with a name.
 - Edit category name and active status.
 - Deactivate categories from the list without deleting them.
@@ -150,6 +157,8 @@ Supported maintenance actions:
 Operational notes:
 
 - Deactivated accounts and categories remain in PostgreSQL so existing transactions keep valid foreign keys and continue to render in transaction lists.
+- Account owner display names are labels for reporting and filters only. They are not linked to OIDC users or access control.
+- Accounts, transactions, and income plans keep storing the stable owner keys `person_a`, `person_b`, and `shared`; changing a display name only changes rendered labels.
 - New transaction forms show only active accounts and categories. Existing transactions still display inactive category names from stored IDs.
 - Use the edit page to reactivate a deactivated account or category.
 - Validation errors are shown in the master data form. Use the visible `X-Request-Id` to inspect the matching request log entry if saving fails unexpectedly.

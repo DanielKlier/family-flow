@@ -9,6 +9,7 @@ import { DrizzleCategorizationRuleRepository } from "../adapters/db/drizzle-cate
 import { DrizzleCategoryRepository } from "../adapters/db/drizzle-category-repository.js";
 import { DrizzleImportProfileRepository } from "../adapters/db/drizzle-import-profile-repository.js";
 import { DrizzleIncomeRepository } from "../adapters/db/drizzle-income-repository.js";
+import { DrizzleOwnerContextRepository } from "../adapters/db/drizzle-owner-context-repository.js";
 import { DrizzleTransactionRepository } from "../adapters/db/drizzle-transaction-repository.js";
 import { migrate } from "../adapters/db/migrate.js";
 import { createPostgresConnection } from "../adapters/db/postgres.js";
@@ -90,6 +91,7 @@ async function main() {
     categorizationRules: new DrizzleCategorizationRuleRepository(connection.db),
     income: new DrizzleIncomeRepository(connection.db),
     importProfiles: new DrizzleImportProfileRepository(connection.db),
+    ownerContexts: new DrizzleOwnerContextRepository(connection.db),
     transactions: new DrizzleTransactionRepository(connection.db),
   };
 

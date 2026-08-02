@@ -19,7 +19,7 @@ test("recurring income can be created", async ({ page }) => {
     await incomeForm.getByRole("button", { name: "Add income" }).click();
 
     await expect(page.getByRole("cell", { name: "Salary Person A", exact: true })).toBeVisible();
-    await expect(page.getByRole("cell", { name: "person_a", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Person A", exact: true })).toBeVisible();
     await expect(page.getByRole("cell", { name: "3500.00", exact: true })).toBeVisible();
     await expect(page.getByText("Monthly planned income: 3500.00")).toBeVisible();
   } finally {

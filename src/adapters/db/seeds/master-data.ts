@@ -1,7 +1,9 @@
 import { createAccount, type Account } from "../../../core/accounts/account.js";
 import { createCategory, type Category } from "../../../core/categories/category.js";
+import { defaultOwnerContextLabels } from "../../../core/shared/owner-context.js";
 import type { AccountRepository } from "../../../ports/repositories/account-repository.js";
 import type { CategoryRepository } from "../../../ports/repositories/category-repository.js";
+import type { OwnerContextRepository } from "../../../ports/repositories/owner-context-repository.js";
 
 export const initialAccounts: Account[] = [
   createAccount({
@@ -35,9 +37,16 @@ export const initialCategories: Category[] = [
 export type MasterDataRepositories = {
   accounts: AccountRepository;
   categories: CategoryRepository;
+  ownerContexts: OwnerContextRepository;
 };
 
 export async function seedMasterData(repositories: MasterDataRepositories): Promise<void> {
+  for (const label of defaultOwnerContextLabels) {
+    if ((await repositories.ownerContexts.get(label.ownerContext)) === null) {
+      await repositories.ownerContexts.save(label);
+    }
+  }
+
   for (const account of initialAccounts) {
     if ((await repositories.accounts.get(account.id)) === null) {
       await repositories.accounts.save(account);

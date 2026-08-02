@@ -1,21 +1,34 @@
 import type { Account } from "../../../core/accounts/account.js";
 import type { Category } from "../../../core/categories/category.js";
+import {
+  type OwnerContextLabel,
+  ownerContextLabelMap,
+} from "../../../core/shared/owner-context.js";
 import { escapeHtml, renderNavigation, renderPage } from "./html.js";
 
 export function renderMasterDataPage(input: {
   accounts: Account[];
   categories: Category[];
+  ownerContexts: OwnerContextLabel[];
   accountError?: string;
   categoryError?: string;
+  ownerContextError?: string;
 }): string {
+  const ownerLabels = ownerContextLabelMap(input.ownerContexts);
+
   return renderPage({
     title: "FamilyFlow Master Data",
     heading: "Master Data",
     navigation: renderMasterDataNavigation(),
     body: `<section class="panel" aria-labelledby="accounts-heading">
         <h2 id="accounts-heading">Accounts</h2>
-        ${renderAccountCreateForm(input.accountError)}
-        ${renderAccountTable(input.accounts)}
+        ${renderAccountCreateForm(input.accountError, input.ownerContexts)}
+        ${renderAccountTable(input.accounts, ownerLabels)}
+      </section>
+      <section class="panel" aria-labelledby="owner-contexts-heading">
+        <h2 id="owner-contexts-heading">Account owners</h2>
+        ${input.ownerContextError === undefined ? "" : `<p class="form-error">${escapeHtml(input.ownerContextError)}</p>`}
+        ${renderOwnerContextForms(input.ownerContexts)}
       </section>
       <section class="panel" aria-labelledby="categories-heading">
         <h2 id="categories-heading">Categories</h2>
@@ -25,7 +38,11 @@ export function renderMasterDataPage(input: {
   });
 }
 
-export function renderAccountEditPage(account: Account, formError?: string): string {
+export function renderAccountEditPage(
+  account: Account,
+  ownerContexts: OwnerContextLabel[],
+  formError?: string,
+): string {
   return renderPage({
     title: "Edit Account",
     heading: "Edit Account",
@@ -37,9 +54,7 @@ export function renderAccountEditPage(account: Account, formError?: string): str
         <label class="field">Account name <input name="name" value="${escapeHtml(account.name)}" required></label>
         <label class="field">Account owner
           <select name="ownerContext">
-            ${renderOption("person_a", "Person A", account.ownerContext)}
-            ${renderOption("person_b", "Person B", account.ownerContext)}
-            ${renderOption("shared", "Shared", account.ownerContext)}
+            ${ownerContexts.map((label) => renderOption(label.ownerContext, label.label, account.ownerContext)).join("")}
           </select>
         </label>
         <label class="checkbox-field">Active <input name="active" type="checkbox" ${account.active ? "checked" : ""}></label>
@@ -76,37 +91,53 @@ function renderMasterDataNavigation(): string {
   ]);
 }
 
-function renderAccountCreateForm(formError: string | undefined): string {
+function renderAccountCreateForm(
+  formError: string | undefined,
+  ownerContexts: OwnerContextLabel[],
+): string {
   return `<form class="grid-form" method="post" action="/admin/master-data/accounts">
     ${formError === undefined ? "" : `<p class="form-error">${escapeHtml(formError)}</p>`}
     <label class="field">New account name <input name="name" required></label>
     <label class="field">New account owner
       <select name="ownerContext">
-        <option value="person_a">Person A</option>
-        <option value="person_b">Person B</option>
-        <option value="shared">Shared</option>
+        ${ownerContexts.map((label) => renderOption(label.ownerContext, label.label)).join("")}
       </select>
     </label>
     <button type="submit">Add account</button>
   </form>`;
 }
 
-function renderAccountTable(accounts: Account[]): string {
+function renderAccountTable(accounts: Account[], ownerLabels: Record<string, string>): string {
   return `<div class="table-wrap"><table>
     <thead><tr><th>Name</th><th>Owner</th><th>Status</th><th>Actions</th></tr></thead>
-    <tbody>${accounts.map(renderAccountRow).join("")}</tbody>
+    <tbody>${accounts.map((account) => renderAccountRow(account, ownerLabels)).join("")}</tbody>
   </table></div>`;
 }
 
-function renderAccountRow(account: Account): string {
+function renderAccountRow(account: Account, ownerLabels: Record<string, string>): string {
   return `<tr>
     <td>${escapeHtml(account.name)}</td>
-    <td>${escapeHtml(account.ownerContext)}</td>
+    <td>${escapeHtml(ownerLabels[account.ownerContext] ?? account.ownerContext)}</td>
     <td>${account.active ? "active" : "inactive"}</td>
     <td class="actions-cell">
       <a class="action-link" href="/admin/master-data/accounts/${encodeURIComponent(account.id)}/edit">Edit account</a>
       ${account.active ? renderDeactivateForm("account", account.id) : ""}
     </td>
+  </tr>`;
+}
+
+function renderOwnerContextForms(ownerContexts: OwnerContextLabel[]): string {
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Owner key</th><th>Display name</th><th>Actions</th></tr></thead>
+    <tbody>${ownerContexts.map(renderOwnerContextRow).join("")}</tbody>
+  </table></div>`;
+}
+
+function renderOwnerContextRow(label: OwnerContextLabel): string {
+  return `<tr>
+    <td>${escapeHtml(label.ownerContext)}</td>
+    <td><form id="owner-context-${escapeHtml(label.ownerContext)}-form" class="inline-grid-form" method="post" action="/admin/master-data/owner-contexts/${encodeURIComponent(label.ownerContext)}"><label class="field">Owner name for ${escapeHtml(label.ownerContext)} <input name="label" value="${escapeHtml(label.label)}" required></label></form></td>
+    <td><button form="owner-context-${escapeHtml(label.ownerContext)}-form" type="submit">Save owner name for ${escapeHtml(label.ownerContext)}</button></td>
   </tr>`;
 }
 
@@ -145,6 +176,6 @@ function renderDeactivateForm(kind: "account" | "category", id: string): string 
   </form>`;
 }
 
-function renderOption(value: string, label: string, selectedValue: string): string {
+function renderOption(value: string, label: string, selectedValue?: string): string {
   return `<option value="${escapeHtml(value)}" ${selectedValue === value ? "selected" : ""}>${escapeHtml(label)}</option>`;
 }

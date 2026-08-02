@@ -4,6 +4,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
+import type { OwnerContextRepository } from "../../ports/repositories/owner-context-repository.js";
 import type { TransactionRepository } from "../../ports/repositories/transaction-repository.js";
 import { isHtmxRequest, readForm, readRouteId } from "./request-values.js";
 import { createTransactionFromForm, readTransactionFilters } from "./transaction-request.js";
@@ -17,6 +18,7 @@ import {
 type TransactionRouteRepositories = {
   accounts: AccountRepository;
   categories: CategoryRepository;
+  ownerContexts: OwnerContextRepository;
   transactions: TransactionRepository;
 };
 
@@ -50,9 +52,10 @@ async function handleListTransactions(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const [accounts, categories] = await Promise.all([
+  const [accounts, categories, ownerContexts] = await Promise.all([
     repositories.accounts.listActive(),
     repositories.categories.listActive(),
+    repositories.ownerContexts.list(),
   ]);
   const filters = readTransactionFilters(request.query);
   const transactions = await repositories.transactions.list(filters);
@@ -65,7 +68,7 @@ async function handleListTransactions(
 
   return reply
     .type("text/html; charset=utf-8")
-    .send(renderTransactionsPage({ accounts, categories, transactions, filters }));
+    .send(renderTransactionsPage({ accounts, categories, ownerContexts, transactions, filters }));
 }
 
 async function handleCreateTransaction(
@@ -114,14 +117,15 @@ async function handleEditTransactionForm(
     return reply.status(404).send("Transaction not found");
   }
 
-  const [accounts, categories] = await Promise.all([
+  const [accounts, categories, ownerContexts] = await Promise.all([
     repositories.accounts.listActive(),
     repositories.categories.listActive(),
+    repositories.ownerContexts.list(),
   ]);
 
   return reply
     .type("text/html; charset=utf-8")
-    .send(renderTransactionEditPage({ accounts, categories, transaction }));
+    .send(renderTransactionEditPage({ accounts, categories, ownerContexts, transaction }));
 }
 
 async function handleUpdateTransaction(
@@ -168,15 +172,17 @@ async function renderTransactionsPanelState(
   repositories: TransactionRouteRepositories,
   formError?: string,
 ): Promise<string> {
-  const [accounts, categories, transactions] = await Promise.all([
+  const [accounts, categories, ownerContexts, transactions] = await Promise.all([
     repositories.accounts.listActive(),
     repositories.categories.listActive(),
+    repositories.ownerContexts.list(),
     repositories.transactions.list({}),
   ]);
 
   return renderTransactionsPanel({
     accounts,
     categories,
+    ownerContexts,
     transactions,
     filters: {},
     formError,

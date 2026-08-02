@@ -3,7 +3,11 @@ import type {
   MonthlyIncomeOverride,
   MonthlyIncomeResult,
 } from "../../../core/income/income-plan.js";
-import type { OwnerContext } from "../../../core/shared/owner-context.js";
+import {
+  type OwnerContext,
+  type OwnerContextLabel,
+  ownerContextLabelMap,
+} from "../../../core/shared/owner-context.js";
 import type { IncomePageFilters } from "../income-request.js";
 import { escapeHtml, renderNavigation, renderPage } from "./html.js";
 
@@ -11,6 +15,7 @@ type IncomePanelInput = {
   plans: IncomePlan[];
   allPlans: IncomePlan[];
   overrides: MonthlyIncomeOverride[];
+  ownerContexts: OwnerContextLabel[];
   filters: IncomePageFilters;
   monthlyIncome: MonthlyIncomeResult;
   formError?: string;
@@ -34,25 +39,32 @@ export function renderIncomePage(input: IncomePanelInput): string {
 
 export function renderIncomePanel(input: IncomePanelInput): string {
   return `<section id="income-panel">
-    ${renderIncomeForm(input.formError)}
+    ${renderIncomeForm(input.ownerContexts, input.formError)}
     ${renderOverrideForm(input.allPlans)}
-    ${renderIncomeFilters(input.filters)}
+    ${renderIncomeFilters(input.filters, input.ownerContexts)}
     ${renderIncomeSummary(input.monthlyIncome)}
-    ${renderIncomeList(input.plans)}
+    ${renderIncomeList(input.plans, input.ownerContexts)}
     ${renderOverrideList(input.overrides, input.allPlans)}
   </section>`;
 }
 
-export function renderIncomeEditPage(input: { plan: IncomePlan }): string {
+export function renderIncomeEditPage(input: {
+  plan: IncomePlan;
+  ownerContexts: OwnerContextLabel[];
+}): string {
   return renderPage({
     title: "Edit Income",
     heading: "Edit Income",
     navigation: renderNavigation([{ href: "/income", label: "Income" }]),
-    body: renderIncomeForm(undefined, input.plan),
+    body: renderIncomeForm(input.ownerContexts, undefined, input.plan),
   });
 }
 
-function renderIncomeForm(formError?: string, plan?: IncomePlan): string {
+function renderIncomeForm(
+  ownerContexts: OwnerContextLabel[],
+  formError?: string,
+  plan?: IncomePlan,
+): string {
   const action = plan === undefined ? "/income" : `/income/${encodeURIComponent(plan.id)}`;
   const button = plan === undefined ? "Add income" : "Save income";
 
@@ -63,9 +75,7 @@ function renderIncomeForm(formError?: string, plan?: IncomePlan): string {
       <label class="field">Income name <input name="name" value="${escapeHtml(plan?.name ?? "")}" required></label>
       <label class="field">Owner context
         <select name="ownerContext">
-          ${renderOption("person_a", "Person A", plan?.ownerContext)}
-          ${renderOption("person_b", "Person B", plan?.ownerContext)}
-          ${renderOption("shared", "Shared", plan?.ownerContext)}
+          ${ownerContexts.map((label) => renderOption(label.ownerContext, label.label, plan?.ownerContext)).join("")}
         </select>
       </label>
       <label class="field">Amount <input name="amount" inputmode="decimal" value="${escapeHtml(plan === undefined ? "" : formatAmount(plan.amountCents))}" required></label>
@@ -92,7 +102,10 @@ function renderOverrideForm(plans: IncomePlan[]): string {
   </section>`;
 }
 
-function renderIncomeFilters(filters: IncomePageFilters): string {
+function renderIncomeFilters(
+  filters: IncomePageFilters,
+  ownerContexts: OwnerContextLabel[],
+): string {
   return `<section class="panel" aria-labelledby="income-filters-heading">
     <h2 id="income-filters-heading">Income filters</h2>
     <form id="income-filters" class="grid-form" method="get" action="/income" hx-get="/income" hx-target="#income-panel" hx-swap="outerHTML">
@@ -100,9 +113,7 @@ function renderIncomeFilters(filters: IncomePageFilters): string {
       <label class="field">Filter owner context
         <select name="ownerContext">
           <option value="">All owners</option>
-          ${renderOption("person_a", "Person A", filters.ownerContext)}
-          ${renderOption("person_b", "Person B", filters.ownerContext)}
-          ${renderOption("shared", "Shared", filters.ownerContext)}
+          ${ownerContexts.map((label) => renderOption(label.ownerContext, label.label, filters.ownerContext)).join("")}
         </select>
       </label>
       <button type="submit">Apply income filters</button>
@@ -118,17 +129,19 @@ function renderIncomeSummary(monthlyIncome: MonthlyIncomeResult): string {
   </section>`;
 }
 
-function renderIncomeList(plans: IncomePlan[]): string {
+function renderIncomeList(plans: IncomePlan[], ownerContexts: OwnerContextLabel[]): string {
+  const ownerLabels = ownerContextLabelMap(ownerContexts);
+
   return `<section class="panel" aria-labelledby="income-list-heading">
     <h2 id="income-list-heading">Income list</h2>
-    ${plans.length === 0 ? '<p class="empty-state">No income plans found.</p>' : `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Owner</th><th>Amount</th><th>Start</th><th>End</th><th>Actions</th></tr></thead><tbody>${plans.map(renderIncomeRow).join("")}</tbody></table></div>`}
+    ${plans.length === 0 ? '<p class="empty-state">No income plans found.</p>' : `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Owner</th><th>Amount</th><th>Start</th><th>End</th><th>Actions</th></tr></thead><tbody>${plans.map((plan) => renderIncomeRow(plan, ownerLabels)).join("")}</tbody></table></div>`}
   </section>`;
 }
 
-function renderIncomeRow(plan: IncomePlan): string {
+function renderIncomeRow(plan: IncomePlan, ownerLabels: Record<string, string>): string {
   return `<tr>
     <td>${escapeHtml(plan.name)}</td>
-    <td>${escapeHtml(plan.ownerContext)}</td>
+    <td>${escapeHtml(ownerLabels[plan.ownerContext] ?? plan.ownerContext)}</td>
     <td>${formatAmount(plan.amountCents)}</td>
     <td>${escapeHtml(plan.startMonth)}</td>
     <td>${escapeHtml(plan.endMonth ?? "")}</td>

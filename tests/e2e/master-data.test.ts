@@ -106,6 +106,49 @@ test("account can be deactivated without losing existing transactions", async ({
   }
 });
 
+test("account owner display names can be edited", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/admin/master-data`);
+    await page.getByLabel("Owner name for person_a").fill("Daniel");
+    await page.getByRole("button", { name: "Save owner name for person_a" }).click();
+
+    await expect(page.getByLabel("Owner name for person_a")).toHaveValue("Daniel");
+    await expect(
+      page.getByRole("row").filter({ hasText: "Person A checking" }).getByRole("cell", {
+        name: "Daniel",
+      }),
+    ).toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
+test("edited account owner display names appear in transaction and income filters", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/admin/master-data`);
+    await page.getByLabel("Owner name for shared").fill("Household");
+    await page.getByRole("button", { name: "Save owner name for shared" }).click();
+
+    await page.goto(`${baseUrl}/transactions`);
+    await expect(page.getByLabel("Owner context")).toContainText("Household");
+
+    await page.goto(`${baseUrl}/income`);
+    await expect(page.getByLabel("Filter owner context")).toContainText("Household");
+  } finally {
+    await server.close();
+  }
+});
+
 test("category can be created and used in the transaction form", async ({ page }) => {
   const server = buildServer();
 
