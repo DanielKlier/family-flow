@@ -57,3 +57,23 @@ export const categorizationRules = pgTable("categorization_rules", {
   priority: integer("priority").notNull(),
   enabled: boolean("enabled").notNull().default(true),
 });
+
+export const incomePlans = pgTable("income_plans", {
+  id: text("id").primaryKey(),
+  ownerContext: text("owner_context").notNull(),
+  name: text("name").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  startMonth: text("start_month").notNull(),
+  endMonth: text("end_month"),
+  active: boolean("active").notNull().default(true),
+});
+
+export const monthlyIncomeOverrides = pgTable("monthly_income_overrides", {
+  id: text("id").primaryKey(),
+  incomePlanId: text("income_plan_id")
+    .notNull()
+    .references(() => incomePlans.id),
+  month: text("month").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  note: text("note"),
+});

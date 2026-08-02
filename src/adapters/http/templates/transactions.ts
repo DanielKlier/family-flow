@@ -17,6 +17,7 @@ export function renderTransactionsPage(input: {
     navigation: renderNavigation([
       { href: "/", label: "Dashboard" },
       { href: "/admin/master-data", label: "Master Data" },
+      { href: "/income", label: "Income" },
       { href: "/imports/csv", label: "CSV Import" },
       { href: "/categorization-rules", label: "Rules" },
     ]),
@@ -105,7 +106,7 @@ function renderTransactionFilters(input: {
   return `<section class="panel" aria-labelledby="transaction-filters-heading">
     <h2 id="transaction-filters-heading">Filters</h2>
     <form id="transaction-filters" class="grid-form" method="get" action="/transactions" hx-get="/transactions" hx-target="#transactions-list" hx-swap="outerHTML">
-    <label class="field">Month <input name="month" type="month" value="${escapeHtml(input.filters.month ?? "")}"></label>
+    <label class="field">Month <input name="month" type="month" placeholder="YYYY-MM" value="${escapeHtml(input.filters.month ?? "")}"></label>
     <label class="field">Filter account
       <select name="accountId"><option value="">All accounts</option>${input.accounts.map((account) => renderOption(account.id, account.name, input.filters.accountId)).join("")}</select>
     </label>

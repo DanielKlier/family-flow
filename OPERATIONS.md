@@ -193,6 +193,26 @@ Operational notes:
 - Re-applying rules can overwrite a transaction category and fixed-cost flag when a rule matches. Review broad search text, fixed-cost action, and priority before applying rules to existing data.
 - If rule application gives unexpected results, capture the visible `X-Request-Id`, inspect the matching request log entry, and verify the affected transaction with a minimized example instead of exporting broad financial data.
 
+## Income Planning Maintenance
+
+Authenticated users can maintain recurring income plans and monthly income overrides at `/income`.
+
+Supported maintenance actions:
+
+- Create recurring income plans with owner context, name, amount, start month, and optional end month.
+- Edit existing income plans from the income list.
+- Capture a monthly override amount for a specific income plan and month.
+- Filter income plans and monthly planned income totals by owner context.
+- Change the calculation month to review the recurring income and matching overrides for that month.
+
+Operational notes:
+
+- Income amounts are entered as positive decimal amounts and stored as positive cents in PostgreSQL.
+- Monthly overrides replace the recurring amount for the selected income plan in that month; they do not add an extra income row.
+- Owner-context filtering uses the income plan owner context directly.
+- If an income calculation looks unexpected, verify the selected calculation month, owner-context filter, start and end months, and matching monthly overrides before editing database rows directly.
+- For support cases, capture the visible `X-Request-Id` and use minimized examples. Avoid exporting broad income or household finance data into logs or tickets.
+
 ## Static Assets And HTMX
 
 The app serves its own UI assets from `/assets/`.
@@ -211,7 +231,7 @@ Operational notes:
 
 ## Backup 
 
-PostgreSQL stores master data, transactions, and CSV import profiles. A full backup runbook is still pending, but before destructive maintenance export the database with `pg_dump` from a trusted host or from the PostgreSQL container.
+PostgreSQL stores master data, transactions, income plans, monthly income overrides, and CSV import profiles. A full backup runbook is still pending, but before destructive maintenance export the database with `pg_dump` from a trusted host or from the PostgreSQL container.
 
 ## Restore 
 

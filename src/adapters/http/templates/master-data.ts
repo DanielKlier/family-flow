@@ -70,6 +70,7 @@ function renderMasterDataNavigation(): string {
   return renderNavigation([
     { href: "/", label: "Dashboard" },
     { href: "/transactions", label: "Transactions" },
+    { href: "/income", label: "Income" },
     { href: "/imports/csv", label: "CSV Import" },
     { href: "/categorization-rules", label: "Rules" },
   ]);

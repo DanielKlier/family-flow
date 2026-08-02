@@ -18,6 +18,7 @@ export function renderDashboard(user: UserContext): string {
     navigation: renderNavigation([
       { href: "/admin/master-data", label: "Master Data" },
       { href: "/transactions", label: "Transactions" },
+      { href: "/income", label: "Income" },
       { href: "/imports/csv", label: "CSV Import" },
       { href: "/categorization-rules", label: "Rules" },
       { href: "/auth/logout", label: "Logout" },

@@ -10,4 +10,12 @@ describe("operations manual", () => {
     expect(manual).toContain("/categorization-rules");
     expect(manual).toContain("Apply rules to existing transactions");
   });
+
+  it("documents income planning maintenance", async () => {
+    const manual = await readFile("OPERATIONS.md", "utf8");
+
+    expect(manual).toContain("## Income Planning Maintenance");
+    expect(manual).toContain("/income");
+    expect(manual).toContain("Monthly overrides replace the recurring amount");
+  });
 });

@@ -31,6 +31,7 @@ export function renderCsvImportPage(input: {
     navigation: renderNavigation([
       { href: "/", label: "Dashboard" },
       { href: "/transactions", label: "Transactions" },
+      { href: "/income", label: "Income" },
       { href: "/categorization-rules", label: "Rules" },
       { href: "/admin/master-data", label: "Master Data" },
     ]),

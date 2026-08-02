@@ -8,6 +8,7 @@ import { DrizzleAccountRepository } from "../adapters/db/drizzle-account-reposit
 import { DrizzleCategorizationRuleRepository } from "../adapters/db/drizzle-categorization-rule-repository.js";
 import { DrizzleCategoryRepository } from "../adapters/db/drizzle-category-repository.js";
 import { DrizzleImportProfileRepository } from "../adapters/db/drizzle-import-profile-repository.js";
+import { DrizzleIncomeRepository } from "../adapters/db/drizzle-income-repository.js";
 import { DrizzleTransactionRepository } from "../adapters/db/drizzle-transaction-repository.js";
 import { migrate } from "../adapters/db/migrate.js";
 import { createPostgresConnection } from "../adapters/db/postgres.js";
@@ -21,6 +22,7 @@ import { registerAuth, type AuthRuntimeConfig } from "../adapters/http/auth.js";
 import { registerCategorizationRuleRoutes } from "../adapters/http/categorization-rules.js";
 import { registerFormParser } from "../adapters/http/form-parser.js";
 import { registerCsvImportRoutes } from "../adapters/http/imports.js";
+import { registerIncomeRoutes } from "../adapters/http/income.js";
 import { registerMasterDataRoutes } from "../adapters/http/master-data.js";
 import { registerRequestLifecycle } from "../adapters/http/request-lifecycle.js";
 import { registerTransactionRoutes } from "../adapters/http/transactions.js";
@@ -28,12 +30,14 @@ import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-l
 import type { RequestLogger } from "../ports/logging/logger.js";
 import type { CsvParser } from "../ports/csv/csv-parser.js";
 import type { CategorizationRuleRepository } from "../ports/repositories/categorization-rule-repository.js";
+import type { IncomeRepository } from "../ports/repositories/income-repository.js";
 import type { TransactionRepository } from "../ports/repositories/transaction-repository.js";
 import { loadConfig } from "./config.js";
 
 type AppRepositories = MasterDataRepositories &
   ImportProfileRepositories & {
     categorizationRules: CategorizationRuleRepository;
+    income: IncomeRepository;
     transactions: TransactionRepository;
   };
 
@@ -70,6 +74,7 @@ export function buildServer(options: ServerOptions = {}) {
   registerTransactionRoutes(server, repositories);
   registerCategorizationRuleRoutes(server, repositories);
   registerCsvImportRoutes(server, repositories, csvParser);
+  registerIncomeRoutes(server, repositories);
 
   return server;
 }
@@ -83,6 +88,7 @@ async function main() {
     accounts: new DrizzleAccountRepository(connection.db),
     categories: new DrizzleCategoryRepository(connection.db),
     categorizationRules: new DrizzleCategorizationRuleRepository(connection.db),
+    income: new DrizzleIncomeRepository(connection.db),
     importProfiles: new DrizzleImportProfileRepository(connection.db),
     transactions: new DrizzleTransactionRepository(connection.db),
   };

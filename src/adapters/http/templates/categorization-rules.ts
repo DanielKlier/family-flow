@@ -15,6 +15,7 @@ export function renderCategorizationRulesPage(input: {
     navigation: renderNavigation([
       { href: "/", label: "Dashboard" },
       { href: "/transactions", label: "Transactions" },
+      { href: "/income", label: "Income" },
       { href: "/imports/csv", label: "CSV Import" },
       { href: "/admin/master-data", label: "Master Data" },
     ]),

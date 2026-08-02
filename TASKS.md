@@ -370,23 +370,23 @@ Ziel: Wiederkehrende Einnahmen und monatliche Abweichungen koennen gepflegt und 
 
 Tasks:
 
-- IncomePlan Core Entity implementieren.
-- Monthly Income Override Core Logik implementieren.
-- Repository Port und Adapter implementieren.
-- Migrationen fuer Einnahmen anlegen.
-- UI fuer Einnahmenliste anlegen.
-- HTMX-Formulare fuer Einnahmen anlegen und bearbeiten.
-- Besitzer-Kontext fuer Einnahmen unterstuetzen.
-- Monatsberechnung fuer geplante Einnahmen implementieren.
-- Operations Manual um Einnahmenpflege erweitern.
+- [x] IncomePlan Core Entity implementieren.
+- [x] Monthly Income Override Core Logik implementieren.
+- [x] Repository Port und Adapter implementieren.
+- [x] Migrationen fuer Einnahmen anlegen.
+- [x] UI fuer Einnahmenliste anlegen.
+- [x] HTMX-Formulare fuer Einnahmen anlegen und bearbeiten.
+- [x] Besitzer-Kontext fuer Einnahmen unterstuetzen.
+- [x] Monatsberechnung fuer geplante Einnahmen implementieren.
+- [x] Operations Manual um Einnahmenpflege erweitern.
 
 Tests:
 
-- Fehlschlagender E2E Test: wiederkehrende Einnahme anlegen.
-- Fehlschlagender E2E Test: monatliche Abweichung erfassen.
-- Fehlschlagender E2E Test: Einnahmen nach Person filtern.
-- Unit-Tests fuer Monatsberechnung.
-- Integrationstests fuer Income Repository.
+- [x] Fehlschlagender E2E Test: wiederkehrende Einnahme anlegen.
+- [x] Fehlschlagender E2E Test: monatliche Abweichung erfassen.
+- [x] Fehlschlagender E2E Test: Einnahmen nach Person filtern.
+- [x] Unit-Tests fuer Monatsberechnung.
+- [x] Integrationstests fuer Income Repository.
 
 Quality Gate:
 
