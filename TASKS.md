@@ -401,7 +401,110 @@ Commit:
 
 - `feat: add income planning`
 
-## Phase 10: Dashboard Und Monatsprognose
+## Phase 10: Bearbeitbare Account-Owner
+
+Ziel: Die Anzeigenamen der fachlichen Account-Owner koennen bearbeitet werden; diese Owner bleiben reine Auswertungs- und Filterkontexte und haben keinen Bezug zum eingeloggten Nutzer.
+
+Tasks:
+
+- OwnerContext Core Entity oder Value Object fuer stabile Owner-Schluessel und editierbare Anzeigenamen implementieren.
+- Repository Port und Drizzle Adapter fuer Owner-Anzeigenamen implementieren.
+- Migration fuer persistierte Owner-Anzeigenamen anlegen und idempotente Defaults fuer `person_a`, `person_b` und `shared` bereitstellen.
+- Account-Core-Regeln so anpassen, dass Konten weiterhin stabile Owner-Schluessel referenzieren.
+- UI fuer Owner-Namen in der Stammdatenverwaltung implementieren.
+- Owner-Anzeigenamen in Kontenlisten, Transaktionsfiltern, Einnahmenfiltern und Auswertungen anzeigen.
+- Sicherstellen, dass Owner-Anzeigenamen nicht aus OIDC Claims oder eingeloggten Nutzern abgeleitet werden.
+- Operations Manual um Pflege der Owner-Anzeigenamen erweitern.
+
+Tests:
+
+- Fehlschlagender E2E Test: Owner-Anzeigenamen bearbeiten und in der Kontenverwaltung sehen.
+- Fehlschlagender E2E Test: geaenderte Owner-Anzeigenamen erscheinen in Transaktions- und Einnahmenfiltern.
+- Unit-Tests fuer OwnerContext-Core-Regeln und stabile Owner-Schluessel.
+- Integrationstests fuer OwnerContext Repository.
+
+Quality Gate:
+
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
+- `docker compose build`
+
+Commit:
+
+- `feat: add editable account owner names`
+
+## Phase 11: Interne Umbuchungen Ausschliessen
+
+Ziel: Geldbewegungen zwischen eigenen Familienkonten fliessen nicht in Kosten-, Ausgaben- oder Prognoseberechnungen ein; nur Geld, das eines der Familienkonten verlaesst, wird als Ausgabe beruecksichtigt.
+
+Tasks:
+
+- Transaction-Core-Regeln um interne Transfer-Klassifikation erweitern.
+- Modellieren, wie ein interner Transfer manuell markiert oder beim CSV-Import erkannt werden kann, ohne Buchungen zwischen Konten doppelt als Kosten zu zaehlen.
+- Repository- und Query-Modelle so erweitern, dass interne Transfers gespeichert und gezielt ausgeschlossen werden koennen.
+- UI fuer manuelle Transaktionen und importierte Transaktionen um interne Transfer-Markierung erweitern.
+- Dashboard-, Durchschnitts- und Forecasting-Core so anpassen, dass interne Transfers aus Kostenberechnungen ausgeschlossen sind.
+- Filter oder Kennzeichnung bereitstellen, damit interne Transfers in Transaktionslisten weiterhin nachvollziehbar bleiben.
+- Operations Manual um Umgang mit internen Umbuchungen und Korrekturen erweitern.
+
+Tests:
+
+- Fehlschlagender E2E Test: Umbuchung zwischen zwei eigenen Konten veraendert die Monatsausgaben nicht.
+- Fehlschlagender E2E Test: interne Transfers bleiben in der Transaktionsliste sichtbar und sind als solche erkennbar.
+- Unit-Tests fuer Transfer-Klassifikation und Ausgabenaggregation.
+- Integrationstests fuer Persistenz und Dashboard Queries mit internen Transfers.
+
+Quality Gate:
+
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
+- `docker compose build`
+
+Commit:
+
+- `feat: exclude internal transfers from expenses`
+
+## Phase 12: Deutsche Lokalisierung
+
+Ziel: Die Anwendung ist fuer deutsche Nutzer lokalisiert; UI-Texte sind deutsch, Betraege und Datumswerte werden im deutschen Format angezeigt und eingegeben.
+
+Tasks:
+
+- Zentrale Ports oder Core-nahe Services fuer Geld- und Datumsformatierung definieren, ohne Locale-Logik in Templates zu verteilen.
+- Deutsche Anzeigeformate fuer Betraege, Datumswerte und Monate in Listen, Formularen, Filtern, Dashboard und Szenarien verwenden.
+- Deutsche Eingabeformate fuer Betraege und Datumswerte validieren und in Core-Werte normalisieren.
+- Bestehende UI-Texte, Formularlabels, Validierungsfehler und Hilfetexte ins Deutsche ueberfuehren.
+- CSV-Import so pruefen, dass deutsche Dezimal- und Datumsformate robust verarbeitet werden, sofern sie im Importprofil konfiguriert sind.
+- Operations Manual und README um deutsche Eingabeformate und Lokalisierungsverhalten erweitern.
+
+Tests:
+
+- Fehlschlagender E2E Test: Betrag im Format `1.234,56` eingeben und korrekt gespeichert sowie angezeigt bekommen.
+- Fehlschlagender E2E Test: Datum im Format `31.12.2026` eingeben und korrekt gespeichert sowie angezeigt bekommen.
+- Fehlschlagender E2E Test: zentrale Nutzerflaechen zeigen deutsche Texte.
+- Unit-Tests fuer Geld- und Datumsformatierung sowie Parsing.
+- Integrationstests fuer Formularverarbeitung mit deutschen Eingabeformaten.
+
+Quality Gate:
+
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
+- `docker compose build`
+
+Commit:
+
+- `feat: add german localization`
+
+## Phase 13: Dashboard Und Monatsprognose
 
 Ziel: Dashboard zeigt Ist-Ausgaben, Einnahmen, Saldo, Kategorien und Monatsprognose.
 
@@ -438,7 +541,7 @@ Commit:
 
 - `feat: add dashboard forecasting`
 
-## Phase 11: Szenarienplanung
+## Phase 14: Szenarienplanung
 
 Ziel: Elternzeit-, Elterngeld- und Teilzeit-Szenarien koennen ueber 18 bis 24 Monate geplant werden.
 
@@ -480,7 +583,7 @@ Commit:
 
 - `feat: add scenario planning`
 
-## Phase 12: Deployment Hardening Und MVP Release
+## Phase 15: Deployment Hardening Und MVP Release
 
 Ziel: Der MVP ist lokal stabil deploybar, dokumentiert und betreibbar.
 
