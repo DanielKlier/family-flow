@@ -36,8 +36,8 @@ Diese Zuordnung dient ausschliesslich der Filterung und Auswertung, nicht der Zu
 
 - Runtime: Node.js mit TypeScript
 - Web Framework: Fastify
-- UI: serverseitige Templates plus HTMX
-- Template Engine: Nunjucks oder Eta
+- UI: server-rendered Nunjucks templates through `@fastify/view`, plus HTMX
+- Template engine: Nunjucks with global automatic escaping
 - Datenbank: PostgreSQL
 - Datenzugriff: Drizzle ORM
 - Authentifizierung: OIDC gegen Authentik mit Session-Cookies
@@ -91,13 +91,41 @@ src/
     unit/
 ```
 
+### Server-Rendered UI And Template Boundary
+
+Nunjucks is the single server-side template engine and is integrated through `@fastify/view`. Automatic escaping is enabled globally.
+
+HTTP and template adapters prepare typed view models before rendering. View models contain presentation-ready labels, translated messages, formatted money and date strings, links, and simple display flags. Templates are limited to presentation, simple conditions, and list rendering. They do not parse input, calculate financial values, choose business outcomes, access repositories, or call use cases.
+
+Untrusted values remain ordinary escaped template values. Any use of pre-rendered or explicitly safe HTML requires a narrow, reviewed adapter boundary and must not be used for user-controlled content.
+
+The core does not depend on Nunjucks, `@fastify/view`, HTMX, translation catalogs, or presentation view models.
+
+### Localization Boundaries
+
+Core values are locale-neutral. Money is represented as integer minor units, dates and months use canonical domain representations, and business failures use typed domain error codes rather than translated user-facing strings.
+
+Translation catalogs, German UI text, `de-DE` money and date formatting, and parsing of human-entered amounts and dates belong to HTTP, template, or localization adapters. These adapters convert accepted human input into canonical core values and map typed domain errors to translated messages.
+
+CSV encoding, delimiter, decimal, date, and bank-profile formats belong to the CSV adapter. The CSV adapter validates and converts source-specific values before passing canonical rows to the import core.
+
+Templates receive already translated and formatted view models. Neither templates nor the core perform locale-sensitive parsing or formatting.
+
 ## Authentifizierung
 
-- OIDC Login ueber Authentik.
-- Alle App-Routen sind geschuetzt.
+- OIDC login uses Authentik.
+- All application routes except explicitly public health, authentication, and static-asset routes are protected.
 - Callback URL: `https://finances.home.arpa/auth/callback`.
-- Sessions werden serverseitig bzw. signiert gespeichert.
-- Authentifizierte Nutzer werden lokal anhand der OIDC Claims erkannt.
+- The signed-cookie session implementation delivered in historical Phase 3 is an interim implementation and will be replaced through the test-first remediation in Phase 10A of `TASKS.md`.
+- The target session cookie contains only an opaque, cryptographically random 256-bit bearer token.
+- PostgreSQL stores only the SHA-256 hash of the bearer token together with a session ID, user context, creation time, expiry time, and optional revocation time. The raw bearer token is never persisted.
+- A session is accepted only when its token hash exists and the record is neither expired nor revoked.
+- Logout revokes the matching server-side record before expiring the browser cookie, so a copied token cannot be replayed after logout.
+- Expired and revoked records are removed by an idempotent, bounded cleanup operation. Authentication correctness does not depend on cleanup having already run.
+- Session data is included in PostgreSQL backup scope and is security-sensitive. Restore procedures invalidate all restored sessions before the application is reopened to users.
+- Existing signed cookies are not migrated and become invalid when the remediation is deployed.
+- Redis or another session service is not part of the architecture.
+- Authenticated users are identified locally from validated OIDC claims stored in the server-side session record.
 
 ## Hauptfunktionen
 
@@ -166,7 +194,19 @@ Der Import ist profilbasiert:
 - Duplikate markieren.
 - Import bestaetigen.
 
-Duplikaterkennung erfolgt zunaechst ueber eine stabile Kombination aus Konto, Datum, Betrag und normalisiertem Beschreibungstext.
+Duplikaterkennung erfolgt zunaechst ueber eine stabile Kombination aus Konto, Datum, Betrag, normalisiertem Beschreibungstext und normalisiertem Empfaenger.
+
+Upload security and confirmation requirements:
+
+- A CSV file is limited to 5 MiB and 10,000 data rows, counted before ignored rows are filtered.
+- Multipart body size and extracted file size are both bounded.
+- Filename and MIME type are advisory; the actual bytes, selected encoding, CSV structure, mapped columns, and row content are validated before preview.
+- Malformed UTF-8, binary or NUL-containing content, malformed quoting, unsupported encodings, and structurally invalid rows are rejected.
+- Encoding, delimiter, decimal, date, and profile-specific interpretation remain in the CSV adapter. The import core receives canonical locale-neutral rows.
+- Confirmation revalidates canonical rows and recomputes import hashes instead of trusting client-provided hashes.
+- All accepted rows are persisted in one PostgreSQL transaction. Unexpected failure rolls back the entire confirmation.
+- A database uniqueness constraint and conflict-safe insertion make repeated and concurrent confirmation idempotent.
+- CSV content and unnecessary financial details are never written to logs. Rejections remain correlated through `X-Request-Id`.
 
 ### Kategorien Und Regeln
 
@@ -306,6 +346,9 @@ Das Projekt enthaelt ein ausfuehrliches Operations Manual mit Run Books fuer:
 - OIDC-Probleme.
 - CSV-Import-Probleme.
 - Log-Analyse.
+- Server-side session cleanup, forced logout during migration, and invalidation after restore.
+- CSV upload limits, validation failures, atomic rollback, and concurrency-safe retry behavior.
+- Nunjucks template packaging and rendering diagnostics.
 
 ## Deploybares MVP-Ergebnis
 
@@ -315,8 +358,10 @@ Ein MVP gilt als deploybar, wenn:
 - Docker Compose die Anwendung startet.
 - Datenbankmigrationen laufen.
 - OIDC-Konfiguration dokumentiert ist.
-- Tests gruen sind.
-- Linting gruen ist.
-- Biome angewendet wurde.
-- E2E Tests fuer neue Features existieren und gruen sind.
+- `pnpm format:check` is green.
+- `pnpm lint` is green.
+- `pnpm test` is green.
+- `pnpm test:e2e` is fully green.
+- `pnpm build` is green.
+- New features have behavior-focused E2E tests that were observed failing before implementation.
 - Operations Manual fuer den aktuellen Stand aktualisiert ist.

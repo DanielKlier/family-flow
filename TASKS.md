@@ -2,7 +2,17 @@
 
 Diese Task-Liste ist phasenbasiert. Nach jeder Phase muss der Stand commitfaehig, deploybar und nachvollziehbar sein.
 
-Jede Phase endet mit einem Conventional Commit. Vor jedem Commit muessen Formatierung, Linting, Tests, Build und relevante E2E Tests erfolgreich laufen.
+Jede Phase endet mit einem Conventional Commit. Vor jedem Commit muessen die vollstaendigen kanonischen Quality Gates erfolgreich laufen.
+
+## Delivery Status And Historical Record
+
+Phases 0 through 10 are completed historical delivery records. Unchecked bullets in the older phase descriptions do not mean that those phases are pending.
+
+Phase 3 records the signed-cookie session implementation that was originally delivered. The registration order that previously exposed protected routes before authentication was corrected later and is no longer pending. Replacing signed-cookie sessions is new follow-up remediation specified in Phase 10A.
+
+Phase 6 records the CSV import implementation that was originally delivered. Additional upload security, transactional confirmation, and concurrency protection are new follow-up remediation specified in Phase 10C.
+
+Phases 10A through 10C are pending remediation and must be completed test-first before Phase 11. Phases 11 through 15 remain planned work.
 
 ## Globale Definition Of Done
 
@@ -11,10 +21,10 @@ Jede Phase endet mit einem Conventional Commit. Vor jedem Commit muessen Formati
 - Core-Logik liegt in `src/core` und ist ohne Adapter testbar.
 - Ports definieren Abhaengigkeiten des Core.
 - Adapter enthalten Web, DB, OIDC, CSV, Logging und Template-Integration.
-- `pnpm format` wurde ausgefuehrt.
+- `pnpm format:check` ist gruen.
 - `pnpm lint` ist gruen.
 - `pnpm test` ist gruen.
-- `pnpm test:e2e` ist fuer relevante Features gruen.
+- `pnpm test:e2e` ist vollstaendig gruen.
 - `pnpm build` ist gruen.
 - Docker Image baut erfolgreich.
 - Docker Compose startet die App erfolgreich.
@@ -436,6 +446,143 @@ Commit:
 
 - `feat: add editable account owner names`
 
+## Phase 10A: PostgreSQL Session Remediation
+
+Goal: Replace the delivered signed-cookie implementation with opaque, revocable PostgreSQL sessions without changing the OIDC user experience.
+
+Tasks:
+
+- [ ] First add a failing E2E test proving that replaying a copied session token after logout is rejected.
+- [ ] Define session store, clock, token-generation, and token-hashing ports at the authentication boundary.
+- [ ] Generate a cryptographically random 256-bit bearer token and store only its SHA-256 hash in PostgreSQL.
+- [ ] Persist a session ID, token hash, user context, creation time, expiry time, and optional revocation time.
+- [ ] Keep the raw bearer token only in the `HttpOnly`, `SameSite=Lax`, appropriately `Secure` session cookie.
+- [ ] Resolve every authenticated request through the session port and reject unknown, expired, or revoked sessions.
+- [ ] Revoke the PostgreSQL session before expiring the browser cookie during logout.
+- [ ] Add an idempotent, bounded cleanup operation for expired and revoked sessions and run it during startup.
+- [ ] Preserve the current eight-hour absolute session lifetime.
+- [ ] Remove the signed payload implementation and `SESSION_SECRET`; existing signed cookies are intentionally invalidated.
+- [ ] Do not introduce Redis or another session service.
+- [ ] Preserve the corrected registration order in which authentication is installed before protected routes.
+- [ ] Update configuration, README, and the Operations Manual for cleanup, forced logout during migration, backup sensitivity, and mandatory invalidation of restored sessions.
+- [ ] Ensure logs contain only the stable authenticated user ID and never raw tokens, token hashes, cookies, or OIDC tokens.
+
+Tests:
+
+- [ ] Failing E2E test: a copied token cannot access a protected route after logout.
+- [ ] E2E regression test: all protected routes remain protected after server composition changes.
+- [ ] Unit tests for active, expired, revoked, and unknown session outcomes using a controlled clock.
+- [ ] PostgreSQL integration test: login stores a token hash and metadata but not the raw bearer token.
+- [ ] PostgreSQL integration test: logout records revocation and subsequent lookup fails.
+- [ ] PostgreSQL integration test: bounded cleanup removes expired and revoked sessions while preserving active sessions.
+- [ ] HTTP integration test: authentication errors retain `X-Request-Id` and produce exactly one sanitized request log entry.
+- [ ] Restore smoke test: restored sessions are invalidated before the application accepts traffic.
+
+Quality Gate:
+
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
+- `docker compose build`
+- Docker Compose migration and authentication smoke test.
+
+Commit:
+
+- `refactor: migrate sessions to postgres`
+
+## Phase 10B: Nunjucks Template Boundary Remediation
+
+Goal: Standardize server-rendered HTML on Nunjucks through `@fastify/view`, with automatic escaping and presentation-only templates receiving prepared view models.
+
+Tasks:
+
+- [ ] Add E2E characterization coverage for existing full-page, no-JavaScript, and HTMX flows before changing rendering.
+- [ ] Add a failing template-adapter integration test for Nunjucks registration and automatic escaping.
+- [ ] Add `@fastify/view` and Nunjucks as the single server-side template integration.
+- [ ] Enable Nunjucks automatic escaping globally and never disable it per template.
+- [ ] Move layouts, pages, and HTMX fragments into `src/views`.
+- [ ] Prepare typed, presentation-ready view models in HTTP or template adapters before rendering.
+- [ ] Keep translations, formatted money and dates, links, labels, and user-facing validation messages in prepared view models.
+- [ ] Restrict templates to presentation, simple conditions, and list rendering.
+- [ ] Prevent templates from parsing input, calculating financial values, selecting business outcomes, querying repositories, or calling use cases.
+- [ ] Migrate routes incrementally while preserving progressive enhancement and HTMX fragment contracts.
+- [ ] Remove the TypeScript string-template renderers after all routes use Nunjucks.
+- [ ] Package all templates into the compiled application and production image.
+- [ ] Update the Operations Manual with template packaging and rendering diagnostics.
+
+Tests:
+
+- [ ] E2E characterization tests for full pages, form validation, navigation, no-JavaScript behavior, and HTMX fragments.
+- [ ] E2E security test: untrusted account, transaction, and validation text is rendered as text rather than executable markup.
+- [ ] Failing integration test: `@fastify/view` renders a Nunjucks template with automatic escaping enabled.
+- [ ] Integration test: full-page and fragment rendering receive only their declared view models.
+- [ ] Build integration test: templates are available from the compiled application and production image.
+- [ ] Docker Compose smoke test: the production image renders a full page and an HTMX fragment from packaged Nunjucks templates.
+
+Quality Gate:
+
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
+- `docker compose build`
+
+Commit:
+
+- `refactor: standardize nunjucks rendering`
+
+## Phase 10C: CSV Upload Security And Atomicity Remediation
+
+Goal: Make CSV upload and confirmation bounded, validated, atomic, idempotent, and safe under concurrent requests.
+
+Tasks:
+
+- [ ] First add failing E2E tests for upload-limit rejection, invalid content rejection, and repeated or concurrent confirmation.
+- [ ] Enforce a maximum CSV file size of 5 MiB and a maximum of 10,000 data rows before filtering ignored rows.
+- [ ] Bound multipart request size and extracted file size so rejected uploads are not processed without limits.
+- [ ] Treat filename and MIME type as advisory and validate actual bytes, selected encoding, CSV structure, mapped columns, and row content.
+- [ ] Reject malformed UTF-8, binary or NUL-containing content, unclosed quotes, missing mapped columns, structurally invalid rows, and unsupported content before preview.
+- [ ] Keep encoding, delimiter, decimal, date, and bank-profile interpretation in the CSV adapter.
+- [ ] Pass only canonical locale-neutral values into the import core.
+- [ ] Revalidate confirmation input and recompute canonical import hashes instead of trusting client-provided hashes.
+- [ ] Persist all accepted rows in one PostgreSQL transaction and roll back the complete confirmation on unexpected failure.
+- [ ] Define a non-destructive migration strategy for historical duplicate import hashes before adding uniqueness; never delete financial records silently.
+- [ ] Add a database uniqueness constraint for non-null import hashes at the appropriate account scope.
+- [ ] Use conflict-safe inserts so repeated or concurrent confirmation cannot create duplicates.
+- [ ] Keep duplicate classification and import decisions in the core while SQL transactions and conflict handling remain in the PostgreSQL adapter.
+- [ ] Return user-friendly errors with `X-Request-Id` and never log uploaded CSV content or unnecessary financial values.
+- [ ] Update the Operations Manual with limits, rejection reasons, concurrency behavior, rollback behavior, and minimized troubleshooting procedures.
+
+Tests:
+
+- [ ] Failing E2E test: a CSV above 5 MiB is rejected without preview or persistence.
+- [ ] Failing E2E test: a CSV above 10,000 data rows is rejected even when excess rows would otherwise be ignored.
+- [ ] Failing E2E test: malformed encoding or binary content is rejected with a user-visible error and `X-Request-Id`.
+- [ ] Failing E2E test: repeated or concurrent confirmation creates each canonical transaction at most once.
+- [ ] Unit tests for canonical row validation, hash generation, duplicate decisions, and boundary row counts.
+- [ ] CSV adapter integration tests for strict UTF-8, Latin1, malformed quoting, mapped-column validation, binary content, and exact file and row boundaries.
+- [ ] Migration integration test: historical duplicate import hashes are handled deterministically without silently deleting financial records before uniqueness is added.
+- [ ] PostgreSQL integration test: an error while confirming a later row rolls back all rows in the confirmation.
+- [ ] PostgreSQL integration test: concurrent confirmations are protected by uniqueness and conflict-safe insertion.
+- [ ] HTTP integration test: rejected uploads produce exactly one sanitized request log entry and never log file contents.
+
+Quality Gate:
+
+- `pnpm format:check`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm test:e2e`
+- `pnpm build`
+- `docker compose build`
+- Docker Compose migration and CSV import smoke test.
+
+Commit:
+
+- `fix: harden csv import confirmation`
+
 ## Phase 11: Interne Umbuchungen Ausschliessen
 
 Ziel: Geldbewegungen zwischen eigenen Familienkonten fliessen nicht in Kosten-, Ausgaben- oder Prognoseberechnungen ein; nur Geld, das eines der Familienkonten verlaesst, wird als Ausgabe beruecksichtigt.
@@ -470,26 +617,32 @@ Commit:
 
 - `feat: exclude internal transfers from expenses`
 
-## Phase 12: Deutsche Lokalisierung
+## Phase 12: German Localization
 
-Ziel: Die Anwendung ist fuer deutsche Nutzer lokalisiert; UI-Texte sind deutsch, Betraege und Datumswerte werden im deutschen Format angezeigt und eingegeben.
+Goal: Provide German UI text and `de-DE` input and display behavior while keeping the core locale-neutral.
 
 Tasks:
 
-- Zentrale Ports oder Core-nahe Services fuer Geld- und Datumsformatierung definieren, ohne Locale-Logik in Templates zu verteilen.
-- Deutsche Anzeigeformate fuer Betraege, Datumswerte und Monate in Listen, Formularen, Filtern, Dashboard und Szenarien verwenden.
-- Deutsche Eingabeformate fuer Betraege und Datumswerte validieren und in Core-Werte normalisieren.
-- Bestehende UI-Texte, Formularlabels, Validierungsfehler und Hilfetexte ins Deutsche ueberfuehren.
-- CSV-Import so pruefen, dass deutsche Dezimal- und Datumsformate robust verarbeitet werden, sofern sie im Importprofil konfiguriert sind.
-- Operations Manual und README um deutsche Eingabeformate und Lokalisierungsverhalten erweitern.
+- Keep core money, date, and month values locale-neutral and independent of `Intl`, translation catalogs, or German input syntax.
+- Replace user-facing core exception messages with typed domain error codes and structured details where business validation is involved.
+- Add adapter-owned translation catalogs and map typed domain errors to German user-facing messages.
+- Add adapter-owned `de-DE` formatters for money, dates, and months.
+- Add HTTP adapter parsers for German human input such as `1.234,56` and `31.12.2026`, converting it to canonical core values before invoking use cases.
+- Keep CSV encoding, delimiter, decimal, date, and import-profile parsing in the CSV adapter rather than sharing human-form parsing with the core.
+- Prepare translated and formatted values in typed view models before rendering Nunjucks templates.
+- Translate existing UI text, form labels, validation messages, and help text into German.
+- Update the Operations Manual and README with accepted German input formats and localization troubleshooting.
 
 Tests:
 
-- Fehlschlagender E2E Test: Betrag im Format `1.234,56` eingeben und korrekt gespeichert sowie angezeigt bekommen.
-- Fehlschlagender E2E Test: Datum im Format `31.12.2026` eingeben und korrekt gespeichert sowie angezeigt bekommen.
-- Fehlschlagender E2E Test: zentrale Nutzerflaechen zeigen deutsche Texte.
-- Unit-Tests fuer Geld- und Datumsformatierung sowie Parsing.
-- Integrationstests fuer Formularverarbeitung mit deutschen Eingabeformaten.
+- Failing E2E test: enter `1.234,56` and receive the correctly stored and displayed amount.
+- Failing E2E test: enter `31.12.2026` and receive the correctly stored and displayed date.
+- Failing E2E test: central user flows display German text and translated validation errors.
+- Unit tests for locale-neutral core money and date rules and typed domain error outcomes.
+- HTTP adapter integration tests for accepted and rejected German amount and date input.
+- Localization adapter integration tests for `de-DE` formatting and domain-error translation.
+- CSV adapter integration tests proving that profile-specific formats are parsed independently from human-form input.
+- Template integration tests proving that prepared localized view models are rendered without formatting logic in templates.
 
 Quality Gate:
 
