@@ -123,7 +123,8 @@ Every phase commit requires:
 
 Additionally:
 
-- Run non-skippable `pnpm test:postgres`, which provisions an isolated PostgreSQL service, whenever a Drizzle adapter or migration changes. The first owning remediation phase adds this script before relying on it; `TEST_DATABASE_URL`-absent skips do not satisfy the gate.
+- Run non-skippable `pnpm test:postgres`, which provisions an isolated PostgreSQL service, whenever a Drizzle adapter or migration changes. `PH-10D` adds this shared command before any later phase relies on it; `TEST_DATABASE_URL`-absent skips do not satisfy the gate.
+- Run operations evidence through the shared `pnpm ops:verify --id <OPS-ID>` dispatcher added by `PH-10D`; an unknown ID, missing fixture, or skipped procedure fails.
 - Run `docker compose build` when Docker, migrations, templates, image packaging, or deployment configuration changes.
 - Run a readiness-based Docker Compose smoke test when deployment behavior changes.
 - Run migration, backup, or restore smoke tests when the corresponding behavior changes.
@@ -284,19 +285,22 @@ The current composition registers authentication before protected routes. This d
 **Red:**
 
 - [ ] Add `INT-FF-QUA-001-01` and observe failure because no executable validator checks the current documents and complete test inventory.
+- [ ] Add `INT-FF-QUA-004-01` and observe failure because non-skippable PostgreSQL and operations-evidence gate commands do not exist.
 
 **Tasks:**
 
 - [ ] Add `scripts/check-requirement-traceability.ts` and a `pnpm requirements:check` command.
 - [ ] Reject duplicate/malformed IDs, missing acceptance-ledger rows, undefined references, range shorthand in authoritative mappings, missing owning phases/files/classifications, phase/inventory file disagreements, adapter evidence assigned to the wrong boundary file, and test IDs absent from the complete test inventory.
 - [ ] Validate that every pending phase has a supported classification, expected-red or expected-green evidence, canonical gates, and named targeted verification where required.
+- [ ] Add non-skippable `pnpm test:postgres`, provisioning isolated PostgreSQL without accepting a missing-URL skip as evidence.
+- [ ] Add the shared `pnpm ops:verify --id <OPS-ID>` dispatcher; reject unknown IDs, missing deterministic fixtures, and skipped procedures.
 - [ ] Add `pnpm requirements:check` to `pnpm lint` so enforcement runs before every later phase commit.
 
 **Tests:** `INT-FF-QUA-001-01`, `INT-FF-QUA-004-01`.
 
-**Quality gates:** the five canonical commands plus direct `pnpm requirements:check`.
+**Quality gates:** the five canonical commands plus direct `pnpm requirements:check`, `pnpm test:postgres`, and dispatcher fixture tests.
 
-**Targeted verification:** run `pnpm requirements:check` against the valid documents and deterministic fixtures containing duplicate IDs, missing acceptance rows, unknown references, absent test inventory rows, and unsupported classifications; only the valid documents exit zero.
+**Targeted verification:** run `pnpm requirements:check` against the valid documents and deterministic fixtures containing duplicate IDs, missing acceptance rows, unknown references, absent test inventory rows, and unsupported classifications; only the valid documents exit zero. Run `pnpm test:postgres` without a preconfigured `TEST_DATABASE_URL`, and run `pnpm ops:verify --id` against valid, unknown, missing-fixture, and skipped-procedure fixtures.
 
 **Commit:** `chore: enforce requirement traceability`
 
@@ -306,7 +310,7 @@ The current composition registers authentication before protected routes. This d
 **Classification:** Behavior change
 **Implements:** `FF-AUTH-003`, `FF-AUTH-004`, `FF-AUTH-005`, `FF-AUTH-006`, `FF-AUTH-009`
 **Verifies:** `FF-AUTH-001`, `FF-AUTH-007`, `FF-AUTH-008`, `FF-OBS-001`, `FF-OBS-002`, `FF-OBS-003`, `FF-OBS-004`, `FF-OPS-002`, `FF-OPS-003`, `FF-QUA-003`
-**Operations:** `OPS-FF-AUTH-006-01`, `OPS-FF-AUTH-009-01`, `OPS-FF-OPS-003-01`
+**Operations:** `OPS-FF-AUTH-006-01`, `OPS-FF-AUTH-009-01`
 
 **Red:**
 
@@ -330,11 +334,16 @@ The current composition registers authentication before protected routes. This d
 
 **Tests:**
 
+- [ ] `E2E-FF-AUTH-005-01`: copied opaque token is rejected after the original session is logged out.
 - [ ] `UNIT-FF-AUTH-004-01`: active, exactly expired, revoked, and unknown outcomes with a controlled clock.
 - [ ] `INT-FF-AUTH-003-01`: PostgreSQL stores the hash and metadata but never the raw token.
+- [ ] `INT-FF-AUTH-003-02`: authenticated HTTP requests resolve opaque tokens through PostgreSQL and reject unknown tokens.
+- [ ] `INT-FF-AUTH-004-01`: the HTTP/session boundary rejects exactly expired sessions using the controlled clock.
+- [ ] `INT-FF-AUTH-004-02`: session creation and lookup preserve the absolute eight-hour lifetime without sliding extension.
 - [ ] `INT-FF-AUTH-005-01`: logout records revocation and subsequent lookup fails.
 - [ ] `UNIT-FF-AUTH-006-01`: authentication cleanup use case enforces limit, ordering, eligibility, and idempotent outcomes.
 - [ ] `INT-FF-AUTH-006-01`: PostgreSQL cleanup removes eligible rows and preserves active rows.
+- [ ] `INT-FF-AUTH-006-02`: startup and maintenance entry points invoke bounded cleanup and report deterministic outcomes.
 - [ ] `INT-FF-AUTH-007-01`: verify every cookie attribute.
 - [ ] `INT-FF-OBS-001-01`: authentication failures retain request IDs and produce one sanitized request log.
 - [ ] `SMOKE-FF-AUTH-009-01`: deployment rejects old signed cookies.
@@ -375,7 +384,9 @@ The current composition registers authentication before protected routes. This d
 **Tests:**
 
 - [ ] `E2E-FF-UI-001-01`: full-page and HTMX create, edit, delete, validation, and filter parity.
+- [ ] `E2E-FF-UI-002-01`: expected-green characterization proves every primary flow remains usable without JavaScript.
 - [ ] `E2E-FF-UI-003-01`: untrusted account, category, transaction, income, rule, and error text renders as text.
+- [ ] `INT-FF-ARC-003-01`: `@fastify/view` renders Nunjucks with global escaping.
 - [ ] `INT-FF-ARC-004-01`: static checks reject disabled escaping, `safe`, parser/formatter arithmetic, and repository/use-case access from templates.
 - [ ] `INT-FF-ARC-004-02`: full pages and fragments receive only declared view models.
 - [ ] `INT-FF-DEP-001-01`: compiled application resolves packaged templates.
@@ -397,7 +408,7 @@ The current composition registers authentication before protected routes. This d
 
 **Red:**
 
-- [ ] Add and independently observe `E2E-FF-CSV-001-02`, `E2E-FF-CSV-004-01`, `E2E-FF-CSV-006-01`, `E2E-FF-CSV-007-01`, `E2E-FF-CSV-008-01`, and `E2E-FF-CSV-009-01` failing because profile options/purpose, row preview outcomes, limits, file validation, trusted confirmation, atomicity, and database uniqueness are absent.
+- [ ] Add and independently observe `E2E-FF-CSV-001-01`, `E2E-FF-CSV-001-02`, `E2E-FF-CSV-002-01`, `E2E-FF-CSV-004-01`, `E2E-FF-CSV-004-02`, `E2E-FF-CSV-006-01`, `E2E-FF-CSV-007-01`, `E2E-FF-CSV-007-02`, `E2E-FF-CSV-008-01`, and `E2E-FF-CSV-009-01` failing because profile options/purpose, profile persistence, row preview outcomes, limits, file validation, trusted confirmation, atomicity, and database uniqueness are absent.
 
 **Tasks:**
 
@@ -418,21 +429,28 @@ The current composition registers authentication before protected routes. This d
 **Tests:**
 
 - [ ] `UNIT-FF-TXN-001-01` and `UNIT-FF-TXN-001-02`: purpose-inclusive field contract and negative persisted amount invariant.
+- [ ] `INT-FF-TXN-001-01`: PostgreSQL preserves the complete post-`PH-10C` transaction round-trip contract.
 - [ ] `E2E-FF-TXN-004-01`: imported transaction editing preserves source, purpose, and import hash.
 - [ ] `INT-FF-TXN-004-01`: PostgreSQL round-trips imported purpose and import identity.
+- [ ] `E2E-FF-CSV-001-01`, `E2E-FF-CSV-001-02`, and `E2E-FF-CSV-002-01`: finite profile options, persistence, reuse, and every mapped field including purpose.
 - [ ] `INT-FF-CSV-008-01`: HTTP preview/confirmation mapping cannot authorize tampered data.
 - [ ] `INT-FF-CSV-003-01`: every encoding/delimiter/date/decimal option, including `31.12.26 → 2026-12-31`.
+- [ ] `INT-FF-CSV-003-02`: CSV structure, header mapping, and finite parser options remain adapter-owned and deterministic.
 - [ ] `E2E-FF-CSV-004-01`: one mixed file shows importable, ignored, invalid, and duplicate rows.
+- [ ] `E2E-FF-CSV-004-02`: preview exposes deterministic row-level reasons and never makes invalid rows confirmable.
+- [ ] `E2E-FF-CSV-007-01` and `E2E-FF-CSV-007-02`: binary, malformed encoding/quotes, inconsistent structure, missing mapped headers, and every other structural trust-boundary failure reject the whole file.
 - [ ] `E2E-FF-CSV-006-01`: exact three limits succeed; each boundary plus one fails.
 - [ ] `INT-FF-CSV-007-01`: every whole-file failure and every row-level invalid outcome.
 - [ ] `UNIT-FF-CSV-004-01`: core row eligibility and deterministic preview outcomes.
 - [ ] `E2E-FF-CSV-008-01`: invalid, expired, reused, other-user/account, or tampered batches cannot be confirmed.
 - [ ] `UNIT-FF-CSV-008-01`: core confirmation permits only eligible rows from one unexpired unused server batch.
 - [ ] `INT-FF-CSV-008-02`: PostgreSQL batch creation, expiry, and atomic consumption; HTTP opaque-ID mapping remains exclusively in `INT-FF-CSV-008-01`.
+- [ ] `E2E-FF-CSV-009-01`: confirmation persists every accepted row atomically or none.
 - [ ] `INT-FF-CSV-009-01`: a later-row failure rolls back every row.
 - [ ] `INT-FF-CSV-009-02`: concurrent confirmation creates no duplicate or unhandled conflict.
 - [ ] `INT-FF-CSV-010-01`: collision/malformed-version abort reports identifiers and leaves all records unchanged.
 - [ ] `INT-FF-CSV-010-02`: v1 hashes remain byte-identical, v2 rows persist, and same-version uniqueness is enforced.
+- [ ] `UNIT-FF-CSV-005-01`: canonical duplicate identity changes only when an identity field changes.
 - [ ] `UNIT-FF-CSV-005-02`: v1 compatibility, v2 length framing, Unicode normalization, delimiter safety, and dual-version lookup.
 - [ ] `INT-FF-CSV-011-01`: rejection persists nothing, returns a request ID, and emits one sanitized log.
 
@@ -456,7 +474,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Add reverse-proxy smoke using `BASE_URL=https://finances.home.arpa` and verify links, secure cookies, and OIDC redirect URLs.
 - [ ] Record commands, expected readiness, failure diagnosis, and rollback in `OPERATIONS.md`.
 
-**Tests:** `SMOKE-FF-SCP-001-01`, `SMOKE-FF-DEP-002-01`, `SMOKE-FF-DEP-003-01`.
+**Tests:** `SMOKE-FF-SCP-001-01`, `SMOKE-FF-SCP-001-02`, `SMOKE-FF-DEP-002-01`, `SMOKE-FF-DEP-003-01`.
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
@@ -476,7 +494,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Display the same ID on finite error-page paths and assert exactly one matching log.
 - [ ] Implement the explicit denylist and allowlisted aggregate-count/stable-ID policy.
 
-**Tests:** `E2E-FF-OBS-001-01`, `E2E-FF-OBS-001-02`, `INT-FF-OBS-002-01`, `INT-FF-OBS-003-01`, `INT-FF-OBS-004-01`.
+**Tests:** `E2E-FF-OBS-001-01`, `E2E-FF-OBS-001-02`, `INT-FF-OBS-002-01`, `INT-FF-OBS-003-01`, `INT-FF-OBS-004-01`, `INT-FF-OBS-005-01`.
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
@@ -511,7 +529,7 @@ The current composition registers authentication before protected routes. This d
 **Classification:** Behavior change
 **Implements:** `FF-AUTH-002`
 **Verifies:** `FF-AUTH-001`, `FF-AUTH-007`, `FF-AUTH-008`, `FF-DEV-001`, `FF-DEP-004`
-**Operations:** `OPS-FF-AUTH-002-01`
+**Operations:** `OPS-FF-AUTH-002-01`, `OPS-FF-DEV-001-01`
 
 - [ ] Add `E2E-FF-AUTH-002-01` and observe red because server-side ten-minute single-use state/nonce transactions do not exist.
 - [ ] Protect logout, replace GET with same-origin `POST /auth/logout`, validate normalized `Origin` against `BASE_URL`, and verify failed attempts do not revoke.
@@ -520,11 +538,11 @@ The current composition registers authentication before protected routes. This d
 - [ ] Cover expiry, reuse, invalid code/callback/claims, safe return-to, request IDs, and sanitized logs.
 - [ ] Preserve committed Dex development and prove production rejects test mode, non-HTTPS/Dex issuer, `family-flow-dev` credentials, and committed development session placeholders.
 
-**Tests:** `E2E-FF-AUTH-001-01`, `E2E-FF-AUTH-001-02`, `E2E-FF-AUTH-001-03` (protected same-origin POST logout), `UNIT-FF-AUTH-002-01` (ten-minute single-use state/nonce rules), `E2E-FF-AUTH-002-01`, `INT-FF-AUTH-002-01` (valid protocol path), `INT-FF-AUTH-002-02` (callback failures plus PostgreSQL state/nonce persistence and atomic consumption), `INT-FF-AUTH-002-03` (production configuration rejection), `INT-FF-DEV-001-01`, and `INT-FF-DEP-004-01`.
+**Tests:** `E2E-FF-AUTH-001-01`, `E2E-FF-AUTH-001-02`, `E2E-FF-AUTH-001-03` (protected same-origin POST logout), `UNIT-FF-AUTH-002-01` (ten-minute single-use state/nonce rules), `E2E-FF-AUTH-002-01`, `INT-FF-AUTH-002-01` (valid protocol path), `INT-FF-AUTH-002-02` (callback failures plus PostgreSQL state/nonce persistence and atomic consumption), `INT-FF-AUTH-002-03` (production configuration rejection), and `INT-FF-DEV-001-01`.
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
-**Targeted verification:** `pnpm ops:verify --id OPS-FF-AUTH-002-01`.
+**Targeted verification:** `pnpm ops:verify --id OPS-FF-AUTH-002-01`, `pnpm ops:verify --id OPS-FF-DEV-001-01`.
 
 **Commit:** `fix: harden oidc boundaries`
 
@@ -539,7 +557,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Cover every filter individually plus month+account, owner+category, and status+fixed-cost combinations.
 - [ ] Cover invalid dates, invalid amounts, fractional cents, unsafe values, missing references, and friendly error rendering.
 - [ ] Add mandatory HTTP integration tests for parsing, use-case orchestration, redirects, and fragments plus mandatory PostgreSQL repository round-trip/filter tests.
-**Tests:** `E2E-FF-TXN-002-01`, `E2E-FF-TXN-002-02`, `E2E-FF-TXN-003-01`, `UNIT-FF-ARC-006-01`, `INT-FF-TXN-001-01` (PostgreSQL), and `INT-FF-TXN-002-01` (HTTP).
+**Tests:** `E2E-FF-TXN-002-01`, `E2E-FF-TXN-002-02`, `E2E-FF-TXN-003-01`, `UNIT-FF-ARC-006-01`, `UNIT-FF-ARC-006-02`, `INT-FF-TXN-002-01` (HTTP), and `INT-FF-TXN-003-01` (PostgreSQL baseline round trip and filters).
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
@@ -561,7 +579,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Verify duplicate identity changes when normalized payee changes.
 - [ ] Add mandatory PostgreSQL integration for profile options, mapping, and round-trip behavior.
 
-**Tests:** `E2E-FF-CSV-001-01`, `INT-FF-CSV-002-01` (CSV parsing/mapping), `INT-FF-CSV-002-02` (PostgreSQL), `UNIT-FF-CSV-005-01`.
+**Tests:** `INT-FF-CSV-002-01` (CSV parsing/mapping) and `INT-FF-CSV-002-02` (PostgreSQL). The acceptance-primary E2E and duplicate-identity evidence is owned and completed by prerequisite `PH-10C`; this phase adds only the expected-green adapter evidence assigned to it.
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
@@ -585,7 +603,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Verify import preview and reapplication to existing transactions produce the same decision.
 - [ ] Add mandatory HTTP and PostgreSQL integration tests for create, edit, delete, ordered lookup, reapplication, and friendly validation.
 
-**Tests:** `UNIT-FF-CAT-001-01`, `UNIT-FF-CAT-002-01` (origin-aware decisions), `UNIT-FF-CAT-003-01`, `UNIT-FF-CAT-004-01` (normalized uniqueness), `E2E-FF-CAT-004-01`, `INT-FF-CAT-004-02` (normalized category migration), `E2E-FF-CAT-005-01`, `E2E-FF-CAT-005-02`, `UNIT-FF-CAT-005-02` (stable order, origin decisions, changed/unchanged counts), `INT-FF-CAT-005-01` (HTTP), `INT-FF-CAT-005-02` (PostgreSQL), `INT-FF-CAT-005-03` (origin migration), and `INT-FF-TXN-001-04` (PostgreSQL round-trip).
+**Tests:** `E2E-FF-CAT-001-01`, `UNIT-FF-CAT-001-01`, `UNIT-FF-CAT-002-01` (origin-aware decisions), `UNIT-FF-CAT-003-01`, `UNIT-FF-CAT-004-01` (normalized uniqueness), `E2E-FF-CAT-004-01`, `INT-FF-CAT-004-02` (normalized category migration), `E2E-FF-CAT-005-01`, `E2E-FF-CAT-005-02`, `UNIT-FF-CAT-005-02` (stable order, origin decisions, changed/unchanged counts), `INT-FF-CAT-005-01` (HTTP), `INT-FF-CAT-005-02` (PostgreSQL), `INT-FF-CAT-005-03` (origin migration), and `INT-FF-TXN-001-04` (PostgreSQL round-trip).
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
@@ -604,6 +622,8 @@ The current composition registers authentication before protected routes. This d
 - [ ] Add `INT-FF-MDM-003-01` and `INT-FF-MDM-004-01` for HTTP mapping and `INT-FF-MDM-003-02` and `INT-FF-MDM-004-02` for PostgreSQL create/edit/deactivate/reactivate and active filtering.
 - [ ] Add `INT-FF-MDM-005-01`: restart preserves names and active state.
 - [ ] If any expected-green evidence fails, stop and reclassify this phase as behavior remediation before changing production code.
+
+**Tests:** `E2E-FF-MDM-003-01`, `E2E-FF-MDM-003-02`, `E2E-FF-MDM-004-01`, `E2E-FF-MDM-004-02`, `INT-FF-MDM-003-01`, `INT-FF-MDM-003-02`, `INT-FF-MDM-004-01`, `INT-FF-MDM-004-02`, and `INT-FF-MDM-005-01`.
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
@@ -626,7 +646,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Assert exact per-plan and total minor-unit values.
 - [ ] Add mandatory HTTP and PostgreSQL integration coverage for form parsing, activation, overrides, filtering, and translated-error preparation.
 
-**Tests:** `E2E-FF-INC-005-01`, `UNIT-FF-INC-001-01` (recurring-plan validation/safe arithmetic), `UNIT-FF-INC-002-01`, `UNIT-FF-INC-004-01`, `UNIT-FF-INC-005-01` (activation calculations), `E2E-FF-INC-003-01`, `INT-FF-INC-001-01` and `INT-FF-INC-005-01` (PostgreSQL), and `INT-FF-INC-001-02` and `INT-FF-INC-005-02` (HTTP).
+**Tests:** `E2E-FF-INC-001-01`, `E2E-FF-INC-001-02`, `E2E-FF-INC-005-01`, `UNIT-FF-INC-001-01` (recurring-plan validation/safe arithmetic), `UNIT-FF-INC-002-01`, `UNIT-FF-INC-004-01`, `UNIT-FF-INC-005-01` (activation calculations), `E2E-FF-INC-003-01`, `INT-FF-INC-001-01` and `INT-FF-INC-005-01` (PostgreSQL), and `INT-FF-INC-001-02` and `INT-FF-INC-005-02` (HTTP).
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
@@ -645,7 +665,10 @@ The current composition registers authentication before protected routes. This d
 - [ ] Add `INT-FF-AUTH-008-01`: label changes cannot alter OIDC subject, session user context, or authorization.
 - [ ] Add `INT-FF-SCP-003-01`: two deterministic authenticated identities can maintain every owner context.
 - [ ] Add `INT-FF-MDM-001-01` for HTTP mapping and `INT-FF-MDM-001-02` for PostgreSQL owner-label round trips.
+- [ ] Add `SMOKE-FF-SCP-003-01`: expected-green deployment evidence proves both authenticated identities retain equal access to every owner context.
 - [ ] If expected-green evidence fails, stop and reclassify before production changes.
+
+**Tests:** `E2E-FF-MDM-001-01`, `INT-FF-AUTH-008-01`, `INT-FF-SCP-003-01`, `INT-FF-MDM-001-01`, `INT-FF-MDM-001-02`, and `SMOKE-FF-SCP-003-01`.
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
@@ -660,7 +683,7 @@ The current composition registers authentication before protected routes. This d
 **Status:** Pending
 **Classification:** Behavior change
 **Implements:** `FF-TXN-005`, transaction-level foundations for `FF-TXN-006`
-**Verifies:** `FF-TXN-001`, `FF-TXN-002`, `FF-TXN-004`, `FF-ARC-006`
+**Verifies:** `FF-TXN-001`, `FF-TXN-002`, `FF-TXN-004`, `FF-ARC-006`, `FF-UI-001`
 **Operations:** `OPS-FF-TXN-005-01`
 
 **Red:**
@@ -713,7 +736,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Use the target German fresh-database seed literals from `FF-MDM-002` without renaming existing user-maintained rows.
 - [ ] Document accepted formats and troubleshooting.
 
-**Tests:** `E2E-FF-LOC-001-01`, `INT-FF-LOC-001-04` (catalog keys and allowlist), `E2E-FF-LOC-002-01`, `UNIT-FF-LOC-003-02` (locale-neutral amount/date values), `UNIT-FF-ARC-007-01` (typed domain errors), `INT-FF-LOC-002-01` and `INT-FF-LOC-002-02` (valid/invalid HTTP grammar), `INT-FF-LOC-003-01` (formatting/error translation), `INT-FF-LOC-004-01` (CSV independence), `INT-FF-ARC-004-03` (template boundary), and `INT-FF-MDM-002-02` (fresh versus existing seeds).
+**Tests:** `E2E-FF-LOC-001-01`, `INT-FF-LOC-001-04` (catalog keys and allowlist), `E2E-FF-LOC-002-01`, `UNIT-FF-LOC-003-02` (locale-neutral amount/date values), `UNIT-FF-ARC-007-01` (typed domain errors), `INT-FF-ARC-007-01` (core/adapters localization boundary), `INT-FF-LOC-002-01` and `INT-FF-LOC-002-02` (valid/invalid HTTP grammar), `INT-FF-LOC-003-01` (formatting/error translation), `INT-FF-LOC-004-01` (CSV independence), `INT-FF-ARC-004-03` (template boundary), and `INT-FF-MDM-002-02` (fresh versus existing seeds).
 
 **Quality gates:** the five canonical commands plus `docker compose build` when packaged localization resources change.
 
@@ -750,7 +773,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Add German prepared view models and translated errors.
 - [ ] Update dashboard interpretation and forecast-limit runbooks.
 
-**Tests:** `E2E-FF-DASH-001-01`, `UNIT-FF-DASH-001-01` (sign conversion and balance), `E2E-FF-DASH-002-01`, `UNIT-FF-DASH-002-01` (reconciliation), `E2E-FF-DASH-003-01`, `UNIT-FF-DASH-003-01` (filter aggregation), `E2E-FF-DASH-004-01`, `UNIT-FF-DASH-004-01`, `E2E-FF-FOR-001-01`, `UNIT-FF-FOR-002-01`, `UNIT-FF-FOR-003-01`, `E2E-FF-FOR-004-01`, `E2E-FF-TXN-006-02`, `E2E-FF-MDM-001-02`, `E2E-FF-LOC-001-02`, `INT-FF-DASH-001-01` (PostgreSQL), and `INT-FF-DASH-003-01` (HTTP/HTMX).
+**Tests:** `E2E-FF-DASH-001-01`, `UNIT-FF-DASH-001-01` (sign conversion and balance), `E2E-FF-DASH-002-01`, `UNIT-FF-DASH-002-01` (reconciliation), `E2E-FF-DASH-003-01`, `UNIT-FF-DASH-003-01` (filter aggregation), `E2E-FF-DASH-004-01`, `UNIT-FF-DASH-004-01`, `E2E-FF-FOR-001-01`, `UNIT-FF-FOR-001-01`, `UNIT-FF-FOR-002-01`, `UNIT-FF-FOR-003-01`, `E2E-FF-FOR-004-01`, `UNIT-FF-FOR-004-01`, `E2E-FF-TXN-006-02`, `E2E-FF-MDM-001-02`, `E2E-FF-LOC-001-02`, `INT-FF-DASH-001-01` (PostgreSQL), and `INT-FF-DASH-003-01` (HTTP/HTMX).
 
 **Quality gates:** the five canonical commands.
 
@@ -785,7 +808,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Link the exact Familienportal and BMF calculator URLs.
 - [ ] Update scenario interpretation and maintenance runbooks.
 
-**Tests:** `E2E-FF-SCN-001-01`, `UNIT-FF-SCN-001-01`, `INT-FF-SCN-001-01` (snapshot persistence), `UNIT-FF-SCN-002-01`, `UNIT-FF-SCN-002-02`, `E2E-FF-SCN-003-01`, `E2E-FF-SCN-004-01`, `UNIT-FF-SCN-004-01`, `UNIT-FF-SCN-005-01`, `E2E-FF-SCN-006-01`, `E2E-FF-LOC-001-03`, `E2E-FF-UI-001-03`, `INT-FF-SCN-001-02` (PostgreSQL), and `INT-FF-SCN-001-03` (HTTP).
+**Tests:** `E2E-FF-SCN-001-01`, `E2E-FF-SCN-001-02`, `UNIT-FF-SCN-001-01`, `INT-FF-SCN-001-01` (snapshot persistence), `UNIT-FF-SCN-002-01`, `UNIT-FF-SCN-002-02`, `E2E-FF-SCN-003-01`, `E2E-FF-SCN-004-01`, `UNIT-FF-SCN-004-01`, `UNIT-FF-SCN-004-02`, `UNIT-FF-SCN-005-01`, `E2E-FF-SCN-006-01`, `E2E-FF-LOC-001-03`, `E2E-FF-UI-001-03`, `INT-FF-SCN-001-02` (PostgreSQL), and `INT-FF-SCN-001-03` (HTTP).
 
 **Quality gates:** the five canonical commands plus `docker compose build`.
 
@@ -799,7 +822,7 @@ The current composition registers authentication before protected routes. This d
 **Classification:** Behavior change
 **Implements:** `FF-DEP-005`, `FF-REL-001`, `FF-REL-002`
 **Verifies:** `FF-SCP-001`, `FF-SCP-002`, `FF-SCP-003`, `FF-SCP-004`, `FF-DEV-001`, `FF-OPS-001`, `FF-OPS-002`, `FF-OPS-003`, `FF-DEP-001`, `FF-DEP-002`, `FF-DEP-003`, `FF-DEP-004`, `FF-DEP-005`, `FF-REL-001`, `FF-REL-002`, `FF-QUA-001`, `FF-QUA-002`, `FF-QUA-003`, `FF-QUA-004`
-**Operations:** final verification of every `OPS-*` evidence item
+**Operations:** `OPS-FF-DEP-005-01`, `OPS-FF-REL-001-01`, `OPS-FF-REL-002-01`; rerun every earlier operations evidence item without redefining ownership
 
 **Red:**
 
@@ -826,7 +849,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Finalize README, Operations runbooks, release checklist, and rollback instructions.
 - [ ] Record known limitations without weakening active acceptance criteria.
 
-**Tests:** `SMOKE-FF-DEP-005-01`, `SMOKE-FF-REL-001-01`, `SMOKE-FF-REL-002-01`, `SMOKE-FF-REL-002-02`, `SMOKE-FF-DEV-001-01`, plus referenced production Compose, migration, backup/restore, reverse-proxy, and secret tests.
+**Tests:** `SMOKE-FF-DEP-005-01`, `SMOKE-FF-REL-001-01`, `SMOKE-FF-REL-002-01`, and `SMOKE-FF-REL-002-02` are expected red before their production changes. `INT-FF-ARC-001-01`, `INT-FF-ARC-002-01`, `INT-FF-ARC-005-01`, `INT-FF-DEP-004-01`, `INT-FF-QUA-002-01`, `INT-FF-QUA-003-01`, `SMOKE-FF-DEV-001-01`, `SMOKE-FF-DEV-001-02`, `SMOKE-FF-OPS-001-01`, `SMOKE-FF-SCP-002-01`, and `SMOKE-FF-SCP-004-01` are expected-green evidence owned by `PH-15`.
 
 **Quality gates:** the five canonical commands plus `docker compose build`.
 
@@ -925,7 +948,7 @@ Statuses describe acceptance evidence, not historical phase completion:
 | `FF-MDM-003-AC01` | Delivered-unverified | `PH-08-R01` | `E2E-FF-MDM-003-01` | `tests/e2e/master-data.test.ts` | `OPS-FF-MDM-003-01` |
 | `FF-MDM-004-AC01` | Delivered-unverified | `PH-08-R01` | `E2E-FF-MDM-004-01` | `tests/e2e/master-data.test.ts` | `OPS-FF-MDM-003-01` |
 | `FF-MDM-005-AC01` | Delivered-unverified | `PH-08-R01` | `INT-FF-MDM-005-01` | `tests/integration/drizzle-master-data-repositories.test.ts` | `—` |
-| `FF-TXN-001-AC01` | Planned | `PH-10C` | `UNIT-FF-TXN-001-01` | `tests/unit/transactions.test.ts` | `—` |
+| `FF-TXN-001-AC01` | Planned | `PH-10C` | `INT-FF-TXN-001-01` | `tests/integration/drizzle-transaction-repository.test.ts` | `—` |
 | `FF-TXN-001-AC02` | Planned | `PH-10C` | `UNIT-FF-TXN-001-02` | `tests/unit/transactions.test.ts` | `—` |
 | `FF-TXN-001-AC03` | Planned | `PH-11` | `INT-FF-TXN-001-03` | `tests/integration/drizzle-transaction-repository.test.ts` | `OPS-FF-TXN-005-01` |
 | `FF-TXN-001-AC04` | Gap | `PH-07-R01` | `INT-FF-TXN-001-04` | `tests/integration/drizzle-transaction-repository.test.ts` | `OPS-FF-CAT-002-01` |
@@ -1150,10 +1173,11 @@ This is the authoritative inventory of every mandatory test ID referenced by pen
 | `INT-FF-SCN-001-02` | `FF-SCN-001-AC02` | `PH-14` | `tests/integration/drizzle-scenario-repository.test.ts` | Expected red before production change |
 | `INT-FF-SCN-001-03` | `FF-SCN-001-AC01` | `PH-14` | `tests/integration/scenario-http.test.ts` | Expected red before production change |
 | `INT-FF-SCP-003-01` | `FF-SCP-003-AC01` | `PH-10-R01` | `tests/integration/oidc-http.test.ts` | Expected green evidence |
-| `INT-FF-TXN-001-01` | `FF-TXN-001-AC01` | `PH-04-R01` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
+| `INT-FF-TXN-001-01` | `FF-TXN-001-AC01` | `PH-10C` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
 | `INT-FF-TXN-001-03` | `FF-TXN-001-AC03` | `PH-11` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
 | `INT-FF-TXN-001-04` | `FF-TXN-001-AC04` | `PH-07-R01` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
 | `INT-FF-TXN-002-01` | `FF-TXN-002-AC01` | `PH-04-R01` | `tests/integration/transaction-http.test.ts` | Expected red before production change |
+| `INT-FF-TXN-003-01` | `FF-TXN-003-AC01` | `PH-04-R01` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
 | `INT-FF-TXN-004-01` | `FF-TXN-004-AC01` | `PH-10C` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
 | `INT-FF-TXN-005-01` | `FF-TXN-005-AC01` | `PH-11` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
 | `INT-FF-TXN-005-02` | `FF-TXN-005-AC01` | `PH-11` | `tests/integration/transaction-http.test.ts` | Expected red before production change |
