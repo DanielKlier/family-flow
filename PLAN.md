@@ -14,6 +14,8 @@ Stable identifiers use these formats:
 
 Identifiers are never renumbered or reused. Reordering or rewording does not change an identifier. Removed requirements remain as tombstones with a rationale. A material behavior change receives a new identifier and marks the old requirement as superseded. Every active requirement has testable acceptance criteria and maps to delivery and verification work in `TASKS.md`.
 
+`traceability.json` is the machine-readable source of truth for requirements, acceptance criteria, phases, test evidence, adapter boundaries, and operations evidence. A typed validator checks its schema, identifiers, cross-references, statuses, mappings, boundaries, and the exact package-script allowlist. Human-readable Markdown explains intent but is not parsed as a programming language. Completed test evidence is checked against tests collected by Vitest and Playwright rather than custom TypeScript control-flow analysis. Executable operations are exposed only through the static registry in `scripts/operations/registry.ts`; Markdown and arbitrary shell commands are never dispatched.
+
 Post-MVP ideas receive no requirement identifier until they are promoted into committed scope.
 
 ## Product Vision

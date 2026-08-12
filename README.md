@@ -45,10 +45,14 @@ Start the app with `pnpm dev:oidc`, open `http://127.0.0.1:3000/`, and sign in t
 
 - `pnpm format`: format files with Biome.
 - `pnpm format:check`: check formatting.
-- `pnpm lint`: run Biome linting and the architecture import check.
+- `pnpm lint`: run Biome linting, the architecture import check, and requirement traceability validation.
 - `pnpm arch:check`: verify core import boundaries.
-- `pnpm test`: run unit and integration tests.
-- `TEST_DATABASE_URL=postgres://... pnpm test`: include Drizzle repository integration tests against a test database.
+- `pnpm requirements:check`: validate the schema, identifiers, cross-references, statuses, mappings, adapter boundaries, and exact package-script allowlist in `traceability.json`. Markdown is documentation, not validator input.
+- `pnpm evidence:check`: compare test IDs owned by completed phases with tests collected by Vitest and Playwright.
+- `pnpm test`: run unit and integration tests; PostgreSQL tests still require `TEST_DATABASE_URL` when this general command is used.
+- `pnpm test:postgres`: provision a disposable PostgreSQL 17 service on a dynamic loopback port, run Vitest sequentially with a runner-owned `TEST_DATABASE_URL`, relay sanitized failed-Vitest output, preserve SIGINT/SIGTERM exit status, and always remove its Compose project and volumes.
+- `pnpm ops:verify --id OPS-FF-...`: invoke only a verifier explicitly registered in `scripts/operations/registry.ts`. Unregistered IDs fail without interpreting Markdown or arbitrary shell commands.
+- `pnpm verify`: run every canonical local gate. Run this once before the final commit and before pushing; add conditional PostgreSQL, Docker, migration, or smoke gates when the changed boundary requires them.
 - `pnpm test:e2e`: run E2E tests.
 - `pnpm build`: compile TypeScript and copy runtime assets into `dist`.
 - `pnpm db:migrate`: run pending SQL migrations against `DATABASE_URL` during local development.

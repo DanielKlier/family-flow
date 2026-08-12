@@ -55,9 +55,17 @@ Image distribution alternatives:
 
 ## Updates
 
-Before publishing a new version tag, run `pnpm install` when dependencies changed, then run `pnpm format:check`, `pnpm lint`, `pnpm test`, `pnpm test:e2e`, `pnpm build`, and `docker compose build` locally or in CI. Push the resulting image and deploy that immutable image reference with `compose.prod.yaml`.
+Before the final commit and again before pushing, run `pnpm install` when dependencies changed, then run `pnpm verify`. Add `pnpm test:postgres`, Docker build, migration, or deployment smoke gates when the changed boundary requires them. Push the resulting immutable image and deploy it with `compose.prod.yaml`.
 
 When database schema changes are included, inspect the SQL files in `drizzle/` before deployment and check `docker compose logs app` after startup for migration failures.
+
+## Quality And Operations Evidence
+
+`traceability.json` is the authoritative requirements, phases, acceptance, test-evidence, adapter-boundary, and operations inventory. Run `pnpm requirements:check` after changing it or package commands. The validator checks typed structure and references only; it deliberately does not interpret Markdown, shell prose, or TypeScript control flow. Run `pnpm evidence:check` to compare completed evidence with tests actually collected by Vitest and Playwright.
+
+For Drizzle adapter or migration work, run `env -u TEST_DATABASE_URL pnpm test:postgres`. This gate uses `compose.test.yaml` to create a uniquely named PostgreSQL-only Compose project, publishes PostgreSQL on a Docker-selected `127.0.0.1` port, and replaces any inherited `TEST_DATABASE_URL` before running Vitest sequentially. On Vitest failure, the runner relays stdout and stderr after redacting PostgreSQL URLs and environment values named as secrets, tokens, passwords, or database URLs. It never exposes the private Compose-port probe. The runner always executes Compose `down --volumes --remove-orphans`, including startup, test, and signal failure paths, and preserves exit codes 130 for SIGINT and 143 for SIGTERM. Docker Engine and Docker Compose are prerequisites. If the gate fails, inspect the sanitized command error and `docker ps -a`; do not reuse a development or production database as test evidence.
+
+Run named operational evidence with `pnpm ops:verify --id <OPS-ID>`. Only verifiers explicitly registered in `scripts/operations/registry.ts` are executable; inventory rows in `traceability.json` are documentation and mapping metadata, not commands. The package command clears inherited Node preload options before starting the dispatcher, and each verifier receives only `PATH` and `HOME`. Unknown IDs and non-passing or mismatched results fail closed. Follow the inventory rollback procedure after any failed production-facing operation.
 
 ## Versioning And Tags
 

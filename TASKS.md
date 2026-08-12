@@ -28,44 +28,11 @@ Every pending phase must list:
 
 Behavior changes require observed failing E2E evidence before production changes, followed by failing core unit tests for changed business rules and integration tests for every changed adapter boundary. Behavior-preserving refactors require green characterization first and a failing architecture or integration test. Evidence-only work is expected green and must not manufacture a failure; an observed failure reclassifies the item as behavior remediation before production changes.
 
-The acceptance-level traceability ledger maps every criterion to one primary evidence item. The separate complete test inventory lists every mandatory test ID, including supplemental core and adapter evidence referenced by phases. A phase cannot complete unless all inventory rows owned by it pass. A `Gap` or `Planned` criterion is expected red before its owning behavior implementation; a `Delivered-unverified` criterion is expected green. Any different result is recorded and reclassified before work continues.
+`traceability.json` maps every criterion to primary evidence and lists supplemental core and adapter evidence. A phase cannot complete unless its collected evidence passes. A `Gap` or `Planned` criterion is expected red before behavior implementation; a `Delivered-unverified` criterion is expected green.
 
-## Delivery Status Ledger
+## Delivery Status
 
-| Phase | Status | Summary |
-|---|---|---|
-| `PH-00` | Completed | Repository, Fastify healthcheck, quality tooling, Docker, Compose, and initial documentation. |
-| `PH-01` | Completed | Request IDs and one-request-log lifecycle. |
-| `PH-02` | Completed | PostgreSQL, Drizzle, accounts, categories, seeds, and initial master-data UI. |
-| `PH-03` | Completed | Authentik OIDC, test authentication, protected routes, and interim signed-cookie sessions. Current composition registers authentication before protected routes. |
-| `PH-04` | Completed | Manual transactions, editing, deletion, and filters. |
-| `PH-05` | Completed | Shared styling, HTMX interactions, and progressive enhancement. |
-| `PH-06` | Completed | Initial profile-based CSV import, preview, duplicate detection, and confirmation. |
-| `PH-07` | Completed | Categorization-rule maintenance and application. |
-| `PH-08` | Completed | Editable and deactivatable accounts and categories. |
-| `PH-09` | Completed | Recurring income, monthly overrides, and owner filters. |
-| `PH-10` | Completed | Editable display names for stable owner contexts. |
-| `PH-10D` | Pending prerequisite | Enforce requirement, acceptance, phase, test, and operations traceability before other pending work. |
-| `PH-10A` | Pending | Replace interim signed cookies with opaque PostgreSQL sessions. |
-| `PH-10B` | Pending | Replace TypeScript string rendering with the Nunjucks template boundary. |
-| `PH-10C` | Pending | Harden CSV profiles, purpose persistence, preview, upload, and confirmation. |
-| `PH-00-R01` | Pending | Deployment and reverse-proxy smoke evidence. |
-| `PH-01-R01` | Pending | Request-ID validation, error-page IDs, lifecycle logs, and redaction. |
-| `PH-02-R01` | Pending | Executable migration, backup, and restore behavior. |
-| `PH-03-R01` | Pending | Exact OIDC issuer/claims and server-side state/nonce transactions. |
-| `PH-04-R01` | Pending | Transaction validation, filter, and HTTP/PostgreSQL acceptance. |
-| `PH-06-R01` | Pending | Complete CSV profile and row-outcome acceptance. |
-| `PH-07-R01` | Pending | Purpose matching, deterministic ties, rule CRUD, and reapplication acceptance. |
-| `PH-08-R01` | Pending | Master-data reactivation and mandatory adapter evidence. |
-| `PH-09-R01` | Pending | Income boundaries, controlled clock, and activation/deactivation. |
-| `PH-10-R01` | Pending | Owner-label and authenticated-user independence evidence. |
-| `PH-11` | Pending | Explicit internal-transfer classification and transaction-list behavior. |
-| `PH-12` | Pending | German localization for all surfaces delivered through `PH-11`. |
-| `PH-13` | Pending | Dashboard, historical averages, and monthly forecasting. |
-| `PH-14` | Pending | Family-finance scenarios and external calculator links. |
-| `PH-15` | Pending | Release hardening and full-system verification. |
-
-Unchecked bullets in the original historical task list did not mean that those phases remained pending. This ledger is authoritative.
+`traceability.json` is the authoritative machine-readable phase, acceptance, test, and operations ledger. Human-readable phase records remain below. Update the JSON document directly; `pnpm requirements:check` validates its schema and references.
 
 ## Dependency And Execution Order
 
@@ -109,11 +76,11 @@ For behavior changes:
 
 For behavior-preserving refactors, record green characterization first, then observe a failing architecture or adapter integration test for the missing target boundary. For evidence-only work, record expected-green evidence; if it fails, stop, reclassify the item, and begin a behavior red-green loop.
 
-Every classification then updates required documentation, runs all canonical and applicable targeted verification, and ends with a Conventional Commit. Syntax, infrastructure, uncontrolled-time, or unrelated failures never establish a valid red phase.
+Every classification updates required documentation and ends with a small Conventional Commit after targeted checks. Prefer multiple reviewable commits during a phase; they may be combined later with interactive rebase. Run the full canonical and applicable conditional gates once before the final phase commit and again before push. Syntax, infrastructure, uncontrolled-time, or unrelated failures never establish a valid red phase.
 
 ## Canonical Quality Gates
 
-Every phase commit requires:
+The final phase commit and every push require:
 
 - `pnpm format:check`
 - `pnpm lint`
@@ -276,7 +243,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-10D — Requirement Traceability Enforcement
 
-**Status:** Pending prerequisite
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** traceability enforcement for `FF-QUA-001` and `FF-QUA-004`
 **Verifies:** every active requirement, acceptance criterion, phase, test, and operations ID
@@ -284,23 +251,24 @@ The current composition registers authentication before protected routes. This d
 
 **Red:**
 
-- [ ] Add `INT-FF-QUA-001-01` and observe failure because no executable validator checks the current documents and complete test inventory.
-- [ ] Add `INT-FF-QUA-004-01` and observe failure because non-skippable PostgreSQL and operations-evidence gate commands do not exist.
+- [x] Add `INT-FF-QUA-001-01` and observe failure because no executable validator checks the current documents and complete test inventory.
+- [x] Add `INT-FF-QUA-004-01` and observe failure because non-skippable PostgreSQL and operations-evidence gate commands do not exist.
 
 **Tasks:**
 
-- [ ] Add `scripts/check-requirement-traceability.ts` and a `pnpm requirements:check` command.
-- [ ] Reject duplicate/malformed IDs, missing acceptance-ledger rows, undefined references, range shorthand in authoritative mappings, missing owning phases/files/classifications, phase/inventory file disagreements, adapter evidence assigned to the wrong boundary file, and test IDs absent from the complete test inventory.
-- [ ] Validate that every pending phase has a supported classification, expected-red or expected-green evidence, canonical gates, and named targeted verification where required.
-- [ ] Add non-skippable `pnpm test:postgres`, provisioning isolated PostgreSQL without accepting a missing-URL skip as evidence.
-- [ ] Add the shared `pnpm ops:verify --id <OPS-ID>` dispatcher; reject unknown IDs, missing deterministic fixtures, and skipped procedures.
-- [ ] Add `pnpm requirements:check` to `pnpm lint` so enforcement runs before every later phase commit.
+- [x] Add `traceability.json` as the machine-readable source of truth and validate its typed schema, identifiers, references, statuses, mappings, boundaries, and exact package-script allowlist.
+- [x] Use Vitest and Playwright collection for completed test evidence instead of parsing TypeScript control flow.
+- [x] Add non-skippable `pnpm test:postgres`, provisioning isolated PostgreSQL without accepting a missing-URL skip as evidence.
+- [x] Dispatch operations only through the static `scripts/operations/registry.ts`; never interpret Markdown or arbitrary shell commands.
+- [x] Add `pnpm requirements:check` to lint and `pnpm evidence:check` to the final `pnpm verify` gate.
 
 **Tests:** `INT-FF-QUA-001-01`, `INT-FF-QUA-004-01`.
 
-**Quality gates:** the five canonical commands plus direct `pnpm requirements:check`, `pnpm test:postgres`, and dispatcher fixture tests.
+**Red evidence:** The focused structured-tooling test initially failed because the typed validator, runner collection adapter, static operations registry, and exact package-script validator did not exist.
 
-**Targeted verification:** run `pnpm requirements:check` against the valid documents and deterministic fixtures containing duplicate IDs, missing acceptance rows, unknown references, absent test inventory rows, and unsupported classifications; only the valid documents exit zero. Run `pnpm test:postgres` without a preconfigured `TEST_DATABASE_URL`, and run `pnpm ops:verify --id` against valid, unknown, missing-fixture, and skipped-procedure fixtures.
+**Quality gates:** `pnpm verify` plus direct `pnpm test:postgres` for the PostgreSQL runner.
+
+**Targeted verification:** run the focused traceability-tooling and PostgreSQL-runner integration tests. Keep validator coverage to representative schema, reference, boundary, collection, registry, environment-sanitization, and exact-wiring cases rather than speculative Markdown, shell, or TypeScript grammar mutations.
 
 **Commit:** `chore: enforce requirement traceability`
 
@@ -386,8 +354,8 @@ The current composition registers authentication before protected routes. This d
 - [ ] `E2E-FF-UI-001-01`: full-page and HTMX create, edit, delete, validation, and filter parity.
 - [ ] `E2E-FF-UI-002-01`: expected-green characterization proves every primary flow remains usable without JavaScript.
 - [ ] `E2E-FF-UI-003-01`: untrusted account, category, transaction, income, rule, and error text renders as text.
-- [ ] `INT-FF-ARC-003-01`: `@fastify/view` renders Nunjucks with global escaping.
-- [ ] `INT-FF-ARC-004-01`: static checks reject disabled escaping, `safe`, parser/formatter arithmetic, and repository/use-case access from templates.
+- [ ] `INT-FF-ARC-003-01`: @fastify/view renders Nunjucks with global escaping.
+- [ ] `INT-FF-ARC-004-01`: static checks reject disabled escaping, the Nunjucks safe filter, parser/formatter arithmetic, and repository/use-case access from templates.
 - [ ] `INT-FF-ARC-004-02`: full pages and fragments receive only declared view models.
 - [ ] `INT-FF-DEP-001-01`: compiled application resolves packaged templates.
 - [ ] `SMOKE-FF-DEP-001-01`: production image renders a full page and an HTMX fragment.
@@ -429,12 +397,12 @@ The current composition registers authentication before protected routes. This d
 **Tests:**
 
 - [ ] `UNIT-FF-TXN-001-01` and `UNIT-FF-TXN-001-02`: purpose-inclusive field contract and negative persisted amount invariant.
-- [ ] `INT-FF-TXN-001-01`: PostgreSQL preserves the complete post-`PH-10C` transaction round-trip contract.
+- [ ] `INT-FF-TXN-001-01`: PostgreSQL preserves the complete post-PH-10C transaction round-trip contract.
 - [ ] `E2E-FF-TXN-004-01`: imported transaction editing preserves source, purpose, and import hash.
 - [ ] `INT-FF-TXN-004-01`: PostgreSQL round-trips imported purpose and import identity.
 - [ ] `E2E-FF-CSV-001-01`, `E2E-FF-CSV-001-02`, and `E2E-FF-CSV-002-01`: finite profile options, persistence, reuse, and every mapped field including purpose.
 - [ ] `INT-FF-CSV-008-01`: HTTP preview/confirmation mapping cannot authorize tampered data.
-- [ ] `INT-FF-CSV-003-01`: every encoding/delimiter/date/decimal option, including `31.12.26 → 2026-12-31`.
+- [ ] `INT-FF-CSV-003-01`: every encoding/delimiter/date/decimal option, including 31.12.26 → 2026-12-31.
 - [ ] `INT-FF-CSV-003-02`: CSV structure, header mapping, and finite parser options remain adapter-owned and deterministic.
 - [ ] `E2E-FF-CSV-004-01`: one mixed file shows importable, ignored, invalid, and duplicate rows.
 - [ ] `E2E-FF-CSV-004-02`: preview exposes deterministic row-level reasons and never makes invalid rows confirmable.
@@ -464,6 +432,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-00-R01 — Deployment And Reverse-Proxy Smoke Evidence
 
+**Status:** Pending
 **Classification:** Evidence-only; expected green after prerequisite phases
 **Implements:** none
 **Verifies:** `FF-SCP-001`, `FF-DEP-001`, `FF-DEP-002`, `FF-DEP-003`
@@ -484,6 +453,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-01-R01 — Complete Request-Lifecycle Behavior
 
+**Status:** Pending
 **Classification:** Behavior change
 **Implements:** `FF-OBS-001`, `FF-OBS-003`, `FF-OBS-004`
 **Verifies:** `FF-OBS-002`, `FF-OBS-005`
@@ -504,6 +474,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-02-R01 — Migration, Backup, And Restore Behavior
 
+**Status:** Pending
 **Classification:** Behavior change
 **Implements:** `FF-OPS-002`, `FF-OPS-003`
 **Verifies:** `FF-MDM-002`, `FF-MDM-005`, `FF-OPS-002`, `FF-OPS-003`, `FF-DEP-002`
@@ -526,6 +497,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-03-R01 — OIDC And Authentication Hardening
 
+**Status:** Pending
 **Classification:** Behavior change
 **Implements:** `FF-AUTH-002`
 **Verifies:** `FF-AUTH-001`, `FF-AUTH-007`, `FF-AUTH-008`, `FF-DEV-001`, `FF-DEP-004`
@@ -548,6 +520,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-04-R01 — Complete Transaction Boundaries
 
+**Status:** Pending
 **Classification:** Behavior change
 **Implements:** `FF-TXN-001`, `FF-TXN-002`, `FF-TXN-003`, `FF-ARC-006`
 **Verifies:** `FF-TXN-001`, `FF-TXN-002`, `FF-TXN-003`, `FF-ARC-006`, `FF-UI-001`
@@ -567,6 +540,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-06-R01 — Complete CSV Profile Acceptance Evidence
 
+**Status:** Pending
 **Classification:** Evidence-only after `PH-10C`; expected green
 **Implements:** none
 **Verifies:** `FF-CSV-001`, `FF-CSV-002`, `FF-CSV-003`, `FF-CSV-004`, `FF-CSV-005`
@@ -579,7 +553,7 @@ The current composition registers authentication before protected routes. This d
 - [ ] Verify duplicate identity changes when normalized payee changes.
 - [ ] Add mandatory PostgreSQL integration for profile options, mapping, and round-trip behavior.
 
-**Tests:** `INT-FF-CSV-002-01` (CSV parsing/mapping) and `INT-FF-CSV-002-02` (PostgreSQL). The acceptance-primary E2E and duplicate-identity evidence is owned and completed by prerequisite `PH-10C`; this phase adds only the expected-green adapter evidence assigned to it.
+**Tests:** `INT-FF-CSV-002-01` (CSV parsing/mapping) and `INT-FF-CSV-002-02` (PostgreSQL). The acceptance-primary E2E and duplicate-identity evidence is owned and completed by prerequisite PH-10C; this phase adds only the expected-green adapter evidence assigned to it.
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
 
@@ -589,6 +563,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-07-R01 — Complete Categorization Behavior
 
+**Status:** Pending
 **Classification:** Behavior change
 **Implements:** `FF-CAT-001`, `FF-CAT-003`, `FF-CAT-004`, `FF-CAT-005`
 **Verifies:** `FF-CAT-002`
@@ -613,6 +588,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-08-R01 — Master-Data Reactivation And Adapter Evidence
 
+**Status:** Pending
 **Classification:** Evidence-only; expected green
 **Implements:** none
 **Verifies:** `FF-MDM-003`, `FF-MDM-004`, `FF-MDM-005`, `FF-ARC-002`
@@ -633,6 +609,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-09-R01 — Income Boundaries, Clock, And Activation
 
+**Status:** Pending
 **Classification:** Behavior change
 **Implements:** `FF-INC-001`, `FF-INC-002`, `FF-INC-004`, `FF-INC-005`, `FF-ARC-006`
 **Verifies:** `FF-INC-003`
@@ -656,6 +633,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-10-R01 — Owner-Context Independence Evidence
 
+**Status:** Pending
 **Classification:** Evidence-only; expected green
 **Implements:** none
 **Verifies:** `FF-MDM-001`, `FF-SCP-003`, `FF-AUTH-008`, `FF-ARC-002`
@@ -849,415 +827,18 @@ The current composition registers authentication before protected routes. This d
 - [ ] Finalize README, Operations runbooks, release checklist, and rollback instructions.
 - [ ] Record known limitations without weakening active acceptance criteria.
 
-**Tests:** `SMOKE-FF-DEP-005-01`, `SMOKE-FF-REL-001-01`, `SMOKE-FF-REL-002-01`, and `SMOKE-FF-REL-002-02` are expected red before their production changes. `INT-FF-ARC-001-01`, `INT-FF-ARC-002-01`, `INT-FF-ARC-005-01`, `INT-FF-DEP-004-01`, `INT-FF-QUA-002-01`, `INT-FF-QUA-003-01`, `SMOKE-FF-DEV-001-01`, `SMOKE-FF-DEV-001-02`, `SMOKE-FF-OPS-001-01`, `SMOKE-FF-SCP-002-01`, and `SMOKE-FF-SCP-004-01` are expected-green evidence owned by `PH-15`.
+**Tests:** `SMOKE-FF-DEP-005-01`, `SMOKE-FF-REL-001-01`, `SMOKE-FF-REL-002-01`, and `SMOKE-FF-REL-002-02` are expected red before their production changes. `INT-FF-ARC-001-01`, `INT-FF-ARC-002-01`, `INT-FF-ARC-005-01`, `INT-FF-DEP-004-01`, `INT-FF-QUA-002-01`, `INT-FF-QUA-003-01`, `SMOKE-FF-DEV-001-01`, `SMOKE-FF-DEV-001-02`, `SMOKE-FF-OPS-001-01`, `SMOKE-FF-SCP-002-01`, and `SMOKE-FF-SCP-004-01` are expected-green evidence owned by PH-15.
 
 **Quality gates:** the five canonical commands plus `docker compose build`.
 
-**Targeted verification:** execute every named `SMOKE-*` and `OPS-*` procedure and the ID/traceability validator.
+**Targeted verification:** execute every named SMOKE and OPS procedure and the ID/traceability validator.
 
 **Commit:** `chore: prepare mvp release`
 
-## Operations Evidence Inventory
+## Traceability Inventories
 
-Each operations ID is owned by the named `OPERATIONS.md` heading. The owning phase creates deterministic fixtures under `tests/fixtures/operations/<OPS-ID>/` and an executable verifier invoked as `pnpm ops:verify --id <OPS-ID>`. The runbook states environment prerequisites and any additional production command. The table defines expected results and rollback. Later phases reference rather than redefine the artifact.
+The phase, acceptance, test-evidence, adapter-boundary, and operations inventories live in `traceability.json`. They are intentionally not duplicated as Markdown tables. Use:
 
-| ID | Target heading and procedure | Expected result | Failure and rollback |
-|---|---|---|---|
-| `OPS-FF-AUTH-002-01` | **OIDC/Auth Problems**: run documented Authentik and Dex discovery/callback diagnostics with invalid issuer/state/nonce fixtures. | Valid flow succeeds; every invalid flow is request-correlated without protocol leakage. | Disable traffic, restore prior auth image/config, and inspect sanitized request ID logs. |
-| `OPS-FF-AUTH-006-01` | **Session Cleanup**: `docker compose -f compose.yaml -f compose.prod.yaml run --rm app node dist/app/session-cleanup.js --limit 1000`. | Each run deletes at most 1,000 eligible rows; repeat until zero; active rows remain. | Stop cleanup, restore database if financial/session tables were unexpectedly changed, and retain command output. |
-| `OPS-FF-AUTH-009-01` | **Session Migration And Restore**: deploy migration and replay pre-migration/pre-backup tokens. | Old signed and restored tokens are rejected before traffic opens. | Keep service unavailable and roll back image/schema only through the documented compatible path. |
-| `OPS-FF-ARC-003-01` | **Template Diagnostics**: render named full-page and HTMX fixture from the production image. | Packaged templates resolve and user markup is escaped. | Roll back to prior image; inspect template path/config without enabling `safe`. |
-| `OPS-FF-CAT-002-01` | **Categorization Rules**: apply deterministic fixture rules to preview and persisted transactions. | Category/fixed-cost outcomes and changed/unchanged counts match. | Stop reapplication and restore backup if persisted scope was wrong. |
-| `OPS-FF-CSV-001-01` | **CSV Profiles**: import named fixtures for every finite profile option. | Saved and reloaded profiles produce identical canonical previews. | Delete only the test profile/data by stable fixture IDs. |
-| `OPS-FF-CSV-006-01` | **CSV Limits**: run exact-boundary and boundary-plus-one fixtures. | Exact limits preview; over-limit requests reject before persistence. | Disable upload endpoint or roll back image if limits fail. |
-| `OPS-FF-CSV-009-01` | **CSV Atomicity And Collision Recovery**: run rollback/concurrency fixtures and collision preflight. | No partial/duplicate writes; collisions abort with IDs and no mutation. | Keep migration stopped, restore backup after unexpected writes, and resolve listed IDs manually. |
-| `OPS-FF-CSV-011-01` | **CSV Troubleshooting**: reject a sanitized invalid fixture and correlate its request ID. | One sanitized log, visible request ID, and zero writes. | Remove captured output if fixture contents appear and treat leakage as an incident. |
-| `OPS-FF-DASH-001-01` | **Dashboard Interpretation**: load named monthly fixture and reconcile totals/breakdowns. | Group totals equal filtered overall total. | Mark dashboard unavailable and roll back if financial totals differ. |
-| `OPS-FF-DEP-001-01` | **Production Image**: start digest-pinned Linux/amd64 image and resolve code, migrations, templates, assets, labels, and maintenance entry points. | Image starts without pnpm/install, every artifact resolves, and version/revision labels match. | Roll back to the compatible digest from its annotated tag; restore its paired backup first when schema-incompatible. |
-| `OPS-FF-DEP-002-01` | **Deployment And Migrations**: run empty-database and update Compose smoke. | Migrations complete before readiness and healthchecks pass. | Stop deployment and restore the pre-migration backup/image pair. |
-| `OPS-FF-DEP-003-01` | **Reverse Proxy**: smoke with `BASE_URL=https://finances.home.arpa`. | Links, secure cookies, callback, and redirects use external HTTPS URL. | Remove new route from proxy and restore prior config/image. |
-| `OPS-FF-DEP-005-01` | **Production Deployment**: pull and start digest-pinned `APP_IMAGE=registry/repository@sha256:<digest>` with build disabled. | Target host installs no packages and the running image reports the configured digest. | Restore the preceding digest-pinned `APP_IMAGE` and compatible database backup. |
-| `OPS-FF-DEV-001-01` | **Local OIDC Development**: start PostgreSQL/Dex with `.env.dev`, then run `pnpm dev:oidc`. | Documented developer login succeeds without changing production configuration. | Stop Dex and remove only development containers/volumes named by the procedure. |
-| `OPS-FF-FOR-001-01` | **Forecast Interpretation**: run current, past, and future month fixtures. | Current month shows components; past shows actuals without forecast; future selection is rejected. | Hide forecast and roll back if any component is miscounted. |
-| `OPS-FF-INC-001-01` | **Income Maintenance**: create, override, deactivate, reactivate named fixture. | Totals and preserved history match exact minor units. | Restore affected fixture IDs from backup if totals diverge. |
-| `OPS-FF-LOC-002-01` | **German Input Formats**: submit documented valid/invalid amount/date fixtures. | Valid inputs canonicalize once; invalid inputs make no change. | Roll back parser image and use canonical maintenance input. |
-| `OPS-FF-MDM-001-01` | **Owner Labels**: edit labels and inspect authenticated identity plus filters. | Labels change; stable owner keys/user identity do not. | Restore labels by stable key. |
-| `OPS-FF-MDM-003-01` | **Master Data**: deactivate/reactivate fixture account/category. | History remains; new-choice availability follows active state. | Reactivate by stable ID or restore fixture. |
-| `OPS-FF-OBS-003-01` | **Log Analysis**: exercise finite lifecycle fixture and correlate request IDs. | Exactly one complete sanitized log per request. | Restrict log access and roll back if secrets/financial text leak. |
-| `OPS-FF-OPS-002-01` | **Backup**: back up deterministic record/count/minor-unit fixture. | Backup completes and manifest records counts/totals. | Keep prior verified backup and diagnose before deployment. |
-| `OPS-FF-OPS-003-01` | **Restore**: restore fixture, reconcile IDs/counts/totals, invalidate sessions, and verify health. | Financial records match and old sessions fail. | Keep traffic closed and restore the previous verified database/image pair. |
-| `OPS-FF-REL-001-01` | **Release**: compare `package.json`, `CHANGELOG.md`, new annotated Git tag, image version label, and recorded OCI digest. | All version labels agree and the digest resolves before publication. | Delete an unpublished incorrect tag/image and correct metadata; never rewrite a published historical tag. |
-| `OPS-FF-REL-002-01` | **Update And Rollback**: before B, record B digest, previous A digest, pre-B backup ID/path/checksum, before/after schemas, and compatibility; exercise direct and restore rollback fixtures. | Compatible rollback starts A directly; incompatible rollback restores B's verified pre-deployment backup before A; data reconciles. | Keep traffic closed and use only B's append-only deployment record; never substitute A's older historical backup. |
-| `OPS-FF-SCN-001-01` | **Scenario Maintenance**: create snapshot fixture, change source transactions, and reload. | Snapshot and exact results remain unchanged. | Remove test scenario; roll back if persisted source data changed. |
-| `OPS-FF-TXN-002-01` | **Transaction Maintenance**: create/edit/delete signed-amount fixture through UI. | Positive UI amount maps once to negative persisted minor units. | Correct by stable transaction ID or restore backup. |
-| `OPS-FF-TXN-005-01` | **Internal Transfers**: mark/unmark fixture and inspect list/aggregates. | Visibility remains and marked expense contribution is zero. | Unmark by stable transaction ID and roll back if aggregates remain wrong. |
-
-## Acceptance-Level Traceability Ledger
-
-Statuses describe acceptance evidence, not historical phase completion:
-
-- `Verified`: requirement-linked evidence already satisfies the criterion.
-- `Delivered-unverified`: behavior appears delivered but stable evidence remains pending.
-- `Gap`: known production or operational remediation is required.
-- `Planned`: owning capability is not yet delivered.
-
-| Acceptance criterion | Status | Owning phase | Evidence ID | Test file or planned file | Operations ID |
-|---|---|---|---|---|---|
-| `FF-AUTH-001-AC01` | Gap | `PH-03-R01` | `E2E-FF-AUTH-001-01` | `tests/e2e/auth.test.ts` | `—` |
-| `FF-AUTH-001-AC02` | Gap | `PH-03-R01` | `E2E-FF-AUTH-001-02` | `tests/e2e/auth.test.ts` | `—` |
-| `FF-AUTH-001-AC03` | Gap | `PH-03-R01` | `E2E-FF-AUTH-001-03` | `tests/e2e/auth.test.ts` | `OPS-FF-AUTH-002-01` |
-| `FF-AUTH-002-AC01` | Gap | `PH-03-R01` | `INT-FF-AUTH-002-01` | `tests/integration/oidc-http.test.ts` | `OPS-FF-AUTH-002-01` |
-| `FF-AUTH-002-AC02` | Gap | `PH-03-R01` | `INT-FF-AUTH-002-02` | `tests/integration/oidc-http.test.ts` | `OPS-FF-AUTH-002-01` |
-| `FF-AUTH-002-AC03` | Gap | `PH-03-R01` | `INT-FF-AUTH-002-03` | `tests/integration/oidc-http.test.ts` | `OPS-FF-AUTH-002-01` |
-| `FF-AUTH-003-AC01` | Planned | `PH-10A` | `INT-FF-AUTH-003-01` | `tests/integration/postgres-session-store.test.ts` | `—` |
-| `FF-AUTH-003-AC02` | Planned | `PH-10A` | `INT-FF-AUTH-003-02` | `tests/integration/oidc-http.test.ts` | `—` |
-| `FF-AUTH-004-AC01` | Planned | `PH-10A` | `INT-FF-AUTH-004-01` | `tests/integration/oidc-http.test.ts` | `—` |
-| `FF-AUTH-004-AC02` | Planned | `PH-10A` | `INT-FF-AUTH-004-02` | `tests/integration/oidc-http.test.ts` | `—` |
-| `FF-AUTH-005-AC01` | Planned | `PH-10A` | `E2E-FF-AUTH-005-01` | `tests/e2e/auth.test.ts` | `—` |
-| `FF-AUTH-006-AC01` | Planned | `PH-10A` | `INT-FF-AUTH-006-01` | `tests/integration/postgres-session-store.test.ts` | `OPS-FF-AUTH-006-01` |
-| `FF-AUTH-006-AC02` | Planned | `PH-10A` | `INT-FF-AUTH-006-02` | `tests/integration/postgres-session-store.test.ts` | `OPS-FF-AUTH-006-01` |
-| `FF-AUTH-007-AC01` | Planned | `PH-10A` | `INT-FF-AUTH-007-01` | `tests/integration/session-handling.test.ts` | `—` |
-| `FF-AUTH-008-AC01` | Delivered-unverified | `PH-10-R01` | `INT-FF-AUTH-008-01` | `tests/integration/oidc-http.test.ts` | `—` |
-| `FF-AUTH-009-AC01` | Planned | `PH-10A` | `SMOKE-FF-AUTH-009-01` | `tests/e2e/restore-smoke.test.ts` | `OPS-FF-AUTH-009-01` |
-| `FF-AUTH-009-AC02` | Planned | `PH-10A` | `SMOKE-FF-AUTH-009-02` | `tests/e2e/restore-smoke.test.ts` | `OPS-FF-AUTH-009-01` |
-| `FF-OBS-001-AC01` | Gap | `PH-01-R01` | `E2E-FF-OBS-001-01` | `tests/e2e/request-id.test.ts` | `—` |
-| `FF-OBS-001-AC02` | Gap | `PH-01-R01` | `E2E-FF-OBS-001-02` | `tests/e2e/request-id.test.ts` | `—` |
-| `FF-OBS-002-AC01` | Gap | `PH-01-R01` | `INT-FF-OBS-002-01` | `tests/integration/request-logging.test.ts` | `—` |
-| `FF-OBS-003-AC01` | Gap | `PH-01-R01` | `INT-FF-OBS-003-01` | `tests/integration/request-logging.test.ts` | `OPS-FF-OBS-003-01` |
-| `FF-OBS-004-AC01` | Gap | `PH-01-R01` | `INT-FF-OBS-004-01` | `tests/integration/request-logging.test.ts` | `—` |
-| `FF-OBS-005-AC01` | Gap | `PH-01-R01` | `INT-FF-OBS-005-01` | `tests/integration/request-logging.test.ts` | `—` |
-| `FF-SCP-001-AC01` | Delivered-unverified | `PH-00-R01` | `SMOKE-FF-SCP-001-01` | `tests/e2e/deployment-smoke.test.ts` | `—` |
-| `FF-SCP-001-AC02` | Delivered-unverified | `PH-00-R01` | `SMOKE-FF-SCP-001-02` | `tests/e2e/deployment-smoke.test.ts` | `—` |
-| `FF-SCP-002-AC01` | Delivered-unverified | `PH-15` | `SMOKE-FF-SCP-002-01` | `tests/e2e/deployment-smoke.test.ts` | `—` |
-| `FF-SCP-003-AC01` | Delivered-unverified | `PH-10-R01` | `SMOKE-FF-SCP-003-01` | `tests/e2e/deployment-smoke.test.ts` | `—` |
-| `FF-SCP-004-AC01` | Delivered-unverified | `PH-15` | `SMOKE-FF-SCP-004-01` | `tests/e2e/deployment-smoke.test.ts` | `—` |
-| `FF-DEV-001-AC01` | Delivered-unverified | `PH-15` | `SMOKE-FF-DEV-001-01` | `tests/integration/dev-oidc-compose.test.ts` | `OPS-FF-DEV-001-01` |
-| `FF-DEV-001-AC02` | Delivered-unverified | `PH-15` | `SMOKE-FF-DEV-001-02` | `tests/integration/dev-oidc-compose.test.ts` | `OPS-FF-DEV-001-01` |
-| `FF-ARC-001-AC01` | Delivered-unverified | `PH-15` | `INT-FF-ARC-001-01` | `tests/integration/architecture-requirements.test.ts` | `—` |
-| `FF-ARC-002-AC01` | Delivered-unverified | `PH-15` | `INT-FF-ARC-002-01` | `tests/integration/architecture-requirements.test.ts` | `—` |
-| `FF-ARC-003-AC01` | Planned | `PH-10B` | `INT-FF-ARC-003-01` | `tests/integration/architecture-requirements.test.ts` | `OPS-FF-ARC-003-01` |
-| `FF-ARC-004-AC01` | Planned | `PH-10B` | `INT-FF-ARC-004-01` | `tests/integration/architecture-requirements.test.ts` | `—` |
-| `FF-ARC-005-AC01` | Delivered-unverified | `PH-15` | `INT-FF-ARC-005-01` | `tests/integration/architecture-requirements.test.ts` | `—` |
-| `FF-ARC-006-AC01` | Gap | `PH-04-R01` | `UNIT-FF-ARC-006-01` | `tests/unit/financial-boundaries.test.ts` | `—` |
-| `FF-ARC-006-AC02` | Gap | `PH-04-R01` | `UNIT-FF-ARC-006-02` | `tests/unit/financial-boundaries.test.ts` | `—` |
-| `FF-ARC-007-AC01` | Planned | `PH-12` | `INT-FF-ARC-007-01` | `tests/integration/architecture-requirements.test.ts` | `—` |
-| `FF-MDM-001-AC01` | Delivered-unverified | `PH-10-R01` | `E2E-FF-MDM-001-01` | `tests/e2e/master-data.test.ts` | `OPS-FF-MDM-001-01` |
-| `FF-MDM-001-AC02` | Planned | `PH-13` | `E2E-FF-MDM-001-02` | `tests/e2e/dashboard.test.ts` | `OPS-FF-MDM-001-01` |
-| `FF-MDM-002-AC01` | Gap | `PH-02-R01` | `INT-FF-MDM-002-01` | `tests/integration/drizzle-master-data-repositories.test.ts` | `—` |
-| `FF-MDM-002-AC02` | Planned | `PH-12` | `INT-FF-MDM-002-02` | `tests/integration/drizzle-master-data-repositories.test.ts` | `—` |
-| `FF-MDM-003-AC01` | Delivered-unverified | `PH-08-R01` | `E2E-FF-MDM-003-01` | `tests/e2e/master-data.test.ts` | `OPS-FF-MDM-003-01` |
-| `FF-MDM-004-AC01` | Delivered-unverified | `PH-08-R01` | `E2E-FF-MDM-004-01` | `tests/e2e/master-data.test.ts` | `OPS-FF-MDM-003-01` |
-| `FF-MDM-005-AC01` | Delivered-unverified | `PH-08-R01` | `INT-FF-MDM-005-01` | `tests/integration/drizzle-master-data-repositories.test.ts` | `—` |
-| `FF-TXN-001-AC01` | Planned | `PH-10C` | `INT-FF-TXN-001-01` | `tests/integration/drizzle-transaction-repository.test.ts` | `—` |
-| `FF-TXN-001-AC02` | Planned | `PH-10C` | `UNIT-FF-TXN-001-02` | `tests/unit/transactions.test.ts` | `—` |
-| `FF-TXN-001-AC03` | Planned | `PH-11` | `INT-FF-TXN-001-03` | `tests/integration/drizzle-transaction-repository.test.ts` | `OPS-FF-TXN-005-01` |
-| `FF-TXN-001-AC04` | Gap | `PH-07-R01` | `INT-FF-TXN-001-04` | `tests/integration/drizzle-transaction-repository.test.ts` | `OPS-FF-CAT-002-01` |
-| `FF-TXN-002-AC01` | Gap | `PH-04-R01` | `E2E-FF-TXN-002-01` | `tests/e2e/transactions.test.ts` | `OPS-FF-TXN-002-01` |
-| `FF-TXN-002-AC02` | Gap | `PH-04-R01` | `E2E-FF-TXN-002-02` | `tests/e2e/transactions.test.ts` | `OPS-FF-TXN-002-01` |
-| `FF-TXN-003-AC01` | Gap | `PH-04-R01` | `E2E-FF-TXN-003-01` | `tests/e2e/transactions.test.ts` | `—` |
-| `FF-TXN-004-AC01` | Planned | `PH-10C` | `E2E-FF-TXN-004-01` | `tests/e2e/transactions.test.ts` | `—` |
-| `FF-TXN-005-AC01` | Planned | `PH-11` | `E2E-FF-TXN-005-01` | `tests/e2e/transactions.test.ts` | `OPS-FF-TXN-005-01` |
-| `FF-TXN-006-AC01` | Planned | `PH-11` | `UNIT-FF-TXN-006-01` | `tests/unit/transactions.test.ts` | `OPS-FF-TXN-005-01` |
-| `FF-TXN-006-AC02` | Planned | `PH-13` | `E2E-FF-TXN-006-02` | `tests/e2e/dashboard.test.ts` | `OPS-FF-FOR-001-01` |
-| `FF-CSV-001-AC01` | Planned | `PH-10C` | `E2E-FF-CSV-001-01` | `tests/e2e/csv-import.test.ts` | `OPS-FF-CSV-001-01` |
-| `FF-CSV-001-AC02` | Planned | `PH-10C` | `E2E-FF-CSV-001-02` | `tests/e2e/csv-import.test.ts` | `OPS-FF-CSV-001-01` |
-| `FF-CSV-002-AC01` | Planned | `PH-10C` | `E2E-FF-CSV-002-01` | `tests/e2e/csv-import.test.ts` | `—` |
-| `FF-CSV-003-AC01` | Planned | `PH-10C` | `INT-FF-CSV-003-01` | `tests/integration/csv-parser.test.ts` | `—` |
-| `FF-CSV-003-AC02` | Planned | `PH-10C` | `INT-FF-CSV-003-02` | `tests/integration/csv-parser.test.ts` | `—` |
-| `FF-CSV-004-AC01` | Planned | `PH-10C` | `E2E-FF-CSV-004-01` | `tests/e2e/csv-import.test.ts` | `—` |
-| `FF-CSV-004-AC02` | Planned | `PH-10C` | `E2E-FF-CSV-004-02` | `tests/e2e/csv-import.test.ts` | `—` |
-| `FF-CSV-005-AC01` | Gap | `PH-10C` | `UNIT-FF-CSV-005-01` | `tests/unit/imports.test.ts` | `OPS-FF-CSV-009-01` |
-| `FF-CSV-005-AC02` | Gap | `PH-10C` | `UNIT-FF-CSV-005-02` | `tests/unit/imports.test.ts` | `OPS-FF-CSV-009-01` |
-| `FF-CSV-006-AC01` | Planned | `PH-10C` | `E2E-FF-CSV-006-01` | `tests/e2e/csv-import.test.ts` | `OPS-FF-CSV-006-01` |
-| `FF-CSV-007-AC01` | Planned | `PH-10C` | `E2E-FF-CSV-007-01` | `tests/e2e/csv-import.test.ts` | `—` |
-| `FF-CSV-007-AC02` | Planned | `PH-10C` | `E2E-FF-CSV-007-02` | `tests/e2e/csv-import.test.ts` | `—` |
-| `FF-CSV-008-AC01` | Planned | `PH-10C` | `E2E-FF-CSV-008-01` | `tests/e2e/csv-import.test.ts` | `—` |
-| `FF-CSV-008-AC02` | Planned | `PH-10C` | `UNIT-FF-CSV-008-01` | `tests/unit/imports.test.ts` | `OPS-FF-CSV-009-01` |
-| `FF-CSV-009-AC01` | Planned | `PH-10C` | `INT-FF-CSV-009-01` | `tests/integration/drizzle-import-confirmation.test.ts` | `OPS-FF-CSV-009-01` |
-| `FF-CSV-009-AC02` | Planned | `PH-10C` | `INT-FF-CSV-009-02` | `tests/integration/drizzle-import-confirmation.test.ts` | `OPS-FF-CSV-009-01` |
-| `FF-CSV-010-AC01` | Planned | `PH-10C` | `INT-FF-CSV-010-01` | `tests/integration/csv-import-hash-migration.test.ts` | `OPS-FF-CSV-009-01` |
-| `FF-CSV-010-AC02` | Planned | `PH-10C` | `INT-FF-CSV-010-02` | `tests/integration/csv-import-hash-migration.test.ts` | `OPS-FF-CSV-009-01` |
-| `FF-CSV-011-AC01` | Planned | `PH-10C` | `INT-FF-CSV-011-01` | `tests/integration/request-logging.test.ts` | `OPS-FF-CSV-011-01` |
-| `FF-CAT-001-AC01` | Gap | `PH-07-R01` | `UNIT-FF-CAT-001-01` | `tests/unit/categorization-rules.test.ts` | `—` |
-| `FF-CAT-002-AC01` | Gap | `PH-07-R01` | `UNIT-FF-CAT-002-01` | `tests/unit/categorization-rules.test.ts` | `OPS-FF-CAT-002-01` |
-| `FF-CAT-003-AC01` | Gap | `PH-07-R01` | `UNIT-FF-CAT-003-01` | `tests/unit/categorization-rules.test.ts` | `—` |
-| `FF-CAT-004-AC01` | Gap | `PH-07-R01` | `E2E-FF-CAT-004-01` | `tests/e2e/categorization-rules.test.ts` | `—` |
-| `FF-CAT-004-AC02` | Gap | `PH-07-R01` | `INT-FF-CAT-004-02` | `tests/integration/categorization-rule-migration.test.ts` | `OPS-FF-CAT-002-01` |
-| `FF-CAT-005-AC01` | Gap | `PH-07-R01` | `E2E-FF-CAT-005-01` | `tests/e2e/categorization-rules.test.ts` | `OPS-FF-CAT-002-01` |
-| `FF-CAT-005-AC02` | Gap | `PH-07-R01` | `E2E-FF-CAT-005-02` | `tests/e2e/categorization-rules.test.ts` | `OPS-FF-CAT-002-01` |
-| `FF-CAT-005-AC03` | Gap | `PH-07-R01` | `INT-FF-CAT-005-03` | `tests/integration/categorization-rule-migration.test.ts` | `OPS-FF-CAT-002-01` |
-| `FF-INC-001-AC01` | Gap | `PH-09-R01` | `E2E-FF-INC-001-01` | `tests/e2e/income-planning.test.ts` | `OPS-FF-INC-001-01` |
-| `FF-INC-001-AC02` | Gap | `PH-09-R01` | `E2E-FF-INC-001-02` | `tests/e2e/income-planning.test.ts` | `OPS-FF-INC-001-01` |
-| `FF-INC-002-AC01` | Gap | `PH-09-R01` | `UNIT-FF-INC-002-01` | `tests/unit/income-plans.test.ts` | `—` |
-| `FF-INC-003-AC01` | Delivered-unverified | `PH-09-R01` | `E2E-FF-INC-003-01` | `tests/e2e/income-planning.test.ts` | `—` |
-| `FF-INC-004-AC01` | Gap | `PH-09-R01` | `UNIT-FF-INC-004-01` | `tests/unit/income-plans.test.ts` | `—` |
-| `FF-INC-005-AC01` | Gap | `PH-09-R01` | `E2E-FF-INC-005-01` | `tests/e2e/income-planning.test.ts` | `OPS-FF-INC-001-01` |
-| `FF-DASH-001-AC01` | Planned | `PH-13` | `E2E-FF-DASH-001-01` | `tests/e2e/dashboard.test.ts` | `OPS-FF-DASH-001-01` |
-| `FF-DASH-002-AC01` | Planned | `PH-13` | `E2E-FF-DASH-002-01` | `tests/e2e/dashboard.test.ts` | `—` |
-| `FF-DASH-003-AC01` | Planned | `PH-13` | `E2E-FF-DASH-003-01` | `tests/e2e/dashboard.test.ts` | `—` |
-| `FF-DASH-004-AC01` | Planned | `PH-13` | `E2E-FF-DASH-004-01` | `tests/e2e/dashboard.test.ts` | `—` |
-| `FF-FOR-001-AC01` | Planned | `PH-13` | `UNIT-FF-FOR-001-01` | `tests/unit/forecasting.test.ts` | `OPS-FF-FOR-001-01` |
-| `FF-FOR-002-AC01` | Planned | `PH-13` | `UNIT-FF-FOR-002-01` | `tests/unit/forecasting.test.ts` | `—` |
-| `FF-FOR-003-AC01` | Planned | `PH-13` | `UNIT-FF-FOR-003-01` | `tests/unit/forecasting.test.ts` | `—` |
-| `FF-FOR-004-AC01` | Planned | `PH-13` | `UNIT-FF-FOR-004-01` | `tests/unit/forecasting.test.ts` | `—` |
-| `FF-SCN-001-AC01` | Planned | `PH-14` | `E2E-FF-SCN-001-01` | `tests/e2e/scenarios.test.ts` | `OPS-FF-SCN-001-01` |
-| `FF-SCN-001-AC02` | Planned | `PH-14` | `E2E-FF-SCN-001-02` | `tests/e2e/scenarios.test.ts` | `OPS-FF-SCN-001-01` |
-| `FF-SCN-002-AC01` | Planned | `PH-14` | `UNIT-FF-SCN-002-01` | `tests/unit/scenarios.test.ts` | `—` |
-| `FF-SCN-002-AC02` | Planned | `PH-14` | `UNIT-FF-SCN-002-02` | `tests/unit/scenarios.test.ts` | `—` |
-| `FF-SCN-003-AC01` | Planned | `PH-14` | `E2E-FF-SCN-003-01` | `tests/e2e/scenarios.test.ts` | `—` |
-| `FF-SCN-004-AC01` | Planned | `PH-14` | `UNIT-FF-SCN-004-01` | `tests/unit/scenarios.test.ts` | `—` |
-| `FF-SCN-004-AC02` | Planned | `PH-14` | `UNIT-FF-SCN-004-02` | `tests/unit/scenarios.test.ts` | `—` |
-| `FF-SCN-005-AC01` | Planned | `PH-14` | `UNIT-FF-SCN-005-01` | `tests/unit/scenarios.test.ts` | `—` |
-| `FF-SCN-006-AC01` | Planned | `PH-14` | `E2E-FF-SCN-006-01` | `tests/e2e/scenarios.test.ts` | `—` |
-| `FF-LOC-001-AC01` | Planned | `PH-12` | `E2E-FF-LOC-001-01` | `tests/e2e/german-localization.test.ts` | `—` |
-| `FF-LOC-001-AC02` | Planned | `PH-13` | `E2E-FF-LOC-001-02` | `tests/e2e/dashboard.test.ts` | `—` |
-| `FF-LOC-001-AC03` | Planned | `PH-14` | `E2E-FF-LOC-001-03` | `tests/e2e/scenarios.test.ts` | `—` |
-| `FF-LOC-002-AC01` | Planned | `PH-12` | `E2E-FF-LOC-002-01` | `tests/e2e/german-localization.test.ts` | `OPS-FF-LOC-002-01` |
-| `FF-LOC-002-AC02` | Planned | `PH-12` | `INT-FF-LOC-002-02` | `tests/integration/localization.test.ts` | `OPS-FF-LOC-002-01` |
-| `FF-LOC-003-AC01` | Planned | `PH-12` | `INT-FF-LOC-003-01` | `tests/integration/localization.test.ts` | `—` |
-| `FF-LOC-004-AC01` | Planned | `PH-12` | `INT-FF-LOC-004-01` | `tests/integration/csv-parser.test.ts` | `—` |
-| `FF-UI-001-AC01` | Delivered-unverified | `PH-10B` | `E2E-FF-UI-001-01` | `tests/e2e/styling-and-htmx.test.ts` | `—` |
-| `FF-UI-001-AC02` | Planned | `PH-11` | `E2E-FF-UI-001-02` | `tests/e2e/internal-transfers.test.ts` | `OPS-FF-TXN-005-01` |
-| `FF-UI-001-AC03` | Planned | `PH-14` | `E2E-FF-UI-001-03` | `tests/e2e/scenarios.test.ts` | `—` |
-| `FF-UI-002-AC01` | Delivered-unverified | `PH-10B` | `E2E-FF-UI-002-01` | `tests/e2e/styling-and-htmx.test.ts` | `—` |
-| `FF-UI-003-AC01` | Delivered-unverified | `PH-10B` | `E2E-FF-UI-003-01` | `tests/e2e/styling-and-htmx.test.ts` | `—` |
-| `FF-OPS-001-AC01` | Delivered-unverified | `PH-15` | `SMOKE-FF-OPS-001-01` | `tests/integration/operations-manual.test.ts` | `—` |
-| `FF-OPS-002-AC01` | Gap | `PH-02-R01` | `SMOKE-FF-OPS-002-01` | `tests/e2e/backup-restore-smoke.test.ts` | `OPS-FF-OPS-002-01` |
-| `FF-OPS-003-AC01` | Gap | `PH-02-R01` | `SMOKE-FF-OPS-003-01` | `tests/e2e/backup-restore-smoke.test.ts` | `OPS-FF-OPS-003-01` |
-| `FF-DEP-001-AC01` | Planned | `PH-10B` | `SMOKE-FF-DEP-001-01` | `tests/e2e/image-smoke.test.ts` | `OPS-FF-DEP-001-01` |
-| `FF-DEP-002-AC01` | Delivered-unverified | `PH-00-R01` | `SMOKE-FF-DEP-002-01` | `tests/e2e/deployment-smoke.test.ts` | `OPS-FF-DEP-002-01` |
-| `FF-DEP-003-AC01` | Delivered-unverified | `PH-00-R01` | `SMOKE-FF-DEP-003-01` | `tests/e2e/deployment-smoke.test.ts` | `OPS-FF-DEP-003-01` |
-| `FF-DEP-004-AC01` | Delivered-unverified | `PH-15` | `INT-FF-DEP-004-01` | `tests/integration/config-and-secrets.test.ts` | `—` |
-| `FF-DEP-005-AC01` | Gap | `PH-15` | `SMOKE-FF-DEP-005-01` | `tests/e2e/deployment-smoke.test.ts` | `OPS-FF-DEP-005-01` |
-| `FF-REL-001-AC01` | Gap | `PH-15` | `SMOKE-FF-REL-001-01` | `tests/e2e/release-smoke.test.ts` | `OPS-FF-REL-001-01` |
-| `FF-REL-002-AC01` | Gap | `PH-15` | `SMOKE-FF-REL-002-01` | `tests/e2e/release-smoke.test.ts` | `OPS-FF-REL-002-01` |
-| `FF-REL-002-AC02` | Gap | `PH-15` | `SMOKE-FF-REL-002-02` | `tests/e2e/release-smoke.test.ts` | `OPS-FF-REL-002-01` |
-| `FF-QUA-001-AC01` | Gap | `PH-10D` | `INT-FF-QUA-001-01` | `tests/integration/requirement-traceability.test.ts` | `—` |
-| `FF-QUA-002-AC01` | Delivered-unverified | `PH-15` | `INT-FF-QUA-002-01` | `tests/integration/requirement-traceability.test.ts` | `—` |
-| `FF-QUA-003-AC01` | Delivered-unverified | `PH-15` | `INT-FF-QUA-003-01` | `tests/integration/requirement-traceability.test.ts` | `—` |
-| `FF-QUA-004-AC01` | Gap | `PH-10D` | `INT-FF-QUA-004-01` | `tests/integration/requirement-traceability.test.ts` | `—` |
-
-## Complete Test Evidence Inventory
-
-This is the authoritative inventory of every mandatory test ID referenced by pending phases or primary acceptance mappings. `PH-10D` validates this table before any other pending phase starts. Each adapter integration row is assigned to one boundary-specific file: HTTP orchestration uses `*-http.test.ts`, PostgreSQL repositories and queries use an explicitly named Drizzle/PostgreSQL test file, CSV source parsing uses `csv-parser.test.ts`, and configuration or architecture checks use their dedicated static-boundary files. One evidence ID never claims multiple adapter boundaries.
-
-| Test ID | Acceptance criterion | Owning phase | Test file or planned file | Initial classification |
-|---|---|---|---|---|
-| `E2E-FF-AUTH-001-01` | `FF-AUTH-001-AC01` | `PH-03-R01` | `tests/e2e/auth.test.ts` | Expected red before production change |
-| `E2E-FF-AUTH-001-02` | `FF-AUTH-001-AC02` | `PH-03-R01` | `tests/e2e/auth.test.ts` | Expected red before production change |
-| `E2E-FF-AUTH-001-03` | `FF-AUTH-001-AC03` | `PH-03-R01` | `tests/e2e/auth.test.ts` | Expected red before production change |
-| `E2E-FF-AUTH-002-01` | `FF-AUTH-002-AC01` | `PH-03-R01` | `tests/e2e/auth.test.ts` | Expected red before production change |
-| `E2E-FF-AUTH-005-01` | `FF-AUTH-005-AC01` | `PH-10A` | `tests/e2e/auth.test.ts` | Expected red before production change |
-| `E2E-FF-CAT-001-01` | `FF-CAT-001-AC01` | `PH-07-R01` | `tests/e2e/categorization-rules.test.ts` | Expected red before production change |
-| `E2E-FF-CAT-004-01` | `FF-CAT-004-AC01` | `PH-07-R01` | `tests/e2e/categorization-rules.test.ts` | Expected red before production change |
-| `E2E-FF-CAT-005-01` | `FF-CAT-005-AC01` | `PH-07-R01` | `tests/e2e/categorization-rules.test.ts` | Expected red before production change |
-| `E2E-FF-CAT-005-02` | `FF-CAT-005-AC02` | `PH-07-R01` | `tests/e2e/categorization-rules.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-001-01` | `FF-CSV-001-AC01` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-001-02` | `FF-CSV-001-AC02` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-002-01` | `FF-CSV-002-AC01` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-004-01` | `FF-CSV-004-AC01` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-004-02` | `FF-CSV-004-AC02` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-006-01` | `FF-CSV-006-AC01` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-007-01` | `FF-CSV-007-AC01` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-007-02` | `FF-CSV-007-AC02` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-008-01` | `FF-CSV-008-AC01` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-CSV-009-01` | `FF-CSV-009-AC01` | `PH-10C` | `tests/e2e/csv-import.test.ts` | Expected red before production change |
-| `E2E-FF-DASH-001-01` | `FF-DASH-001-AC01` | `PH-13` | `tests/e2e/dashboard.test.ts` | Expected red before production change |
-| `E2E-FF-DASH-002-01` | `FF-DASH-002-AC01` | `PH-13` | `tests/e2e/dashboard.test.ts` | Expected red before production change |
-| `E2E-FF-DASH-003-01` | `FF-DASH-003-AC01` | `PH-13` | `tests/e2e/dashboard.test.ts` | Expected red before production change |
-| `E2E-FF-DASH-004-01` | `FF-DASH-004-AC01` | `PH-13` | `tests/e2e/dashboard.test.ts` | Expected red before production change |
-| `E2E-FF-FOR-001-01` | `FF-FOR-001-AC01` | `PH-13` | `tests/e2e/dashboard.test.ts` | Expected red before production change |
-| `E2E-FF-FOR-004-01` | `FF-FOR-004-AC01` | `PH-13` | `tests/e2e/dashboard.test.ts` | Expected red before production change |
-| `E2E-FF-INC-001-01` | `FF-INC-001-AC01` | `PH-09-R01` | `tests/e2e/income-planning.test.ts` | Expected red before production change |
-| `E2E-FF-INC-001-02` | `FF-INC-001-AC02` | `PH-09-R01` | `tests/e2e/income-planning.test.ts` | Expected red before production change |
-| `E2E-FF-INC-003-01` | `FF-INC-003-AC01` | `PH-09-R01` | `tests/e2e/income-planning.test.ts` | Expected green evidence |
-| `E2E-FF-INC-005-01` | `FF-INC-005-AC01` | `PH-09-R01` | `tests/e2e/income-planning.test.ts` | Expected red before production change |
-| `E2E-FF-LOC-001-01` | `FF-LOC-001-AC01` | `PH-12` | `tests/e2e/german-localization.test.ts` | Expected red before production change |
-| `E2E-FF-LOC-001-02` | `FF-LOC-001-AC02` | `PH-13` | `tests/e2e/dashboard.test.ts` | Expected red before production change |
-| `E2E-FF-LOC-001-03` | `FF-LOC-001-AC03` | `PH-14` | `tests/e2e/scenarios.test.ts` | Expected red before production change |
-| `E2E-FF-LOC-002-01` | `FF-LOC-002-AC01` | `PH-12` | `tests/e2e/german-localization.test.ts` | Expected red before production change |
-| `E2E-FF-MDM-001-01` | `FF-MDM-001-AC01` | `PH-10-R01` | `tests/e2e/master-data.test.ts` | Expected green evidence |
-| `E2E-FF-MDM-001-02` | `FF-MDM-001-AC02` | `PH-13` | `tests/e2e/dashboard.test.ts` | Expected red before production change |
-| `E2E-FF-MDM-003-01` | `FF-MDM-003-AC01` | `PH-08-R01` | `tests/e2e/master-data.test.ts` | Expected green evidence |
-| `E2E-FF-MDM-003-02` | `FF-MDM-003-AC01` | `PH-08-R01` | `tests/e2e/master-data.test.ts` | Expected green evidence |
-| `E2E-FF-MDM-004-01` | `FF-MDM-004-AC01` | `PH-08-R01` | `tests/e2e/master-data.test.ts` | Expected green evidence |
-| `E2E-FF-MDM-004-02` | `FF-MDM-004-AC01` | `PH-08-R01` | `tests/e2e/master-data.test.ts` | Expected green evidence |
-| `E2E-FF-OBS-001-01` | `FF-OBS-001-AC01` | `PH-01-R01` | `tests/e2e/request-id.test.ts` | Expected red before production change |
-| `E2E-FF-OBS-001-02` | `FF-OBS-001-AC02` | `PH-01-R01` | `tests/e2e/request-id.test.ts` | Expected red before production change |
-| `E2E-FF-SCN-001-01` | `FF-SCN-001-AC01` | `PH-14` | `tests/e2e/scenarios.test.ts` | Expected red before production change |
-| `E2E-FF-SCN-001-02` | `FF-SCN-001-AC02` | `PH-14` | `tests/e2e/scenarios.test.ts` | Expected red before production change |
-| `E2E-FF-SCN-003-01` | `FF-SCN-003-AC01` | `PH-14` | `tests/e2e/scenarios.test.ts` | Expected red before production change |
-| `E2E-FF-SCN-004-01` | `FF-SCN-004-AC01` | `PH-14` | `tests/e2e/scenarios.test.ts` | Expected red before production change |
-| `E2E-FF-SCN-006-01` | `FF-SCN-006-AC01` | `PH-14` | `tests/e2e/scenarios.test.ts` | Expected red before production change |
-| `E2E-FF-TXN-002-01` | `FF-TXN-002-AC01` | `PH-04-R01` | `tests/e2e/transactions.test.ts` | Expected red before production change |
-| `E2E-FF-TXN-002-02` | `FF-TXN-002-AC02` | `PH-04-R01` | `tests/e2e/transactions.test.ts` | Expected red before production change |
-| `E2E-FF-TXN-003-01` | `FF-TXN-003-AC01` | `PH-04-R01` | `tests/e2e/transactions.test.ts` | Expected red before production change |
-| `E2E-FF-TXN-004-01` | `FF-TXN-004-AC01` | `PH-10C` | `tests/e2e/transactions.test.ts` | Expected red before production change |
-| `E2E-FF-TXN-005-01` | `FF-TXN-005-AC01` | `PH-11` | `tests/e2e/transactions.test.ts` | Expected red before production change |
-| `E2E-FF-TXN-005-02` | `FF-TXN-005-AC01` | `PH-11` | `tests/e2e/transactions.test.ts` | Expected red before production change |
-| `E2E-FF-TXN-006-02` | `FF-TXN-006-AC02` | `PH-13` | `tests/e2e/dashboard.test.ts` | Expected red before production change |
-| `E2E-FF-UI-001-01` | `FF-UI-001-AC01` | `PH-10B` | `tests/e2e/styling-and-htmx.test.ts` | Expected green evidence |
-| `E2E-FF-UI-001-02` | `FF-UI-001-AC02` | `PH-11` | `tests/e2e/internal-transfers.test.ts` | Expected red before production change |
-| `E2E-FF-UI-001-03` | `FF-UI-001-AC03` | `PH-14` | `tests/e2e/scenarios.test.ts` | Expected red before production change |
-| `E2E-FF-UI-002-01` | `FF-UI-002-AC01` | `PH-10B` | `tests/e2e/styling-and-htmx.test.ts` | Expected green evidence |
-| `E2E-FF-UI-003-01` | `FF-UI-003-AC01` | `PH-10B` | `tests/e2e/styling-and-htmx.test.ts` | Expected green evidence |
-| `INT-FF-ARC-001-01` | `FF-ARC-001-AC01` | `PH-15` | `tests/integration/architecture-requirements.test.ts` | Expected green evidence |
-| `INT-FF-ARC-002-01` | `FF-ARC-002-AC01` | `PH-15` | `tests/integration/architecture-requirements.test.ts` | Expected green evidence |
-| `INT-FF-ARC-003-01` | `FF-ARC-003-AC01` | `PH-10B` | `tests/integration/architecture-requirements.test.ts` | Expected red before production change |
-| `INT-FF-ARC-004-01` | `FF-ARC-004-AC01` | `PH-10B` | `tests/integration/architecture-requirements.test.ts` | Expected red before production change |
-| `INT-FF-ARC-004-02` | `FF-ARC-004-AC01` | `PH-10B` | `tests/integration/architecture-requirements.test.ts` | Expected red before production change |
-| `INT-FF-ARC-004-03` | `FF-ARC-004-AC01` | `PH-12` | `tests/integration/architecture-requirements.test.ts` | Expected red before production change |
-| `INT-FF-ARC-005-01` | `FF-ARC-005-AC01` | `PH-15` | `tests/integration/architecture-requirements.test.ts` | Expected green evidence |
-| `INT-FF-ARC-007-01` | `FF-ARC-007-AC01` | `PH-12` | `tests/integration/architecture-requirements.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-002-01` | `FF-AUTH-002-AC01` | `PH-03-R01` | `tests/integration/oidc-http.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-002-02` | `FF-AUTH-002-AC02` | `PH-03-R01` | `tests/integration/oidc-http.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-002-03` | `FF-AUTH-002-AC03` | `PH-03-R01` | `tests/integration/oidc-http.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-003-01` | `FF-AUTH-003-AC01` | `PH-10A` | `tests/integration/postgres-session-store.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-003-02` | `FF-AUTH-003-AC02` | `PH-10A` | `tests/integration/oidc-http.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-004-01` | `FF-AUTH-004-AC01` | `PH-10A` | `tests/integration/oidc-http.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-004-02` | `FF-AUTH-004-AC02` | `PH-10A` | `tests/integration/oidc-http.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-005-01` | `FF-AUTH-005-AC01` | `PH-10A` | `tests/integration/postgres-session-store.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-006-01` | `FF-AUTH-006-AC01` | `PH-10A` | `tests/integration/postgres-session-store.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-006-02` | `FF-AUTH-006-AC02` | `PH-10A` | `tests/integration/postgres-session-store.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-007-01` | `FF-AUTH-007-AC01` | `PH-10A` | `tests/integration/session-handling.test.ts` | Expected red before production change |
-| `INT-FF-AUTH-008-01` | `FF-AUTH-008-AC01` | `PH-10-R01` | `tests/integration/oidc-http.test.ts` | Expected green evidence |
-| `INT-FF-CAT-004-02` | `FF-CAT-004-AC02` | `PH-07-R01` | `tests/integration/categorization-rule-migration.test.ts` | Expected red before production change |
-| `INT-FF-CAT-005-01` | `FF-CAT-005-AC01` | `PH-07-R01` | `tests/integration/categorization-rule-http.test.ts` | Expected red before production change |
-| `INT-FF-CAT-005-02` | `FF-CAT-005-AC01` | `PH-07-R01` | `tests/integration/drizzle-categorization-rule-repository.test.ts` | Expected red before production change |
-| `INT-FF-CAT-005-03` | `FF-CAT-005-AC03` | `PH-07-R01` | `tests/integration/categorization-rule-migration.test.ts` | Expected red before production change |
-| `INT-FF-CSV-002-01` | `FF-CSV-002-AC01` | `PH-06-R01` | `tests/integration/csv-parser.test.ts` | Expected green evidence |
-| `INT-FF-CSV-002-02` | `FF-CSV-002-AC01` | `PH-06-R01` | `tests/integration/drizzle-import-profile-repository.test.ts` | Expected green evidence |
-| `INT-FF-CSV-003-01` | `FF-CSV-003-AC01` | `PH-10C` | `tests/integration/csv-parser.test.ts` | Expected red before production change |
-| `INT-FF-CSV-003-02` | `FF-CSV-003-AC02` | `PH-10C` | `tests/integration/csv-parser.test.ts` | Expected red before production change |
-| `INT-FF-CSV-007-01` | `FF-CSV-007-AC01` | `PH-10C` | `tests/integration/csv-parser.test.ts` | Expected red before production change |
-| `INT-FF-CSV-008-01` | `FF-CSV-008-AC01` | `PH-10C` | `tests/integration/csv-import-http.test.ts` | Expected red before production change |
-| `INT-FF-CSV-008-02` | `FF-CSV-008-AC02` | `PH-10C` | `tests/integration/drizzle-import-preview-batch-repository.test.ts` | Expected red before production change |
-| `INT-FF-CSV-009-01` | `FF-CSV-009-AC01` | `PH-10C` | `tests/integration/drizzle-import-confirmation.test.ts` | Expected red before production change |
-| `INT-FF-CSV-009-02` | `FF-CSV-009-AC02` | `PH-10C` | `tests/integration/drizzle-import-confirmation.test.ts` | Expected red before production change |
-| `INT-FF-CSV-010-01` | `FF-CSV-010-AC01` | `PH-10C` | `tests/integration/csv-import-hash-migration.test.ts` | Expected red before production change |
-| `INT-FF-CSV-010-02` | `FF-CSV-010-AC02` | `PH-10C` | `tests/integration/csv-import-hash-migration.test.ts` | Expected red before production change |
-| `INT-FF-CSV-011-01` | `FF-CSV-011-AC01` | `PH-10C` | `tests/integration/request-logging.test.ts` | Expected red before production change |
-| `INT-FF-DASH-001-01` | `FF-DASH-001-AC01` | `PH-13` | `tests/integration/drizzle-dashboard-query-adapter.test.ts` | Expected red before production change |
-| `INT-FF-DASH-003-01` | `FF-DASH-003-AC01` | `PH-13` | `tests/integration/dashboard-http.test.ts` | Expected red before production change |
-| `INT-FF-DEP-001-01` | `FF-DEP-001-AC01` | `PH-10B` | `tests/integration/template-packaging.test.ts` | Expected red before production change |
-| `INT-FF-DEP-004-01` | `FF-DEP-004-AC01` | `PH-15` | `tests/integration/config-and-secrets.test.ts` | Expected green evidence |
-| `INT-FF-DEV-001-01` | `FF-DEV-001-AC01` | `PH-03-R01` | `tests/integration/dev-oidc-compose.test.ts` | Expected red before production change |
-| `INT-FF-INC-001-01` | `FF-INC-001-AC01` | `PH-09-R01` | `tests/integration/drizzle-income-repository.test.ts` | Expected red before production change |
-| `INT-FF-INC-001-02` | `FF-INC-001-AC01` | `PH-09-R01` | `tests/integration/income-http.test.ts` | Expected red before production change |
-| `INT-FF-INC-005-01` | `FF-INC-005-AC01` | `PH-09-R01` | `tests/integration/drizzle-income-repository.test.ts` | Expected red before production change |
-| `INT-FF-INC-005-02` | `FF-INC-005-AC01` | `PH-09-R01` | `tests/integration/income-http.test.ts` | Expected red before production change |
-| `INT-FF-LOC-001-04` | `FF-LOC-001-AC01` | `PH-12` | `tests/integration/localization.test.ts` | Expected red before production change |
-| `INT-FF-LOC-002-01` | `FF-LOC-002-AC01` | `PH-12` | `tests/integration/localization.test.ts` | Expected red before production change |
-| `INT-FF-LOC-002-02` | `FF-LOC-002-AC02` | `PH-12` | `tests/integration/localization.test.ts` | Expected red before production change |
-| `INT-FF-LOC-003-01` | `FF-LOC-003-AC01` | `PH-12` | `tests/integration/localization.test.ts` | Expected red before production change |
-| `INT-FF-LOC-004-01` | `FF-LOC-004-AC01` | `PH-12` | `tests/integration/csv-parser.test.ts` | Expected red before production change |
-| `INT-FF-MDM-001-01` | `FF-MDM-001-AC01` | `PH-10-R01` | `tests/integration/master-data-http.test.ts` | Expected green evidence |
-| `INT-FF-MDM-001-02` | `FF-MDM-001-AC01` | `PH-10-R01` | `tests/integration/drizzle-master-data-repositories.test.ts` | Expected green evidence |
-| `INT-FF-MDM-002-01` | `FF-MDM-002-AC01` | `PH-02-R01` | `tests/integration/drizzle-master-data-repositories.test.ts` | Expected red before production change |
-| `INT-FF-MDM-002-02` | `FF-MDM-002-AC02` | `PH-12` | `tests/integration/drizzle-master-data-repositories.test.ts` | Expected red before production change |
-| `INT-FF-MDM-003-01` | `FF-MDM-003-AC01` | `PH-08-R01` | `tests/integration/master-data-http.test.ts` | Expected green evidence |
-| `INT-FF-MDM-003-02` | `FF-MDM-003-AC01` | `PH-08-R01` | `tests/integration/drizzle-master-data-repositories.test.ts` | Expected green evidence |
-| `INT-FF-MDM-004-01` | `FF-MDM-004-AC01` | `PH-08-R01` | `tests/integration/master-data-http.test.ts` | Expected green evidence |
-| `INT-FF-MDM-004-02` | `FF-MDM-004-AC01` | `PH-08-R01` | `tests/integration/drizzle-master-data-repositories.test.ts` | Expected green evidence |
-| `INT-FF-MDM-005-01` | `FF-MDM-005-AC01` | `PH-08-R01` | `tests/integration/drizzle-master-data-repositories.test.ts` | Expected green evidence |
-| `INT-FF-OBS-001-01` | `FF-OBS-001-AC01` | `PH-10A` | `tests/integration/request-logging.test.ts` | Expected red before production change |
-| `INT-FF-OBS-002-01` | `FF-OBS-002-AC01` | `PH-01-R01` | `tests/integration/request-logging.test.ts` | Expected red before production change |
-| `INT-FF-OBS-003-01` | `FF-OBS-003-AC01` | `PH-01-R01` | `tests/integration/request-logging.test.ts` | Expected red before production change |
-| `INT-FF-OBS-004-01` | `FF-OBS-004-AC01` | `PH-01-R01` | `tests/integration/request-logging.test.ts` | Expected red before production change |
-| `INT-FF-OBS-005-01` | `FF-OBS-005-AC01` | `PH-01-R01` | `tests/integration/request-logging.test.ts` | Expected red before production change |
-| `INT-FF-QUA-001-01` | `FF-QUA-001-AC01` | `PH-10D` | `tests/integration/requirement-traceability.test.ts` | Expected red before production change |
-| `INT-FF-QUA-002-01` | `FF-QUA-002-AC01` | `PH-15` | `tests/integration/requirement-traceability.test.ts` | Expected green evidence |
-| `INT-FF-QUA-003-01` | `FF-QUA-003-AC01` | `PH-15` | `tests/integration/requirement-traceability.test.ts` | Expected green evidence |
-| `INT-FF-QUA-004-01` | `FF-QUA-004-AC01` | `PH-10D` | `tests/integration/requirement-traceability.test.ts` | Expected red before production change |
-| `INT-FF-SCN-001-01` | `FF-SCN-001-AC01` | `PH-14` | `tests/integration/drizzle-scenario-repository.test.ts` | Expected red before production change |
-| `INT-FF-SCN-001-02` | `FF-SCN-001-AC02` | `PH-14` | `tests/integration/drizzle-scenario-repository.test.ts` | Expected red before production change |
-| `INT-FF-SCN-001-03` | `FF-SCN-001-AC01` | `PH-14` | `tests/integration/scenario-http.test.ts` | Expected red before production change |
-| `INT-FF-SCP-003-01` | `FF-SCP-003-AC01` | `PH-10-R01` | `tests/integration/oidc-http.test.ts` | Expected green evidence |
-| `INT-FF-TXN-001-01` | `FF-TXN-001-AC01` | `PH-10C` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
-| `INT-FF-TXN-001-03` | `FF-TXN-001-AC03` | `PH-11` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
-| `INT-FF-TXN-001-04` | `FF-TXN-001-AC04` | `PH-07-R01` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
-| `INT-FF-TXN-002-01` | `FF-TXN-002-AC01` | `PH-04-R01` | `tests/integration/transaction-http.test.ts` | Expected red before production change |
-| `INT-FF-TXN-003-01` | `FF-TXN-003-AC01` | `PH-04-R01` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
-| `INT-FF-TXN-004-01` | `FF-TXN-004-AC01` | `PH-10C` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
-| `INT-FF-TXN-005-01` | `FF-TXN-005-AC01` | `PH-11` | `tests/integration/drizzle-transaction-repository.test.ts` | Expected red before production change |
-| `INT-FF-TXN-005-02` | `FF-TXN-005-AC01` | `PH-11` | `tests/integration/transaction-http.test.ts` | Expected red before production change |
-| `SMOKE-FF-AUTH-009-01` | `FF-AUTH-009-AC01` | `PH-10A` | `tests/e2e/restore-smoke.test.ts` | Expected red before production change |
-| `SMOKE-FF-AUTH-009-02` | `FF-AUTH-009-AC02` | `PH-10A` | `tests/e2e/restore-smoke.test.ts` | Expected red before production change |
-| `SMOKE-FF-DEP-001-01` | `FF-DEP-001-AC01` | `PH-10B` | `tests/e2e/image-smoke.test.ts` | Expected red before production change |
-| `SMOKE-FF-DEP-002-01` | `FF-DEP-002-AC01` | `PH-00-R01` | `tests/e2e/deployment-smoke.test.ts` | Expected green evidence |
-| `SMOKE-FF-DEP-003-01` | `FF-DEP-003-AC01` | `PH-00-R01` | `tests/e2e/deployment-smoke.test.ts` | Expected green evidence |
-| `SMOKE-FF-DEP-005-01` | `FF-DEP-005-AC01` | `PH-15` | `tests/e2e/deployment-smoke.test.ts` | Expected red before production change |
-| `SMOKE-FF-DEV-001-01` | `FF-DEV-001-AC01` | `PH-15` | `tests/integration/dev-oidc-compose.test.ts` | Expected green evidence |
-| `SMOKE-FF-DEV-001-02` | `FF-DEV-001-AC02` | `PH-15` | `tests/integration/dev-oidc-compose.test.ts` | Expected green evidence |
-| `SMOKE-FF-OPS-001-01` | `FF-OPS-001-AC01` | `PH-15` | `tests/integration/operations-manual.test.ts` | Expected green evidence |
-| `SMOKE-FF-OPS-002-01` | `FF-OPS-002-AC01` | `PH-02-R01` | `tests/e2e/backup-restore-smoke.test.ts` | Expected red before production change |
-| `SMOKE-FF-OPS-003-01` | `FF-OPS-003-AC01` | `PH-02-R01` | `tests/e2e/backup-restore-smoke.test.ts` | Expected red before production change |
-| `SMOKE-FF-REL-001-01` | `FF-REL-001-AC01` | `PH-15` | `tests/e2e/release-smoke.test.ts` | Expected red before production change |
-| `SMOKE-FF-REL-002-01` | `FF-REL-002-AC01` | `PH-15` | `tests/e2e/release-smoke.test.ts` | Expected red before production change |
-| `SMOKE-FF-REL-002-02` | `FF-REL-002-AC02` | `PH-15` | `tests/e2e/release-smoke.test.ts` | Expected red before production change |
-| `SMOKE-FF-SCP-001-01` | `FF-SCP-001-AC01` | `PH-00-R01` | `tests/e2e/deployment-smoke.test.ts` | Expected green evidence |
-| `SMOKE-FF-SCP-001-02` | `FF-SCP-001-AC02` | `PH-00-R01` | `tests/e2e/deployment-smoke.test.ts` | Expected green evidence |
-| `SMOKE-FF-SCP-002-01` | `FF-SCP-002-AC01` | `PH-15` | `tests/e2e/deployment-smoke.test.ts` | Expected green evidence |
-| `SMOKE-FF-SCP-003-01` | `FF-SCP-003-AC01` | `PH-10-R01` | `tests/e2e/deployment-smoke.test.ts` | Expected green evidence |
-| `SMOKE-FF-SCP-004-01` | `FF-SCP-004-AC01` | `PH-15` | `tests/e2e/deployment-smoke.test.ts` | Expected green evidence |
-| `UNIT-FF-ARC-006-01` | `FF-ARC-006-AC01` | `PH-04-R01` | `tests/unit/financial-boundaries.test.ts` | Expected red before production change |
-| `UNIT-FF-ARC-006-02` | `FF-ARC-006-AC02` | `PH-04-R01` | `tests/unit/financial-boundaries.test.ts` | Expected red before production change |
-| `UNIT-FF-ARC-007-01` | `FF-ARC-007-AC01` | `PH-12` | `tests/unit/localized-domain-boundaries.test.ts` | Expected red before production change |
-| `UNIT-FF-AUTH-002-01` | `FF-AUTH-002-AC01` | `PH-03-R01` | `tests/unit/authentication.test.ts` | Expected red before production change |
-| `UNIT-FF-AUTH-004-01` | `FF-AUTH-004-AC01` | `PH-10A` | `tests/unit/authentication.test.ts` | Expected red before production change |
-| `UNIT-FF-AUTH-006-01` | `FF-AUTH-006-AC01` | `PH-10A` | `tests/unit/authentication.test.ts` | Expected red before production change |
-| `UNIT-FF-CAT-001-01` | `FF-CAT-001-AC01` | `PH-07-R01` | `tests/unit/categorization-rules.test.ts` | Expected red before production change |
-| `UNIT-FF-CAT-002-01` | `FF-CAT-002-AC01` | `PH-07-R01` | `tests/unit/categorization-rules.test.ts` | Expected red before production change |
-| `UNIT-FF-CAT-003-01` | `FF-CAT-003-AC01` | `PH-07-R01` | `tests/unit/categorization-rules.test.ts` | Expected red before production change |
-| `UNIT-FF-CAT-004-01` | `FF-CAT-004-AC01` | `PH-07-R01` | `tests/unit/categorization-rules.test.ts` | Expected red before production change |
-| `UNIT-FF-CAT-005-02` | `FF-CAT-005-AC02` | `PH-07-R01` | `tests/unit/categorization-rules.test.ts` | Expected red before production change |
-| `UNIT-FF-CSV-004-01` | `FF-CSV-004-AC01` | `PH-10C` | `tests/unit/imports.test.ts` | Expected red before production change |
-| `UNIT-FF-CSV-005-01` | `FF-CSV-005-AC01` | `PH-10C` | `tests/unit/imports.test.ts` | Expected red before production change |
-| `UNIT-FF-CSV-005-02` | `FF-CSV-005-AC02` | `PH-10C` | `tests/unit/imports.test.ts` | Expected red before production change |
-| `UNIT-FF-CSV-008-01` | `FF-CSV-008-AC02` | `PH-10C` | `tests/unit/imports.test.ts` | Expected red before production change |
-| `UNIT-FF-DASH-001-01` | `FF-DASH-001-AC01` | `PH-13` | `tests/unit/dashboard.test.ts` | Expected red before production change |
-| `UNIT-FF-DASH-002-01` | `FF-DASH-002-AC01` | `PH-13` | `tests/unit/dashboard.test.ts` | Expected red before production change |
-| `UNIT-FF-DASH-003-01` | `FF-DASH-003-AC01` | `PH-13` | `tests/unit/dashboard.test.ts` | Expected red before production change |
-| `UNIT-FF-DASH-004-01` | `FF-DASH-004-AC01` | `PH-13` | `tests/unit/dashboard.test.ts` | Expected red before production change |
-| `UNIT-FF-FOR-001-01` | `FF-FOR-001-AC01` | `PH-13` | `tests/unit/forecasting.test.ts` | Expected red before production change |
-| `UNIT-FF-FOR-002-01` | `FF-FOR-002-AC01` | `PH-13` | `tests/unit/forecasting.test.ts` | Expected red before production change |
-| `UNIT-FF-FOR-003-01` | `FF-FOR-003-AC01` | `PH-13` | `tests/unit/forecasting.test.ts` | Expected red before production change |
-| `UNIT-FF-FOR-004-01` | `FF-FOR-004-AC01` | `PH-13` | `tests/unit/forecasting.test.ts` | Expected red before production change |
-| `UNIT-FF-INC-001-01` | `FF-INC-001-AC01` | `PH-09-R01` | `tests/unit/income-plans.test.ts` | Expected red before production change |
-| `UNIT-FF-INC-002-01` | `FF-INC-002-AC01` | `PH-09-R01` | `tests/unit/income-plans.test.ts` | Expected red before production change |
-| `UNIT-FF-INC-004-01` | `FF-INC-004-AC01` | `PH-09-R01` | `tests/unit/income-plans.test.ts` | Expected red before production change |
-| `UNIT-FF-INC-005-01` | `FF-INC-005-AC01` | `PH-09-R01` | `tests/unit/income-plans.test.ts` | Expected red before production change |
-| `UNIT-FF-LOC-003-02` | `FF-LOC-003-AC01` | `PH-12` | `tests/unit/localized-domain-boundaries.test.ts` | Expected red before production change |
-| `UNIT-FF-SCN-001-01` | `FF-SCN-001-AC01` | `PH-14` | `tests/unit/scenarios.test.ts` | Expected red before production change |
-| `UNIT-FF-SCN-002-01` | `FF-SCN-002-AC01` | `PH-14` | `tests/unit/scenarios.test.ts` | Expected red before production change |
-| `UNIT-FF-SCN-002-02` | `FF-SCN-002-AC02` | `PH-14` | `tests/unit/scenarios.test.ts` | Expected red before production change |
-| `UNIT-FF-SCN-004-01` | `FF-SCN-004-AC01` | `PH-14` | `tests/unit/scenarios.test.ts` | Expected red before production change |
-| `UNIT-FF-SCN-004-02` | `FF-SCN-004-AC02` | `PH-14` | `tests/unit/scenarios.test.ts` | Expected red before production change |
-| `UNIT-FF-SCN-005-01` | `FF-SCN-005-AC01` | `PH-14` | `tests/unit/scenarios.test.ts` | Expected red before production change |
-| `UNIT-FF-TXN-001-01` | `FF-TXN-001-AC01` | `PH-10C` | `tests/unit/transactions.test.ts` | Expected red before production change |
-| `UNIT-FF-TXN-001-02` | `FF-TXN-001-AC02` | `PH-10C` | `tests/unit/transactions.test.ts` | Expected red before production change |
-| `UNIT-FF-TXN-005-01` | `FF-TXN-005-AC01` | `PH-11` | `tests/unit/transactions.test.ts` | Expected red before production change |
-| `UNIT-FF-TXN-006-01` | `FF-TXN-006-AC01` | `PH-11` | `tests/unit/transactions.test.ts` | Expected red before production change |
-
-## Conventional Commit Examples
-
-- `feat: classify internal transfers`
-- `fix: harden csv import confirmation`
-- `test: complete request lifecycle coverage`
-- `docs: add backup runbook`
-- `refactor: standardize nunjucks rendering`
-- `chore: prepare mvp release`
-
-## Post-MVP Backlog
-
-These ideas are uncommitted and intentionally have no stable requirement IDs:
-
-- Automatic bank import through FinTS, HBCI, or Open Banking.
-- Internal gross-to-net, part-time, or parental-benefit calculators.
-- Automatic internal-transfer pair matching.
-- Improved variable-expense forecasting models.
-- Automatic recurring-expense detection and fixed-cost suggestions.
-- Matching planned and booked transactions.
-- CSV or PDF export.
-- Scenario and category charts.
-- Central JSON logging integration.
+- `pnpm requirements:check` for schema, identifier, mapping, boundary, and exact command-wiring validation.
+- `pnpm evidence:check` to compare completed evidence with tests collected by Vitest and Playwright.
+- `pnpm ops:verify --id <OPS-ID>` to invoke only a verifier registered in `scripts/operations/registry.ts`.
