@@ -1,0 +1,10 @@
+{% extends "layouts/app.njk" %}
+{% block content %}<section class="panel" aria-labelledby="category-edit-heading">
+  <h2 id="category-edit-heading">{{ text.categoryEditHeading }}</h2>
+  {% if formError %}<p class="form-error">{{ formError }}</p>{% endif %}
+  <form class="grid-form" method="post" action="{{ actionUrl }}">
+    <label class="field">{{ text.categoryName }} <input name="name" value="{{ name }}" required></label>
+    <label class="checkbox-field">{{ text.active }} <input name="active" type="checkbox"{% if activeChecked %} checked{% endif %}></label>
+    <button type="submit">{{ text.saveCategory }}</button>
+  </form>
+</section>{% endblock %}

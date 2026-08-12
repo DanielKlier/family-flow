@@ -37,7 +37,7 @@ async function waitForApp(baseUrl: string): Promise<void> {
   throw new Error("production image did not start; inspect its container logs");
 }
 
-test("SMOKE-FF-DEP-001-01 production image packages templates and serves full and HTMX transaction responses", async () => {
+test("SMOKE-FF-DEP-001-01 production image packages every template family and serves full and HTMX responses", async () => {
   docker(["build", "--tag", imageName, "."]);
 
   const packagedTemplates = docker(
@@ -52,7 +52,20 @@ test("SMOKE-FF-DEP-001-01 production image packages templates and serves full an
     ],
     "utf8",
   );
-  expect(packagedTemplates).toContain("/app/dist/views/transactions.njk");
+  for (const template of [
+    "/app/dist/views/layouts/app.njk",
+    "/app/dist/views/pages/dashboard.njk",
+    "/app/dist/views/pages/resource-error.njk",
+    "/app/dist/views/pages/master-data.njk",
+    "/app/dist/views/pages/categorization-rules.njk",
+    "/app/dist/views/pages/income.njk",
+    "/app/dist/views/pages/csv-import.njk",
+    "/app/dist/views/pages/transactions.njk",
+    "/app/dist/views/partials/income-panel.njk",
+    "/app/dist/views/partials/transactions-list.njk",
+  ]) {
+    expect(packagedTemplates).toContain(template);
+  }
 
   try {
     docker(["network", "create", networkName]);
@@ -104,19 +117,49 @@ test("SMOKE-FF-DEP-001-01 production image packages templates and serves full an
     const cookie = login.headers.get("set-cookie")?.split(";", 1)[0];
     expect(cookie).toBeDefined();
     const headers = { Cookie: cookie ?? "" };
-    const fullPage = await fetch(`${baseUrl}/transactions`, { headers });
-    const fragment = await fetch(`${baseUrl}/transactions`, {
+    for (const path of [
+      "/",
+      "/admin/master-data",
+      "/categorization-rules",
+      "/income",
+      "/imports/csv",
+      "/transactions",
+    ]) {
+      const response = await fetch(`${baseUrl}${path}`, { headers });
+      expect(response.status, path).toBe(200);
+      expect(await response.text(), path).toContain(
+        '<link rel="stylesheet" href="/assets/app.css">',
+      );
+    }
+
+    const transactionList = await fetch(`${baseUrl}/transactions`, {
       headers: { ...headers, "HX-Request": "true" },
     });
+    const incomePanel = await fetch(`${baseUrl}/income`, {
+      headers: { ...headers, "HX-Request": "true" },
+    });
+    const createUnsafeTransaction = await fetch(`${baseUrl}/transactions`, {
+      method: "POST",
+      redirect: "manual",
+      headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        accountId: "account-person-a-checking",
+        categoryId: "category-groceries",
+        date: "2026-07-15",
+        description: "<script>globalThis.familyFlowXss=true</script>",
+        amount: "42.99",
+        status: "booked",
+      }),
+    });
+    expect(createUnsafeTransaction.status).toBe(302);
+    const escapedTransactions = await fetch(`${baseUrl}/transactions`, { headers });
 
-    expect(fullPage.status).toBe(200);
-    expect(await fullPage.text()).toEqual(
-      expect.stringContaining('<link rel="stylesheet" href="/assets/app.css">'),
-    );
-    expect(fragment.status).toBe(200);
-    const fragmentBody = await fragment.text();
-    expect(fragmentBody).toContain('id="transactions-list"');
-    expect(fragmentBody).not.toContain("<!doctype html>");
+    expect(transactionList.status).toBe(200);
+    expect(await transactionList.text()).toContain('id="transactions-list"');
+    expect(await incomePanel.text()).toContain('id="income-panel"');
+    const escapedBody = await escapedTransactions.text();
+    expect(escapedBody).toContain("&lt;script&gt;globalThis.familyFlowXss=true&lt;/script&gt;");
+    expect(escapedBody).not.toContain("<script>globalThis.familyFlowXss=true</script>");
   } finally {
     for (const resource of [appName, postgresName]) {
       try {

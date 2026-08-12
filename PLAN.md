@@ -131,7 +131,7 @@ HTTP and template adapters prepare typed, presentation-ready view models. View m
 
 User-controlled content remains an ordinary escaped value. Pre-rendered or explicitly safe HTML requires a narrow reviewed adapter boundary and must never contain user-controlled content.
 
-Phase 10B migrates route families incrementally behind named rendering methods. Transaction pages and HTMX fragments are the first packaged Nunjucks surfaces; the remaining route-family migration and removal of legacy TypeScript string renderers remain tracked in `TASKS.md`.
+Phase 10B completed the migration of dashboard and authentication, master data, categorization rules, CSV import, income, and transactions behind named asynchronous rendering methods. Shared layouts, page templates, and HTMX fragments are packaged recursively, and the legacy TypeScript string renderers have been removed.
 
 ### Localization Boundary
 
@@ -306,7 +306,7 @@ Nunjucks through `@fastify/view` is the sole template integration with global au
 
 Templates receive typed presentation-ready view models only.
 
-- **FF-ARC-004-AC01:** Static template checks reject disabled escaping, `safe`, parsing/formatting helpers, financial arithmetic, repository or use-case access, and imports or calls outside approved presentation helpers.
+- **FF-ARC-004-AC01:** Static template checks tokenize Nunjucks before rejecting remaining user-facing literals in text nodes and display attributes, including literals at any position among expressions or controls. Display attributes include accessible text, placeholders, titles, alternative text, and HTMX confirmation or prompt text. The checks also reject disabled escaping, `safe`, parsing/formatting helpers, financial arithmetic, repository or use-case access, and imports or calls outside approved presentation helpers.
 
 #### FF-ARC-005 — Declared Stack
 

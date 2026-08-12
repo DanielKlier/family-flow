@@ -10,9 +10,9 @@ import {
 } from "../../core/income/income-plan.js";
 import type { IncomeRepository } from "../../ports/repositories/income-repository.js";
 import type { OwnerContextRepository } from "../../ports/repositories/owner-context-repository.js";
-import { isHtmxRequest, readForm, readRouteId } from "./request-values.js";
 import { readIncomeFilters, requireFormValue } from "./income-request.js";
-import { renderIncomeEditPage, renderIncomePage, renderIncomePanel } from "./templates/income.js";
+import { isHtmxRequest, readForm, readRouteId } from "./request-values.js";
+import { createFamilyFlowViews } from "./views.js";
 
 type IncomeRouteRepositories = {
   income: IncomeRepository;
@@ -52,11 +52,12 @@ async function handleListIncome(
   const filters = readIncomeFilters(request.query, currentMonth());
   const state = await readIncomePanelState(repositories, filters);
 
+  const views = createFamilyFlowViews(reply);
   if (isHtmxRequest(request.headers)) {
-    return reply.type("text/html; charset=utf-8").send(renderIncomePanel(state));
+    return reply.type("text/html; charset=utf-8").send(await views.incomePanel(state));
   }
 
-  return reply.type("text/html; charset=utf-8").send(renderIncomePage(state));
+  return reply.type("text/html; charset=utf-8").send(await views.incomePage(state));
 }
 
 async function handleCreateIncome(
@@ -85,10 +86,15 @@ async function handleEditIncomeForm(
     repositories.ownerContexts.list(),
   ]);
   if (plan === null) {
-    return reply.status(404).send("Income plan not found");
+    return reply
+      .status(404)
+      .type("text/html; charset=utf-8")
+      .send(await createFamilyFlowViews(reply).missingResourcePage("incomePlan"));
   }
 
-  return reply.type("text/html; charset=utf-8").send(renderIncomeEditPage({ plan, ownerContexts }));
+  return reply
+    .type("text/html; charset=utf-8")
+    .send(await createFamilyFlowViews(reply).incomeEditPage({ plan, ownerContexts }));
 }
 
 async function handleUpdateIncome(
@@ -99,12 +105,29 @@ async function handleUpdateIncome(
   const id = readRouteId(request.params);
   const existing = await repositories.income.getPlan(id);
   if (existing === null) {
-    return reply.status(404).send("Income plan not found");
+    return reply
+      .status(404)
+      .type("text/html; charset=utf-8")
+      .send(await createFamilyFlowViews(reply).missingResourcePage("incomePlan"));
   }
 
-  await repositories.income.savePlan(createIncomePlanFromForm(readForm(request.body), id));
+  try {
+    await repositories.income.savePlan(createIncomePlanFromForm(readForm(request.body), id));
+  } catch (error: unknown) {
+    const ownerContexts = await repositories.ownerContexts.list();
+    const input = {
+      plan: existing,
+      ownerContexts,
+      formError: errorMessage(error, "Income could not be saved"),
+    };
+    const views = createFamilyFlowViews(reply);
+    const body = isHtmxRequest(request.headers)
+      ? await views.incomeEditPanel(input)
+      : await views.incomeEditPage(input);
+    return reply.status(400).type("text/html; charset=utf-8").send(body);
+  }
 
-  return reply.redirect("/income");
+  return sendIncomeState(repositories, request, reply);
 }
 
 async function handleCreateOverride(
@@ -139,7 +162,11 @@ async function sendIncomeState(
   if (isHtmxRequest(request.headers)) {
     return reply
       .type("text/html; charset=utf-8")
-      .send(renderIncomePanel(await readIncomePanelState(repositories, { month: currentMonth() })));
+      .send(
+        await createFamilyFlowViews(reply).incomePanel(
+          await readIncomePanelState(repositories, { month: currentMonth() }),
+        ),
+      );
   }
 
   return reply.redirect("/income");
@@ -152,22 +179,17 @@ async function handleFormError(
   error: unknown,
   fallback: string,
 ) {
-  if (!isHtmxRequest(request.headers)) {
-    throw error;
-  }
+  const state = await readIncomePanelState(
+    repositories,
+    { month: currentMonth() },
+    errorMessage(error, fallback),
+  );
+  const views = createFamilyFlowViews(reply);
+  const body = isHtmxRequest(request.headers)
+    ? await views.incomePanel(state)
+    : await views.incomePage(state);
 
-  return reply
-    .status(400)
-    .type("text/html; charset=utf-8")
-    .send(
-      renderIncomePanel(
-        await readIncomePanelState(
-          repositories,
-          { month: currentMonth() },
-          errorMessage(error, fallback),
-        ),
-      ),
-    );
+  return reply.status(400).type("text/html; charset=utf-8").send(body);
 }
 
 async function readIncomePanelState(

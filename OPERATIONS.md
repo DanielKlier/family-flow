@@ -243,16 +243,18 @@ Operational notes:
 
 ## Template Packaging And Rendering
 
-Transaction pages and HTMX fragments are rendered through `@fastify/view` from globally autoescaped Nunjucks templates. Source execution (`pnpm dev` and `pnpm dev:oidc`) always loads `src/views`, even when a previous build left `dist/views` in the worktree. `pnpm build` copies the templates recursively to `dist/views`; compiled execution and the production image load that packaged directory.
+Dashboard and authentication, master data, categorization rules, CSV import, income, and transaction responses are rendered through named `@fastify/view` methods from globally autoescaped Nunjucks templates. Source execution (`pnpm dev` and `pnpm dev:oidc`) always loads `src/views`, even when a previous build left `dist/views` in the worktree. `pnpm build` copies layouts, pages, and fragments recursively to `dist/views`; compiled execution and the production image load that packaged directory.
 
 Packaging verification:
 
 1. Install the locked dependencies with `pnpm install --frozen-lockfile`.
 2. Run `pnpm build` from the repository root.
-3. Run `find dist/views -type f -name '*.njk' -print` and verify that `dist/views/transactions.njk` is listed.
-4. For image-facing changes, run `pnpm exec playwright test tests/e2e/image-smoke.test.ts --reporter=line`. The smoke fixture requires Docker, starts isolated PostgreSQL and application containers, authenticates in test mode, and expects both a complete transaction page and an HTMX list fragment.
+3. Run `find dist/views -type f -name '*.njk' -print` and verify the `layouts/app.njk`, declared `pages/*.njk`, and income/transaction `partials/*.njk` inventory.
+4. For image-facing changes, run `pnpm exec playwright test tests/e2e/image-smoke.test.ts --reporter=line`. The smoke fixture requires Docker, starts isolated PostgreSQL and application containers, authenticates in test mode, and checks representative full pages, income and transaction HTMX fragments, and escaped transaction content.
 
-If the compiled template is absent, inspect the `build` script and rerun the build from a clean checkout; do not copy templates into a running production container. If startup reports a missing template, verify that the deployed immutable image contains `/app/dist/views`, roll back to the previous known-good image, and rebuild rather than editing the container. If rendering succeeds but an HTMX replacement fails, verify that the fragment retains `id="transactions-list"` and does not contain a full document. Run `pnpm arch:check` after template edits; disabled autoescaping, `safe`, calculations, imports, calls, repository access, and use-case access are prohibited in templates.
+If a compiled template is absent, inspect the recursive copy in the `build` script and rerun the build from a clean checkout; do not copy templates into a running production container. If startup reports a missing template, verify that the deployed immutable image contains `/app/dist/views`, roll back to the previous known-good image, and rebuild rather than editing the container. If an HTMX replacement fails, verify that transaction responses retain `id="transactions-list"` or `id="transactions-panel"` and income create, edit, validation, and filter responses retain `id="income-panel"`; fragment responses must not contain a full document. Repeat the failing transaction or income operation with JavaScript disabled: the equivalent form must redirect after success or render a shared-layout validation page, which distinguishes server-side progressive-enhancement failures from HTMX targeting failures.
+
+Run `pnpm arch:check` after template edits. The checker removes Nunjucks expression, control, and comment tokens before inspecting the remaining text-node and user-visible attribute content, so a literal mixed before, between, or after dynamic tokens is still prohibited. This includes accessible labels and descriptions, placeholders, titles, alternative text, and `hx-confirm` or `hx-prompt` messages; move such text into the prepared view model rather than hiding it among controls. Expression-only, control-only, and whitespace-only display content remains valid. Disabled autoescaping, `safe`, calculations, imports, calls, repository access, and use-case access are also prohibited.
 
 ## Static Assets And HTMX
 

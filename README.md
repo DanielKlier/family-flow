@@ -53,11 +53,13 @@ Start the app with `pnpm dev:oidc`, open `http://127.0.0.1:3000/`, and sign in t
 - `pnpm ops:verify --id OPS-FF-...`: invoke only a verifier explicitly registered in `scripts/operations/registry.ts`. Unregistered IDs fail without interpreting Markdown or arbitrary shell commands.
 - `pnpm verify`: run every canonical local gate. Run this once before the final commit and before pushing; add conditional PostgreSQL, Docker, migration, or smoke gates when the changed boundary requires them.
 - `pnpm test:e2e`: run E2E tests.
-- `pnpm build`: compile TypeScript and copy runtime CSS and Nunjucks templates into `dist`.
+- `pnpm build`: compile TypeScript and recursively copy runtime CSS plus all Nunjucks layouts, pages, and fragments into `dist`.
 - `pnpm db:migrate`: run pending SQL migrations against `DATABASE_URL` during local development.
 - `node dist/app/session-cleanup.js --limit 1000`: delete one bounded batch of expired/revoked sessions.
 - `node dist/app/session-invalidate.js`: revoke all sessions after restoring a backup, before reopening traffic.
 - `pnpm dev:oidc`: run the local app with `.env.dev` for the Dex development OIDC flow.
+
+All server-rendered route families use named `@fastify/view` boundaries with globally autoescaped Nunjucks templates. Prepared HTTP view models supply display-ready values; templates contain presentation only.
 
 ## Versioning
 

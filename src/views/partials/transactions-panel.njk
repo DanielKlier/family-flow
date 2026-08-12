@@ -1,0 +1,23 @@
+<section id="transactions-panel">
+<section class="panel" aria-labelledby="transaction-form-heading"><h2 id="transaction-form-heading">{{ form.heading }}</h2>
+  {% if form.formError %}<p class="form-error">{{ form.formError }}</p>{% endif %}
+  <form id="transaction-form" class="grid-form" method="post" action="{{ form.actionUrl }}" hx-post="{{ form.actionUrl }}" hx-target="{% if form.create %}#transactions-list{% else %}#transactions-panel{% endif %}" hx-swap="outerHTML">
+    <label class="field">{{ form.text.account }} <select name="accountId">{% for option in form.accounts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ form.text.category }} <select name="categoryId">{% for option in form.categories %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ form.text.date }} <input name="date" type="date" value="{{ form.date }}" required></label><label class="field">{{ form.text.description }} <input name="description" value="{{ form.description }}" required></label><label class="field">{{ form.text.payee }} <input name="payee" value="{{ form.payee }}"></label><label class="field">{{ form.text.amount }} <input name="amount" inputmode="decimal" value="{{ form.amount }}" required></label>
+    <label class="field">{{ form.text.status }} <select name="status">{% for option in form.statuses %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="checkbox-field">{{ form.text.fixedCost }} <input name="fixedCost" type="checkbox"{% if form.fixedCostChecked %} checked{% endif %}></label><label class="field">{{ form.text.note }} <textarea name="note">{{ form.note }}</textarea></label><button type="submit">{{ form.submitLabel }}</button>
+  </form>
+</section>
+{% if filters %}<section class="panel" aria-labelledby="transaction-filters-heading"><h2 id="transaction-filters-heading">{{ text.filtersHeading }}</h2>
+  <form id="transaction-filters" class="grid-form" method="get" action="/transactions" hx-get="/transactions" hx-target="#transactions-list" hx-swap="outerHTML">
+    <label class="field">{{ text.month }} <input name="month" type="month" placeholder="{{ text.monthPlaceholder }}" value="{{ filters.month }}"></label>
+    <label class="field">{{ text.filterAccount }} <select name="accountId">{% for option in filters.accounts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.ownerContext }} <select name="ownerContext">{% for option in filters.ownerContexts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.filterCategory }} <select name="categoryId">{% for option in filters.categories %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.filterStatus }} <select name="status">{% for option in filters.statuses %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.fixedCostFilter }} <select name="fixedCost">{% for option in filters.fixedCosts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label><button type="submit">{{ text.applyFilters }}</button>
+  </form>
+</section>{% endif %}
+{% if list %}{% include "partials/transactions-list.njk" %}{% endif %}
+</section>

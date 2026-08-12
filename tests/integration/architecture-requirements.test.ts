@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -23,10 +23,15 @@ describe("INT-FF-ARC-003-01 Nunjucks rendering", () => {
       "../../src/adapters/http/views.js"
     );
     const templateDirectory = await mkdtemp(join(tmpdir(), "family-flow-views-"));
-    await writeFile(
-      join(templateDirectory, "transactions.njk"),
-      "{% for row in list.rows %}<p>{{ row.description }}</p>{% endfor %}",
-    );
+    await Promise.all([
+      mkdir(join(templateDirectory, "pages")),
+      mkdir(join(templateDirectory, "partials")),
+    ]);
+    const template = "{% for row in list.rows %}<p>{{ row.description }}</p>{% endfor %}";
+    await Promise.all([
+      writeFile(join(templateDirectory, "pages/transactions.njk"), template),
+      writeFile(join(templateDirectory, "partials/transactions-list.njk"), template),
+    ]);
     const server = Fastify();
     registerTemplateRenderer(server, templateDirectory);
     server.get("/page", async (_request, reply) =>
@@ -49,6 +54,106 @@ describe("INT-FF-ARC-003-01 Nunjucks rendering", () => {
 });
 
 describe("INT-FF-ARC-004-01 template presentation boundary", () => {
+  it("rejects display literals in presentation-ready bounded templates", async () => {
+    const { checkTemplateArchitecture } = await import(
+      "../../scripts/check-template-architecture.js"
+    );
+    const templateDirectory = await mkdtemp(join(tmpdir(), "family-flow-template-check-"));
+    await mkdir(join(templateDirectory, "pages"));
+    await writeFile(
+      join(templateDirectory, "pages/new-phase-10b-surface.njk"),
+      "<button>Literal returns</button>",
+    );
+
+    await expect(checkTemplateArchitecture(templateDirectory)).resolves.toContain(
+      "pages/new-phase-10b-surface.njk: user-facing display literal",
+    );
+  });
+
+  it.each([
+    [
+      "literal prefix before multiple expressions",
+      "<button>Delete {{ first }} {{ second }}</button>",
+    ],
+    [
+      "literal infix between multiple expressions",
+      "<button>{{ first }} Delete {{ second }}</button>",
+    ],
+    [
+      "literal suffix after multiple expressions",
+      "<button>{{ first }} {{ second }} Delete</button>",
+    ],
+    ["control-wrapped mixed text", "<button>{% if enabled %}Delete {{ item }}{% endif %}</button>"],
+    [
+      "placeholder literal before multiple expressions",
+      '<input placeholder="Search {{ first }} {{ second }}">',
+    ],
+    [
+      "placeholder literal between multiple expressions",
+      '<input placeholder="{{ first }} Search {{ second }}">',
+    ],
+    [
+      "placeholder literal after multiple expressions",
+      '<input placeholder="{{ first }} {{ second }} Search">',
+    ],
+    ["placeholder literal in a control", '<input placeholder="{% if enabled %}Search{% endif %}">'],
+    ["aria-label literal", '<input aria-label="Search {{ item }}">'],
+    ["aria-description literal", '<input aria-description="Search {{ item }}">'],
+    ["aria-placeholder literal", '<input aria-placeholder="Search {{ item }}">'],
+    ["aria-roledescription literal", '<input aria-roledescription="Search {{ item }}">'],
+    ["aria-valuetext literal", '<input aria-valuetext="Search {{ item }}">'],
+    ["title literal", '<input title="Search {{ item }}">'],
+    ["alternative text literal", '<img alt="Search {{ item }}">'],
+    ["HTMX confirmation literal", '<button hx-confirm="Delete {{ item }}">{{ item }}</button>'],
+    ["HTMX prompt literal", '<button hx-prompt="Search {{ item }}">{{ item }}</button>'],
+    ["literal in a raw block", "<button>{% raw %}Delete {{ item }}{% endraw %}</button>"],
+  ])("rejects mixed display text with %s", async (_description, template) => {
+    const { checkTemplateArchitecture } = await import(
+      "../../scripts/check-template-architecture.js"
+    );
+    const templateDirectory = await mkdtemp(join(tmpdir(), "family-flow-template-check-"));
+    await writeFile(join(templateDirectory, "unsafe.njk"), template);
+
+    await expect(checkTemplateArchitecture(templateDirectory)).resolves.toEqual([
+      "unsafe.njk: user-facing display literal",
+    ]);
+  });
+
+  it.each([
+    ["expression-only text", "<button>{{ text.delete }}</button>"],
+    ["adjacent expressions", "<p>{{ first }} {{ second }}</p>"],
+    ["whitespace around adjacent expressions", "<p>\n  {{ first }} {{ second }}\n</p>"],
+    ["structural label whitespace", '<label>{{ text.name }} <input name="name"></label>'],
+    ["control-only text", "<button>{% if enabled %}{% endif %}</button>"],
+    [
+      "control and expression-only text",
+      "<button>{% if enabled %}{{ text.on }}{% else %}{{ text.off }}{% endif %}</button>",
+    ],
+    [
+      "expression-only display attributes",
+      '<img placeholder="{{ text.query }}" aria-label="{{ text.search }}" aria-description="{{ text.description }}" aria-placeholder="{{ text.placeholder }}" aria-roledescription="{{ text.role }}" aria-valuetext="{{ text.value }}" title="{{ text.tooltip }}" alt="{{ text.alt }}">',
+    ],
+    [
+      "control and expression-only display attributes",
+      '<button title="{% if enabled %}{{ text.on }}{% else %}{{ text.off }}{% endif %}" hx-confirm="{{ text.confirm }}" hx-prompt="{{ text.prompt }}">{{ text.submit }}</button>',
+    ],
+    ["control-only display attribute", '<input title="{% if enabled %}{% endif %}">'],
+    ["whitespace-only display attributes", '<input placeholder="  \n  " title="\t">'],
+    ["Nunjucks comments", "<button>{# translator context #}{{ text.submit }}</button>"],
+    [
+      "non-display attributes",
+      '<button class="Delete" id="delete" href="/delete">{{ text.delete }}</button>',
+    ],
+  ])("allows %s", async (_description, template) => {
+    const { checkTemplateArchitecture } = await import(
+      "../../scripts/check-template-architecture.js"
+    );
+    const templateDirectory = await mkdtemp(join(tmpdir(), "family-flow-template-check-"));
+    await writeFile(join(templateDirectory, "allowed.njk"), template);
+
+    await expect(checkTemplateArchitecture(templateDirectory)).resolves.toEqual([]);
+  });
+
   it.each([
     ["disabled autoescaping", "{% autoescape false %}{{ text }}{% endautoescape %}"],
     ["safe filter", "{{ text | safe }}"],
@@ -77,22 +182,91 @@ describe("INT-FF-ARC-004-02 typed rendering contract", () => {
     const viewAsync = vi.fn();
     const views = createFamilyFlowViews({ viewAsync });
 
-    expect(views).toEqual(
-      expect.objectContaining({
-        transactionsPage: expect.any(Function),
-        transactionsPanel: expect.any(Function),
-        transactionsList: expect.any(Function),
-        authLoginPage: expect.any(Function),
-        masterDataPage: expect.any(Function),
-        categorizationRulesPage: expect.any(Function),
-        csvImportPage: expect.any(Function),
-        incomePage: expect.any(Function),
-      }),
-    );
+    const namedViews: Record<string, unknown> = views;
+    const requiredMethods = [
+      "dashboardPage",
+      "authLoginPage",
+      "authErrorPage",
+      "missingResourcePage",
+      "masterDataPage",
+      "accountEditPage",
+      "categoryEditPage",
+      "categorizationRulesPage",
+      "categorizationRuleEditPage",
+      "csvImportPage",
+      "incomePage",
+      "incomePanel",
+      "incomeEditPage",
+      "incomeEditPanel",
+      "transactionsPage",
+      "transactionsPanel",
+      "transactionsList",
+      "transactionEditPage",
+      "transactionEditPanel",
+    ];
+
+    for (const method of requiredMethods) {
+      expect(namedViews, `${method} must be a named asynchronous view boundary`).toHaveProperty(
+        method,
+        expect.any(Function),
+      );
+    }
     expect(views).not.toHaveProperty("render");
     expect(views).not.toHaveProperty("view");
 
     await views.transactionsList(transactionInput);
-    expect(viewAsync).toHaveBeenCalledWith("transactions.njk", expect.any(Object));
+    expect(viewAsync).toHaveBeenCalledWith("partials/transactions-list.njk", expect.any(Object));
+  });
+
+  it("has no legacy TypeScript HTML renderers or direct HTML assembly at HTTP view boundaries", async () => {
+    const legacyTemplateDirectory = join(import.meta.dirname, "../../src/adapters/http/templates");
+    const viewsSource = await readFile(
+      join(import.meta.dirname, "../../src/adapters/http/views.ts"),
+      "utf8",
+    );
+
+    await expect(readdir(legacyTemplateDirectory)).rejects.toMatchObject({ code: "ENOENT" });
+    expect(viewsSource).not.toContain("./templates/");
+    expect(viewsSource).not.toMatch(/return\s+[`'"]/);
+  });
+
+  it("keeps the complete prepared-view template inventory free of user-facing display literals", async () => {
+    const { checkTemplateArchitecture } = await import(
+      "../../scripts/check-template-architecture.js"
+    );
+    const templateDirectory = join(import.meta.dirname, "../../src/views");
+
+    await expect(checkTemplateArchitecture(templateDirectory)).resolves.not.toEqual(
+      expect.arrayContaining([expect.stringContaining("user-facing display literal")]),
+    );
+  });
+
+  it("targets declared page, layout, and fragment templates through @fastify/view", async () => {
+    const requiredTemplates = [
+      "layouts/app.njk",
+      "pages/dashboard.njk",
+      "pages/login.njk",
+      "pages/auth-error.njk",
+      "pages/resource-error.njk",
+      "pages/master-data.njk",
+      "pages/account-edit.njk",
+      "pages/category-edit.njk",
+      "pages/categorization-rules.njk",
+      "pages/categorization-rule-edit.njk",
+      "pages/csv-import.njk",
+      "pages/income.njk",
+      "pages/income-edit.njk",
+      "pages/transactions.njk",
+      "partials/income-panel.njk",
+      "partials/transactions-panel.njk",
+      "partials/transactions-list.njk",
+    ];
+
+    for (const template of requiredTemplates) {
+      await expect(
+        readFile(join(import.meta.dirname, "../../src/views", template), "utf8"),
+        template,
+      ).resolves.toEqual(expect.any(String));
+    }
   });
 });

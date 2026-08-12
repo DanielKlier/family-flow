@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% if htmxEnabled %}<meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"400","swap":true,"error":true},{"code":"[45]..","swap":false,"error":true},{"code":"...","swap":true}]}'>{% endif %}
+    <link rel="stylesheet" href="/assets/app.css">
+    {% if htmxEnabled %}<script src="/assets/htmx.min.js" defer></script>{% endif %}
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <h1 class="app-title">{{ heading }}</h1>
+        {% if navigation %}<nav class="app-nav">{% for link in navigation %}<a href="{{ link.href }}">{{ link.label }}</a>{% endfor %}</nav>{% endif %}
+      </header>
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

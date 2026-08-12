@@ -325,7 +325,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-10B — Nunjucks Template Boundary
 
-**Status:** In progress
+**Status:** Completed
 **Classification:** Behavior-preserving refactor
 **Implements:** `FF-ARC-003`, `FF-ARC-004`
 **Verifies:** `FF-UI-001`, `FF-UI-002`, `FF-UI-003`, `FF-DEP-001`, `FF-QUA-003`
@@ -339,26 +339,26 @@ The current composition registers authentication before protected routes. This d
 
 **Tasks:**
 
-- [ ] Add `@fastify/view` and Nunjucks as the only template integration.
+- [x] Add `@fastify/view` and Nunjucks as the only template integration.
 - [x] Enable automatic escaping globally and prohibit per-template disabling.
-- [x] Create typed prepared transaction view models in the HTTP adapter.
-- [ ] Move layouts, pages, and fragments to `src/views`.
-- [x] Preserve transaction HTMX target contracts and progressive enhancement.
-- [ ] Keep translations, formatting, links, labels, and user-facing validation in prepared view models.
-- [ ] Remove TypeScript string renderers after every route is migrated.
+- [x] Create typed prepared view models for every route family in the HTTP adapter.
+- [x] Move layouts, pages, and fragments to `src/views`.
+- [x] Preserve transaction and income HTMX target contracts and progressive enhancement.
+- [x] Keep formatting, links, labels, display flags, and user-facing validation in prepared view models.
+- [x] Remove TypeScript string renderers after every route is migrated.
 - [x] Package views in compiled output and the production image.
 - [x] Update template and HTMX diagnostics in `OPERATIONS.md`.
 
 **Tests:**
 
-- [ ] `E2E-FF-UI-001-01`: full-page and HTMX create, edit, delete, validation, and filter parity.
-- [ ] `E2E-FF-UI-002-01`: expected-green characterization proves every primary flow remains usable without JavaScript. Transaction coverage is green.
-- [ ] `E2E-FF-UI-003-01`: untrusted account, category, transaction, income, rule, and error text renders as text. Transaction full-page and fragment coverage is green.
+- [x] `E2E-FF-UI-001-01`: full-page and HTMX create, edit, delete, validation, and filter parity.
+- [x] `E2E-FF-UI-002-01`: expected-green characterization proves primary full-page flows remain usable without JavaScript.
+- [x] `E2E-FF-UI-003-01`: untrusted account, category, transaction, income, rule, and error text renders as text in globally autoescaped templates.
 - [x] `INT-FF-ARC-003-01`: @fastify/view renders Nunjucks with global escaping.
-- [x] `INT-FF-ARC-004-01`: static checks reject disabled escaping, the Nunjucks safe filter, parser/formatter arithmetic, and repository/use-case access from templates.
+- [x] `INT-FF-ARC-004-01`: Nunjucks-aware static checks reject remaining user-facing literals at any position among expressions and controls in text nodes and display attributes (including accessible text, alternative text, placeholders, titles, `hx-confirm`, and `hx-prompt`), while allowing expression-only, control-only, and whitespace-only content. They also reject disabled escaping, the Nunjucks safe filter, parser/formatter arithmetic, and repository/use-case access from templates.
 - [x] `INT-FF-ARC-004-02`: named page and fragment methods expose declared view-model boundaries.
 - [x] `INT-FF-DEP-001-01`: compiled application resolves packaged templates.
-- [x] `SMOKE-FF-DEP-001-01`: production image renders a transaction full page and HTMX fragment.
+- [x] `SMOKE-FF-DEP-001-01`: production image packages every template family and renders representative full pages and HTMX fragments.
 
 **Quality gates:** the five canonical commands plus `docker compose build`.
 

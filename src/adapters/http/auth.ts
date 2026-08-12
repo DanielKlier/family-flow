@@ -25,7 +25,7 @@ import {
   serializeSessionCookie,
   sessionCookieName,
 } from "./session.js";
-import { renderDashboard, renderLoginPage } from "./templates/auth.js";
+import { createFamilyFlowViews } from "./views.js";
 
 export type AuthRuntimeConfig = {
   mode: "test" | "oidc";
@@ -82,21 +82,30 @@ export function registerAuth(
 
   server.get("/", async (request: RequestWithUser, reply) => {
     const user = request.userContext;
+    const views = createFamilyFlowViews(reply);
     if (user === undefined) {
-      return reply.status(500).send("Missing authenticated user context");
+      return reply
+        .status(500)
+        .type("text/html; charset=utf-8")
+        .send(await views.authErrorPage("Missing authenticated user context"));
     }
 
-    return reply.type("text/html; charset=utf-8").send(renderDashboard(user));
+    return reply.type("text/html; charset=utf-8").send(await views.dashboardPage(user));
   });
 
   server.get("/auth/login", async (request, reply) => {
     const returnTo = readSafeReturnTo(request.query);
     if (config.mode === "test") {
-      return reply.type("text/html; charset=utf-8").send(renderLoginPage(returnTo));
+      return reply
+        .type("text/html; charset=utf-8")
+        .send(await createFamilyFlowViews(reply).authLoginPage(returnTo));
     }
 
     if (config.oidc === null) {
-      return reply.status(500).send("OIDC configuration is missing");
+      return reply
+        .status(500)
+        .type("text/html; charset=utf-8")
+        .send(await createFamilyFlowViews(reply).authErrorPage("OIDC configuration is missing"));
     }
 
     const state = randomUUID();
@@ -108,7 +117,10 @@ export function registerAuth(
 
   server.get("/auth/test-login", async (request, reply) => {
     if (config.mode !== "test") {
-      return reply.status(404).send("Not Found");
+      return reply
+        .status(404)
+        .type("text/html; charset=utf-8")
+        .send(await createFamilyFlowViews(reply).authErrorPage("Not Found"));
     }
 
     const returnTo = readSafeReturnTo(request.query);
@@ -123,13 +135,19 @@ export function registerAuth(
 
   server.get("/auth/callback", async (request, reply) => {
     if (config.mode !== "oidc" || config.oidc === null) {
-      return reply.status(404).send("Not Found");
+      return reply
+        .status(404)
+        .type("text/html; charset=utf-8")
+        .send(await createFamilyFlowViews(reply).authErrorPage("Not Found"));
     }
 
     const query = readCallbackQuery(request.query);
     const expectedState = readCookie(request.headers.cookie, oidcStateCookieName);
     if (query === null || expectedState === undefined || query.state !== expectedState) {
-      return reply.status(400).send("Invalid OIDC callback state");
+      return reply
+        .status(400)
+        .type("text/html; charset=utf-8")
+        .send(await createFamilyFlowViews(reply).authErrorPage("Invalid OIDC callback state"));
     }
 
     const provider = await getOidcProviderMetadata(config.oidc);
@@ -155,12 +173,18 @@ export function registerAuth(
 
   server.post("/auth/logout", async (request, reply) => {
     if (!hasSameOrigin(request.headers.origin, config.baseUrl)) {
-      return reply.status(403).send("Invalid logout origin");
+      return reply
+        .status(403)
+        .type("text/html; charset=utf-8")
+        .send(await createFamilyFlowViews(reply).authErrorPage("Invalid logout origin"));
     }
 
     const token = readCookie(request.headers.cookie, sessionCookieName);
     if (!(await sessions.revoke(token))) {
-      return reply.status(401).send("Invalid session");
+      return reply
+        .status(401)
+        .type("text/html; charset=utf-8")
+        .send(await createFamilyFlowViews(reply).authErrorPage("Invalid session"));
     }
     reply.header("Set-Cookie", serializeExpiredSessionCookie(secureCookie));
 

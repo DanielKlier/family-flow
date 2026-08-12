@@ -1,0 +1,11 @@
+{% extends "layouts/app.njk" %}
+{% block content %}<section class="panel" aria-labelledby="account-edit-heading">
+  <h2 id="account-edit-heading">{{ text.accountEditHeading }}</h2>
+  {% if formError %}<p class="form-error">{{ formError }}</p>{% endif %}
+  <form class="grid-form" method="post" action="{{ actionUrl }}">
+    <label class="field">{{ text.accountName }} <input name="name" value="{{ name }}" required></label>
+    <label class="field">{{ text.accountOwner }} <select name="ownerContext">{% for option in ownerContexts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="checkbox-field">{{ text.active }} <input name="active" type="checkbox"{% if activeChecked %} checked{% endif %}></label>
+    <button type="submit">{{ text.saveAccount }}</button>
+  </form>
+</section>{% endblock %}

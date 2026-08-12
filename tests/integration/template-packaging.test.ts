@@ -28,13 +28,33 @@ describe("INT-FF-DEP-001-01 compiled template packaging", () => {
     });
   }, buildTimeoutMs);
 
-  it("copies every source Nunjucks template to the matching dist/views path", async () => {
+  it("ships the complete declared layout, page, and fragment inventory to dist/views", async () => {
     const sourceViews = join(repositoryRoot, "src/views");
     const sourceTemplates = await listTemplates(sourceViews);
-    expect(sourceTemplates).not.toEqual([]);
+    const templatePaths = sourceTemplates.map((template) => relative(sourceViews, template));
+    const requiredTemplates = [
+      "layouts/app.njk",
+      "pages/dashboard.njk",
+      "pages/login.njk",
+      "pages/auth-error.njk",
+      "pages/resource-error.njk",
+      "pages/master-data.njk",
+      "pages/account-edit.njk",
+      "pages/category-edit.njk",
+      "pages/categorization-rules.njk",
+      "pages/categorization-rule-edit.njk",
+      "pages/csv-import.njk",
+      "pages/income.njk",
+      "pages/income-edit.njk",
+      "pages/transactions.njk",
+      "partials/income-panel.njk",
+      "partials/income-edit-panel.njk",
+      "partials/transactions-panel.njk",
+      "partials/transactions-list.njk",
+    ];
 
-    for (const sourceTemplate of sourceTemplates) {
-      const templatePath = relative(sourceViews, sourceTemplate);
+    expect(templatePaths).toEqual(expect.arrayContaining(requiredTemplates));
+    for (const templatePath of requiredTemplates) {
       await expect(
         access(join(repositoryRoot, "dist/views", templatePath)),
       ).resolves.toBeUndefined();

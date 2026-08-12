@@ -1,0 +1,13 @@
+<section id="income-panel">
+<section class="panel" aria-labelledby="income-form-heading"><h2 id="income-form-heading">{{ heading }}</h2>
+  {% if formError %}<p class="form-error">{{ formError }}</p>{% endif %}
+  <form id="income-form" class="grid-form" method="post" action="{{ actionUrl }}" hx-post="{{ actionUrl }}" hx-target="#income-panel" hx-swap="outerHTML">
+    <label class="field">{{ text.name }} <input name="name" value="{{ name }}" required></label>
+    <label class="field">{{ text.ownerContext }} <select name="ownerContext">{% for option in ownerContexts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.amount }} <input name="amount" inputmode="decimal" value="{{ amount }}" required></label>
+    <label class="field">{{ text.startMonth }} <input name="startMonth" type="month" placeholder="{{ text.monthPlaceholder }}" value="{{ startMonth }}" required></label>
+    <label class="field">{{ text.endMonth }} <input name="endMonth" type="month" placeholder="{{ text.monthPlaceholder }}" value="{{ endMonth }}"></label>
+    <label class="checkbox-field">{{ text.active }} <input name="active" type="checkbox"{% if activeChecked %} checked{% endif %}></label><button type="submit">{{ submitLabel }}</button>
+  </form>
+</section>
+</section>

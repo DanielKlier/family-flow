@@ -34,6 +34,23 @@ describe("INT-FF-QUA-001-01 structured traceability", () => {
     );
   });
 
+  it("rejects completed phases with acceptance that is not verified", async () => {
+    const document = (await traceabilityDocument()) as {
+      acceptance: Array<Record<string, unknown>>;
+      phases: Array<Record<string, unknown>>;
+    };
+    const invalid = structuredClone(document);
+    const phase = invalid.phases.find(({ id }) => id === "PH-10B");
+    expect(phase).toBeDefined();
+    const acceptance = invalid.acceptance.find(({ phase: phaseId }) => phaseId === "PH-10B");
+    expect(acceptance).toBeDefined();
+    if (acceptance !== undefined) acceptance.status = "Planned";
+
+    expect(validateTraceability(invalid)).toContain(
+      `INCOMPLETE_ACCEPTANCE_IN_COMPLETED_PHASE ${String(acceptance?.id)}`,
+    );
+  });
+
   it("uses Vitest and Playwright collection as completed test evidence", async () => {
     const evidence = await collectDeclaredEvidence(repositoryRoot);
 

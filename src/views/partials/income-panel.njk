@@ -1,0 +1,33 @@
+<section id="income-panel">
+<section class="panel" aria-labelledby="income-form-heading"><h2 id="income-form-heading">{{ form.heading }}</h2>
+  {% if form.formError %}<p class="form-error">{{ form.formError }}</p>{% endif %}
+  <form id="income-form" class="grid-form" method="post" action="{{ form.actionUrl }}" hx-post="{{ form.actionUrl }}" hx-target="#income-panel" hx-swap="outerHTML">
+    <label class="field">{{ text.name }} <input name="name" value="{{ form.name }}" required></label>
+    <label class="field">{{ text.ownerContext }} <select name="ownerContext">{% for option in form.ownerContexts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.amount }} <input name="amount" inputmode="decimal" value="{{ form.amount }}" required></label>
+    <label class="field">{{ text.startMonth }} <input name="startMonth" type="month" placeholder="{{ text.monthPlaceholder }}" value="{{ form.startMonth }}" required></label>
+    <label class="field">{{ text.endMonth }} <input name="endMonth" type="month" placeholder="{{ text.monthPlaceholder }}" value="{{ form.endMonth }}"></label>
+    <input type="hidden" name="active" value="on"><button type="submit">{{ form.submitLabel }}</button>
+  </form>
+</section>
+<section class="panel" aria-labelledby="income-override-heading"><h2 id="income-override-heading">{{ text.overrideHeading }}</h2>
+  <form id="income-override-form" class="grid-form" method="post" action="/income/overrides" hx-post="/income/overrides" hx-target="#income-panel" hx-swap="outerHTML">
+    <label class="field">{{ text.overrideIncome }} <select name="incomePlanId">{% for option in planOptions %}<option value="{{ option.value }}">{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.overrideMonth }} <input name="month" type="month" placeholder="{{ text.monthPlaceholder }}" required></label><label class="field">{{ text.overrideAmount }} <input name="amount" inputmode="decimal" required></label><label class="field">{{ text.overrideNote }} <input name="note"></label><button type="submit">{{ text.saveOverride }}</button>
+  </form>
+</section>
+<section class="panel" aria-labelledby="income-filters-heading"><h2 id="income-filters-heading">{{ text.filtersHeading }}</h2>
+  <form id="income-filters" class="grid-form" method="get" action="/income" hx-get="/income" hx-target="#income-panel" hx-swap="outerHTML">
+    <label class="field">{{ text.calculationMonth }} <input name="month" type="month" placeholder="{{ text.monthPlaceholder }}" value="{{ filterMonth }}"></label>
+    <label class="field">{{ text.filterOwner }} <select name="ownerContext">{% for option in ownerContextOptions %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <button type="submit">{{ text.applyFilters }}</button><button type="submit">{{ text.updateCalculation }}</button>
+  </form>
+</section>
+<section class="panel" aria-labelledby="income-summary-heading"><h2 id="income-summary-heading">{{ text.summaryHeading }}</h2><p>{{ monthlyIncomeLabel }}</p></section>
+<section class="panel" aria-labelledby="income-list-heading"><h2 id="income-list-heading">{{ text.listHeading }}</h2>
+  {% if empty %}<p class="empty-state">{{ text.noPlans }}</p>{% else %}<div class="table-wrap"><table><thead><tr><th>{{ text.name }}</th><th>{{ text.owner }}</th><th>{{ text.amount }}</th><th>{{ text.start }}</th><th>{{ text.end }}</th><th>{{ text.actions }}</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ row.name }}</td><td>{{ row.ownerLabel }}</td><td>{{ row.amount }}</td><td>{{ row.startMonth }}</td><td>{{ row.endMonth }}</td><td><a class="action-link" href="{{ row.editUrl }}">{{ text.edit }}</a></td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</section>
+<section class="panel" aria-labelledby="income-overrides-list-heading"><h2 id="income-overrides-list-heading">{{ text.overridesHeading }}</h2>
+  {% if overridesEmpty %}<p class="empty-state">{{ text.noOverrides }}</p>{% else %}<div class="table-wrap"><table><thead><tr><th>{{ text.month }}</th><th>{{ text.income }}</th><th>{{ text.amount }}</th><th>{{ text.note }}</th></tr></thead><tbody>{% for row in overrides %}<tr><td>{{ row.month }}</td><td>{{ row.incomeName }}</td><td>{{ row.amount }}</td><td>{{ row.note }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</section>
+</section>

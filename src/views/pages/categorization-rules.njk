@@ -1,0 +1,24 @@
+{% extends "layouts/app.njk" %}
+{% block content %}
+<section class="panel" aria-labelledby="categorization-rule-form-heading">
+  <h2 id="categorization-rule-form-heading">{{ form.heading }}</h2>
+  {% if formError %}<p class="form-error">{{ formError }}</p>{% endif %}
+  <form id="categorization-rule-form" class="grid-form" method="post" action="{{ form.actionUrl }}">
+    <label class="field">{{ form.text.name }} <input name="name" value="{{ form.name }}" required></label>
+    <label class="field">{{ form.text.searchText }} <input name="searchText" value="{{ form.searchText }}" required></label>
+    <label class="field">{{ form.text.category }} <select name="categoryId">{% for option in form.categories %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ form.text.account }} <select name="accountId">{% for option in form.accounts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ form.text.fixedCostAction }} <select name="fixedCost">{% for option in form.fixedCostOptions %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ form.text.priority }} <input name="priority" type="number" min="0" step="1" value="{{ form.priority }}" required></label>
+    <button type="submit">{{ form.submitLabel }}</button>
+  </form>
+</section>
+<section class="panel" aria-labelledby="categorization-rules-list-heading">
+  <h2 id="categorization-rules-list-heading">{{ text.listHeading }}</h2>
+  <form class="inline-form" method="post" action="/categorization-rules/apply"><button type="submit">{{ text.apply }}</button></form>
+  {% if empty %}<p class="empty-state">{{ text.empty }}</p>{% else %}<div class="table-wrap"><table>
+    <thead><tr><th>{{ text.name }}</th><th>{{ text.searchText }}</th><th>{{ text.categoryColumn }}</th><th>{{ text.accountColumn }}</th><th>{{ text.fixedCostColumn }}</th><th>{{ text.priority }}</th><th>{{ text.status }}</th><th>{{ text.actions }}</th></tr></thead><tbody>
+    {% for row in rows %}<tr><td>{{ row.name }}</td><td>{{ row.searchText }}</td><td>{{ row.category }}</td><td>{{ row.account }}</td><td>{{ row.fixedCostLabel }}</td><td>{{ row.priority }}</td><td>{{ row.statusLabel }}</td><td class="actions-cell"><a class="action-link" href="{{ row.editUrl }}">{{ text.edit }}</a><form class="inline-form" method="post" action="{{ row.deleteUrl }}"><button class="link-button" type="submit">{{ text.delete }}</button></form></td></tr>{% endfor %}
+    </tbody></table></div>{% endif %}
+</section>
+{% endblock %}

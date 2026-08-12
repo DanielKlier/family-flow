@@ -83,20 +83,14 @@ async function handleCreateTransaction(
       createTransactionFromForm(readForm(request.body), randomUUID()),
     );
   } catch (error: unknown) {
-    if (isHtmxRequest(request.headers)) {
-      return reply
-        .status(400)
-        .type("text/html; charset=utf-8")
-        .send(
-          await renderTransactionsPanelState(
-            repositories,
-            reply,
-            error instanceof Error ? error.message : "Transaction could not be saved",
-          ),
-        );
-    }
+    const formError = error instanceof Error ? error.message : "Transaction could not be saved";
+    const state = await readTransactionsState(repositories, formError);
+    const views = createFamilyFlowViews(reply);
+    const body = isHtmxRequest(request.headers)
+      ? await views.transactionsPanel(state)
+      : await views.transactionsPage(state);
 
-    throw error;
+    return reply.status(400).type("text/html; charset=utf-8").send(body);
   }
 
   if (isHtmxRequest(request.headers)) {
@@ -120,7 +114,10 @@ async function handleEditTransactionForm(
 ) {
   const transaction = await repositories.transactions.get(readRouteId(request.params));
   if (transaction === null) {
-    return reply.status(404).send("Transaction not found");
+    return reply
+      .status(404)
+      .type("text/html; charset=utf-8")
+      .send(await createFamilyFlowViews(reply).missingResourcePage("transaction"));
   }
 
   const [accounts, categories] = await Promise.all([
@@ -143,10 +140,31 @@ async function handleUpdateTransaction(
   const id = readRouteId(request.params);
   const existing = await repositories.transactions.get(id);
   if (existing === null) {
-    return reply.status(404).send("Transaction not found");
+    return reply
+      .status(404)
+      .type("text/html; charset=utf-8")
+      .send(await createFamilyFlowViews(reply).missingResourcePage("transaction"));
   }
 
-  await repositories.transactions.save(createTransactionFromForm(readForm(request.body), id));
+  try {
+    await repositories.transactions.save(createTransactionFromForm(readForm(request.body), id));
+  } catch (error: unknown) {
+    const [accounts, categories] = await Promise.all([
+      repositories.accounts.listActive(),
+      repositories.categories.listActive(),
+    ]);
+    const input = {
+      accounts,
+      categories,
+      transaction: existing,
+      formError: error instanceof Error ? error.message : "Transaction could not be saved",
+    };
+    const views = createFamilyFlowViews(reply);
+    const body = isHtmxRequest(request.headers)
+      ? await views.transactionEditPanel(input)
+      : await views.transactionEditPage(input);
+    return reply.status(400).type("text/html; charset=utf-8").send(body);
+  }
 
   if (isHtmxRequest(request.headers)) {
     return reply
@@ -183,6 +201,15 @@ async function renderTransactionsPanelState(
   reply: FastifyReply,
   formError?: string,
 ): Promise<string> {
+  return createFamilyFlowViews(reply).transactionsPanel(
+    await readTransactionsState(repositories, formError),
+  );
+}
+
+async function readTransactionsState(
+  repositories: TransactionRouteRepositories,
+  formError?: string,
+) {
   const [accounts, categories, ownerContexts, transactions] = await Promise.all([
     repositories.accounts.listActive(),
     repositories.categories.listActive(),
@@ -190,12 +217,5 @@ async function renderTransactionsPanelState(
     repositories.transactions.list({}),
   ]);
 
-  return createFamilyFlowViews(reply).transactionsPanel({
-    accounts,
-    categories,
-    ownerContexts,
-    transactions,
-    filters: {},
-    formError,
-  });
+  return { accounts, categories, ownerContexts, transactions, filters: {}, formError };
 }

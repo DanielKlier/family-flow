@@ -460,7 +460,7 @@
     },
     {
       "id": "PH-10B",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Replace TypeScript string rendering with the Nunjucks template boundary.",
       "classification": "Behavior-preserving refactor"
     },
@@ -820,7 +820,7 @@
     },
     {
       "id": "FF-ARC-003-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10B",
       "test": "INT-FF-ARC-003-01",
       "file": "tests/integration/architecture-requirements.test.ts",
@@ -828,7 +828,7 @@
     },
     {
       "id": "FF-ARC-004-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10B",
       "test": "INT-FF-ARC-004-01",
       "file": "tests/integration/architecture-requirements.test.ts",
@@ -1468,7 +1468,7 @@
     },
     {
       "id": "FF-UI-001-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-10B",
       "test": "E2E-FF-UI-001-01",
       "file": "tests/e2e/styling-and-htmx.test.ts",
@@ -1492,7 +1492,7 @@
     },
     {
       "id": "FF-UI-002-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-10B",
       "test": "E2E-FF-UI-002-01",
       "file": "tests/e2e/styling-and-htmx.test.ts",
@@ -1500,7 +1500,7 @@
     },
     {
       "id": "FF-UI-003-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-10B",
       "test": "E2E-FF-UI-003-01",
       "file": "tests/e2e/styling-and-htmx.test.ts",
@@ -1532,7 +1532,7 @@
     },
     {
       "id": "FF-DEP-001-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10B",
       "test": "SMOKE-FF-DEP-001-01",
       "file": "tests/e2e/image-smoke.test.ts",

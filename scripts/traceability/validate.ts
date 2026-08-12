@@ -103,11 +103,11 @@ export function validateTraceability(value: unknown): string[] {
     const test = document.tests.find((candidate) => candidate.id === row.test);
     if (test && (test.acceptance !== row.id || test.phase !== row.phase || test.file !== row.file))
       diagnostics.push(`MAPPING_MISMATCH ${row.test}`);
-    if (
-      row.status === "Verified" &&
-      document.phases.find((phase) => phase.id === row.phase)?.status !== "Completed"
-    )
+    const phaseStatus = document.phases.find((phase) => phase.id === row.phase)?.status;
+    if (row.status === "Verified" && phaseStatus !== "Completed")
       diagnostics.push(`VERIFIED_INCOMPLETE_PHASE ${row.id}`);
+    if (row.status !== "Verified" && phaseStatus === "Completed")
+      diagnostics.push(`INCOMPLETE_ACCEPTANCE_IN_COMPLETED_PHASE ${row.id}`);
   });
 
   document.tests.forEach((row, index) => {

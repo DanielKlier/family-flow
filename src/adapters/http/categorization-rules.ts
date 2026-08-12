@@ -7,14 +7,11 @@ import {
   createCategorizationRule,
 } from "../../core/categorization/categorization-rule.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
-import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
+import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type { TransactionRepository } from "../../ports/repositories/transaction-repository.js";
-import { readForm, readRouteId, type FormBody } from "./request-values.js";
-import {
-  renderCategorizationRuleEditPage,
-  renderCategorizationRulesPage,
-} from "./templates/categorization-rules.js";
+import { type FormBody, readForm, readRouteId } from "./request-values.js";
+import { createFamilyFlowViews } from "./views.js";
 
 type CategorizationRuleRouteRepositories = {
   accounts: AccountRepository;
@@ -79,7 +76,10 @@ async function handleEditRuleForm(
 ) {
   const rule = await repositories.categorizationRules.get(readRouteId(request.params));
   if (rule === null) {
-    return reply.status(404).send("Categorization rule not found");
+    return reply
+      .status(404)
+      .type("text/html; charset=utf-8")
+      .send(await createFamilyFlowViews(reply).missingResourcePage("categorizationRule"));
   }
 
   const [accounts, categories] = await Promise.all([
@@ -87,9 +87,14 @@ async function handleEditRuleForm(
     repositories.categories.list(),
   ]);
 
-  return reply
-    .type("text/html; charset=utf-8")
-    .send(renderCategorizationRuleEditPage({ accounts, categories, rule }));
+  return reply.type("text/html; charset=utf-8").send(
+    await createFamilyFlowViews(reply).categorizationRuleEditPage({
+      accounts,
+      categories,
+      rules: [],
+      rule,
+    }),
+  );
 }
 
 async function handleUpdateRule(
@@ -100,7 +105,10 @@ async function handleUpdateRule(
   const id = readRouteId(request.params);
   const existing = await repositories.categorizationRules.get(id);
   if (existing === null) {
-    return reply.status(404).send("Categorization rule not found");
+    return reply
+      .status(404)
+      .type("text/html; charset=utf-8")
+      .send(await createFamilyFlowViews(reply).missingResourcePage("categorizationRule"));
   }
 
   await repositories.categorizationRules.save(createRuleFromForm(readForm(request.body), id));
@@ -142,9 +150,14 @@ async function renderRulePage(
     repositories.categorizationRules.list(),
   ]);
 
-  return reply
-    .type("text/html; charset=utf-8")
-    .send(renderCategorizationRulesPage({ accounts, categories, rules, formError }));
+  return reply.type("text/html; charset=utf-8").send(
+    await createFamilyFlowViews(reply).categorizationRulesPage({
+      accounts,
+      categories,
+      rules,
+      formError,
+    }),
+  );
 }
 
 function createRuleFromForm(form: FormBody, id: string = randomUUID()) {

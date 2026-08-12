@@ -19,6 +19,7 @@ export function prepareTransactionListViewModel(input: TransactionListInput) {
   const categoryNames = new Map(input.categories.map((category) => [category.id, category.name]));
 
   return {
+    text: transactionText,
     empty: input.transactions.length === 0,
     rows: input.transactions.map((transaction) => ({
       date: transaction.date,
@@ -33,6 +34,32 @@ export function prepareTransactionListViewModel(input: TransactionListInput) {
   };
 }
 
+const transactionText = {
+  account: "Transaction account",
+  category: "Category",
+  date: "Date",
+  description: "Description",
+  payee: "Payee",
+  amount: "Amount",
+  status: "Transaction status",
+  fixedCost: "Fixed cost",
+  note: "Note",
+  filtersHeading: "Filters",
+  month: "Month",
+  monthPlaceholder: "YYYY-MM",
+  filterAccount: "Filter account",
+  ownerContext: "Owner context",
+  filterCategory: "Category",
+  filterStatus: "Filter status",
+  fixedCostFilter: "Fixed cost filter",
+  applyFilters: "Apply filters",
+  listHeading: "Transaction list",
+  empty: "No transactions found.",
+  actions: "Actions",
+  edit: "Edit",
+  delete: "Delete",
+} as const;
+
 export function prepareTransactionFormViewModel(input: {
   accounts: Account[];
   categories: Category[];
@@ -42,6 +69,7 @@ export function prepareTransactionFormViewModel(input: {
   const transaction = input.transaction;
 
   return {
+    text: transactionText,
     heading: transaction === undefined ? "Add transaction" : "Edit transaction",
     actionUrl:
       transaction === undefined
@@ -74,6 +102,7 @@ export function prepareTransactionsViewModel(input: {
   formError?: string;
 }) {
   return {
+    text: transactionText,
     form: prepareTransactionFormViewModel(input),
     filters: {
       month: input.filters.month ?? "",

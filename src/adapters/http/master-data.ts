@@ -9,11 +9,7 @@ import type { AccountRepository } from "../../ports/repositories/account-reposit
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type { OwnerContextRepository } from "../../ports/repositories/owner-context-repository.js";
 import { readForm, readRouteId } from "./request-values.js";
-import {
-  renderAccountEditPage,
-  renderCategoryEditPage,
-  renderMasterDataPage,
-} from "./templates/master-data.js";
+import { createFamilyFlowViews } from "./views.js";
 
 type MasterDataRouteRepositories = {
   accounts: AccountRepository;
@@ -52,18 +48,18 @@ export function registerMasterDataRoutes(
       repositories.ownerContexts.list(),
     ]);
     if (account === null) {
-      return reply.status(404).send("Account not found");
+      return renderMissingResource(reply, "account");
     }
 
     return reply
       .type("text/html; charset=utf-8")
-      .send(renderAccountEditPage(account, ownerContexts));
+      .send(await createFamilyFlowViews(reply).accountEditPage({ account, ownerContexts }));
   });
 
   server.post("/admin/master-data/accounts/:id", async (request, reply) => {
     const account = await repositories.accounts.get(readRouteId(request.params));
     if (account === null) {
-      return reply.status(404).send("Account not found");
+      return renderMissingResource(reply, "account");
     }
 
     const form = readForm(request.body);
@@ -81,7 +77,13 @@ export function registerMasterDataRoutes(
       return reply
         .status(400)
         .type("text/html; charset=utf-8")
-        .send(renderAccountEditPage(account, ownerContexts, errorMessage(error)));
+        .send(
+          await createFamilyFlowViews(reply).accountEditPage({
+            account,
+            ownerContexts,
+            formError: errorMessage(error),
+          }),
+        );
     }
 
     return reply.redirect("/admin/master-data");
@@ -90,7 +92,7 @@ export function registerMasterDataRoutes(
   server.post("/admin/master-data/accounts/:id/deactivate", async (request, reply) => {
     const account = await repositories.accounts.get(readRouteId(request.params));
     if (account === null) {
-      return reply.status(404).send("Account not found");
+      return renderMissingResource(reply, "account");
     }
 
     await repositories.accounts.save({ ...account, active: false });
@@ -139,16 +141,18 @@ export function registerMasterDataRoutes(
   server.get("/admin/master-data/categories/:id/edit", async (request, reply) => {
     const category = await repositories.categories.get(readRouteId(request.params));
     if (category === null) {
-      return reply.status(404).send("Category not found");
+      return renderMissingResource(reply, "category");
     }
 
-    return reply.type("text/html; charset=utf-8").send(renderCategoryEditPage(category));
+    return reply
+      .type("text/html; charset=utf-8")
+      .send(await createFamilyFlowViews(reply).categoryEditPage({ category }));
   });
 
   server.post("/admin/master-data/categories/:id", async (request, reply) => {
     const category = await repositories.categories.get(readRouteId(request.params));
     if (category === null) {
-      return reply.status(404).send("Category not found");
+      return renderMissingResource(reply, "category");
     }
 
     const form = readForm(request.body);
@@ -163,7 +167,12 @@ export function registerMasterDataRoutes(
       return reply
         .status(400)
         .type("text/html; charset=utf-8")
-        .send(renderCategoryEditPage(category, errorMessage(error)));
+        .send(
+          await createFamilyFlowViews(reply).categoryEditPage({
+            category,
+            formError: errorMessage(error),
+          }),
+        );
     }
 
     return reply.redirect("/admin/master-data");
@@ -172,7 +181,7 @@ export function registerMasterDataRoutes(
   server.post("/admin/master-data/categories/:id/deactivate", async (request, reply) => {
     const category = await repositories.categories.get(readRouteId(request.params));
     if (category === null) {
-      return reply.status(404).send("Category not found");
+      return renderMissingResource(reply, "category");
     }
 
     await repositories.categories.save({ ...category, active: false });
@@ -195,7 +204,7 @@ async function renderMasterData(
   ]);
 
   return reply.type("text/html; charset=utf-8").send(
-    renderMasterDataPage({
+    await createFamilyFlowViews(reply).masterDataPage({
       accounts,
       categories,
       ownerContexts,
@@ -204,6 +213,13 @@ async function renderMasterData(
       ownerContextError,
     }),
   );
+}
+
+async function renderMissingResource(reply: FastifyReply, resource: "account" | "category") {
+  return reply
+    .status(404)
+    .type("text/html; charset=utf-8")
+    .send(await createFamilyFlowViews(reply).missingResourcePage(resource));
 }
 
 function errorMessage(error: unknown): string {

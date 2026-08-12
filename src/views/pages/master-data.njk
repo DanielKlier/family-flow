@@ -1,0 +1,35 @@
+{% extends "layouts/app.njk" %}
+{% block content %}
+<section class="panel" aria-labelledby="accounts-heading">
+  <h2 id="accounts-heading">{{ accountHeading }}</h2>
+  <form class="grid-form" method="post" action="/admin/master-data/accounts">
+    {% if accountError %}<p class="form-error">{{ accountError }}</p>{% endif %}
+    <label class="field">{{ text.newAccountName }} <input name="name" required></label>
+    <label class="field">{{ text.newAccountOwner }} <select name="ownerContext">{% for option in ownerContexts %}<option value="{{ option.value }}">{{ option.label }}</option>{% endfor %}</select></label>
+    <button type="submit">{{ text.addAccount }}</button>
+  </form>
+  <div class="table-wrap"><table><thead><tr><th>{{ text.name }}</th><th>{{ text.owner }}</th><th>{{ text.status }}</th><th>{{ text.actions }}</th></tr></thead><tbody>
+  {% for row in accounts %}<tr><td>{{ row.name }}</td><td>{{ row.ownerLabel }}</td><td>{{ row.statusLabel }}</td><td class="actions-cell">
+    <a class="action-link" href="{{ row.editUrl }}">{{ text.editAccount }}</a>
+    {% if row.active %}<form class="inline-form" method="post" action="{{ row.deactivateUrl }}"><button class="link-button" type="submit">{{ text.deactivateAccount }}</button></form>{% endif %}
+  </td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+<section class="panel" aria-labelledby="owner-contexts-heading">
+  <h2 id="owner-contexts-heading">{{ text.ownerContextsHeading }}</h2>
+  {% if ownerContextError %}<p class="form-error">{{ ownerContextError }}</p>{% endif %}
+  <div class="table-wrap"><table><thead><tr><th>{{ text.ownerKey }}</th><th>{{ text.displayName }}</th><th>{{ text.actions }}</th></tr></thead><tbody>
+  {% for row in ownerContexts %}<tr><td>{{ row.value }}</td><td><form id="{{ row.formId }}" class="inline-grid-form" method="post" action="{{ row.actionUrl }}"><label class="field">{{ row.inputLabel }} <input name="label" value="{{ row.label }}" required></label></form></td><td><button form="{{ row.formId }}" type="submit">{{ row.submitLabel }}</button></td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+<section class="panel" aria-labelledby="categories-heading">
+  <h2 id="categories-heading">{{ categoryHeading }}</h2>
+  <form class="grid-form" method="post" action="/admin/master-data/categories">
+    {% if categoryError %}<p class="form-error">{{ categoryError }}</p>{% endif %}
+    <label class="field">{{ text.newCategoryName }} <input name="name" required></label><button type="submit">{{ text.addCategory }}</button>
+  </form>
+  <div class="table-wrap"><table><thead><tr><th>{{ text.name }}</th><th>{{ text.status }}</th><th>{{ text.actions }}</th></tr></thead><tbody>
+  {% for row in categories %}<tr><td>{{ row.name }}</td><td>{{ row.statusLabel }}</td><td class="actions-cell"><a class="action-link" href="{{ row.editUrl }}">{{ text.editCategory }}</a>{% if row.active %}<form class="inline-form" method="post" action="{{ row.deactivateUrl }}"><button class="link-button" type="submit">{{ text.deactivateCategory }}</button></form>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}

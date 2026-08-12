@@ -25,8 +25,8 @@ import {
   readRequiredFile,
 } from "./import-request.js";
 import { readForm, readOptionalQueryValue } from "./request-values.js";
-import { renderCsvImportPage } from "./templates/imports.js";
-import type { CsvImportPreviewRow } from "./templates/imports.js";
+import type { CsvImportPreviewRow } from "./csv-import-view-model.js";
+import { createFamilyFlowViews } from "./views.js";
 
 type CsvImportRouteRepositories = {
   accounts: AccountRepository;
@@ -56,7 +56,7 @@ export function registerCsvImportRoutes(
         : await repositories.importProfiles.get(selectedProfileId);
 
     return reply.type("text/html; charset=utf-8").send(
-      renderCsvImportPage({
+      await createFamilyFlowViews(reply).csvImportPage({
         accounts,
         categories,
         importProfiles,
@@ -102,7 +102,7 @@ async function handleSaveImportProfile(
       .status(400)
       .type("text/html; charset=utf-8")
       .send(
-        renderCsvImportPage({
+        await createFamilyFlowViews(reply).csvImportPage({
           accounts,
           categories,
           importProfiles,
@@ -138,15 +138,20 @@ async function handleCsvImportPreview(
       rules: await repositories.categorizationRules.list(),
     });
 
-    return reply
-      .type("text/html; charset=utf-8")
-      .send(renderCsvImportPage({ accounts, categories, importProfiles, previewRows }));
+    return reply.type("text/html; charset=utf-8").send(
+      await createFamilyFlowViews(reply).csvImportPage({
+        accounts,
+        categories,
+        importProfiles,
+        previewRows,
+      }),
+    );
   } catch (error: unknown) {
     return reply
       .status(400)
       .type("text/html; charset=utf-8")
       .send(
-        renderCsvImportPage({
+        await createFamilyFlowViews(reply).csvImportPage({
           accounts,
           categories,
           importProfiles,
