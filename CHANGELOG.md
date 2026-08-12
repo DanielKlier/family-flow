@@ -4,6 +4,21 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.9.0] - 2026-08-12
+
+### Added
+
+- Add globally autoescaped Nunjucks templates for every server-rendered route family and HTMX fragment.
+- Add typed, presentation-ready view models and named asynchronous `@fastify/view` rendering boundaries.
+- Add architecture checks that prevent user-facing display literals and direct HTML assembly from returning to templates and HTTP adapters.
+- Add full-page, HTMX, no-JavaScript, escaping, template-packaging, and production-image coverage.
+
+### Changed
+
+- Replace legacy TypeScript string renderers with shared Nunjucks layouts, pages, fragments, and resource-error views.
+- Package all templates into compiled output and the production image while keeping source and distribution template roots distinct.
+- Treat flaky tests as defects and stabilize template-packaging verification without retries.
+
 ## [0.8.2] - 2026-08-12
 
 ### Added
