@@ -27,6 +27,10 @@ Der geplante Stack ist Node.js, TypeScript, Fastify, PostgreSQL, Drizzle, server
 - Fuer reine Core-Logik sind Unit-Tests Pflicht.
 - Fuer Adapter mit Datenbank, HTTP, OIDC, CSV oder Logging sind Integrationstests Pflicht.
 - Bugs werden zuerst durch einen reproduzierenden Test abgesichert.
+- Flaky Tests sind Defekte und weder erlaubt noch akzeptabel.
+- Ein sporadischer Testfehler darf nicht als Rerun-Rauschen abgetan werden, nur weil der Test bei einer Wiederholung besteht.
+- Die Ursache eines Flaky Tests muss vor Commit und Push behoben werden.
+- Automatische oder manuelle Retries duerfen die Behebung der eigentlichen Ursache nicht ersetzen.
 
 ### 2. Red-Green-Refactor
 

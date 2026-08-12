@@ -2,9 +2,10 @@ import { execFileSync } from "node:child_process";
 import { access, readdir } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 const repositoryRoot = resolve(import.meta.dirname, "../..");
+const buildTimeoutMs = 30_000;
 
 async function listTemplates(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -19,9 +20,15 @@ async function listTemplates(directory: string): Promise<string[]> {
 }
 
 describe("INT-FF-DEP-001-01 compiled template packaging", () => {
-  it("copies every source Nunjucks template to the matching dist/views path", async () => {
-    execFileSync("pnpm", ["build"], { cwd: repositoryRoot, stdio: "pipe" });
+  beforeAll(() => {
+    execFileSync("pnpm", ["build"], {
+      cwd: repositoryRoot,
+      stdio: "pipe",
+      timeout: buildTimeoutMs,
+    });
+  }, buildTimeoutMs);
 
+  it("copies every source Nunjucks template to the matching dist/views path", async () => {
     const sourceViews = join(repositoryRoot, "src/views");
     const sourceTemplates = await listTemplates(sourceViews);
     expect(sourceTemplates).not.toEqual([]);
@@ -35,14 +42,12 @@ describe("INT-FF-DEP-001-01 compiled template packaging", () => {
   });
 
   it("resolves source templates when the application executes from src", async () => {
-    execFileSync("pnpm", ["build"], { cwd: repositoryRoot, stdio: "pipe" });
     const { resolveTemplateDirectory } = await import("../../src/adapters/http/views.js");
 
     expect(resolveTemplateDirectory()).toBe(join(repositoryRoot, "src/views"));
   });
 
   it("resolves packaged templates when the application executes from dist", async () => {
-    execFileSync("pnpm", ["build"], { cwd: repositoryRoot, stdio: "pipe" });
     const { resolveTemplateDirectory } = await import("../../dist/adapters/http/views.js");
 
     expect(resolveTemplateDirectory()).toBe(join(repositoryRoot, "dist/views"));
