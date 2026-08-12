@@ -2,6 +2,11 @@ import { fileURLToPath } from "node:url";
 
 import Fastify from "fastify";
 
+import {
+  SecureSessionTokenGenerator,
+  Sha256SessionTokenHasher,
+} from "../adapters/auth/session-cryptography.js";
+import { SystemClock } from "../adapters/clock/system-clock.js";
 import { createSeededInMemoryRepositories } from "../adapters/db/default-repositories.js";
 import { SimpleCsvParser } from "../adapters/csv/simple-csv-parser.js";
 import { DrizzleAccountRepository } from "../adapters/db/drizzle-account-repository.js";
@@ -9,8 +14,10 @@ import { DrizzleCategorizationRuleRepository } from "../adapters/db/drizzle-cate
 import { DrizzleCategoryRepository } from "../adapters/db/drizzle-category-repository.js";
 import { DrizzleImportProfileRepository } from "../adapters/db/drizzle-import-profile-repository.js";
 import { DrizzleIncomeRepository } from "../adapters/db/drizzle-income-repository.js";
+import { DrizzleSessionStore } from "../adapters/db/drizzle-session-store.js";
 import { DrizzleOwnerContextRepository } from "../adapters/db/drizzle-owner-context-repository.js";
 import { DrizzleTransactionRepository } from "../adapters/db/drizzle-transaction-repository.js";
+import { InMemorySessionStore } from "../adapters/db/in-memory-session-store.js";
 import { migrate } from "../adapters/db/migrate.js";
 import { createPostgresConnection } from "../adapters/db/postgres.js";
 import {
@@ -28,6 +35,7 @@ import { registerMasterDataRoutes } from "../adapters/http/master-data.js";
 import { registerRequestLifecycle } from "../adapters/http/request-lifecycle.js";
 import { registerTransactionRoutes } from "../adapters/http/transactions.js";
 import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-logger.js";
+import { SessionService } from "../core/auth/session-service.js";
 import type { RequestLogger } from "../ports/logging/logger.js";
 import type { CsvParser } from "../ports/csv/csv-parser.js";
 import type { CategorizationRuleRepository } from "../ports/repositories/categorization-rule-repository.js";
@@ -47,6 +55,7 @@ type ServerOptions = {
   repositories?: AppRepositories;
   csvParser?: CsvParser;
   auth?: AuthRuntimeConfig;
+  sessions?: SessionService;
 };
 
 export function buildServer(options: ServerOptions = {}) {
@@ -60,14 +69,21 @@ export function buildServer(options: ServerOptions = {}) {
     options.auth ??
     ({
       mode: "test",
-      sessionSecret: "test-session-secret-with-enough-length",
       baseUrl: "http://127.0.0.1:3000",
       oidc: null,
     } satisfies AuthRuntimeConfig);
+  const sessions =
+    options.sessions ??
+    new SessionService(
+      new InMemorySessionStore(),
+      new SystemClock(),
+      new SecureSessionTokenGenerator(),
+      new Sha256SessionTokenHasher(),
+    );
 
   registerFormParser(server);
   registerRequestLifecycle(server, logger);
-  registerAuth(server, auth);
+  registerAuth(server, auth, sessions);
 
   registerStaticAssets(server);
   server.get("/health", async () => ({ status: "ok" }));
@@ -98,12 +114,22 @@ async function main() {
   await seedMasterData(repositories);
   await seedImportProfiles(repositories);
 
+  const sessions = new SessionService(
+    new DrizzleSessionStore(connection.db),
+    new SystemClock(),
+    new SecureSessionTokenGenerator(),
+    new Sha256SessionTokenHasher(),
+  );
+  const deletedSessions = await sessions.cleanup(1_000);
+  console.info(`Session cleanup deleted ${deletedSessions} row(s)`);
+
   const server = buildServer({
     repositories,
     auth: {
       ...config.auth,
       baseUrl: config.baseUrl,
     },
+    sessions,
   });
 
   server.addHook("onClose", async () => {

@@ -2,11 +2,14 @@ import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
-
-import { validateTraceability } from "../../scripts/traceability/validate.js";
+import {
+  type OperationRegistry,
+  operationRegistry,
+  verifyOperation,
+} from "../../scripts/operations/registry.js";
 import { collectDeclaredEvidence } from "../../scripts/traceability/collect-evidence.js";
+import { validateTraceability } from "../../scripts/traceability/validate.js";
 import { validatePackageScripts } from "../../scripts/traceability/validate-package.js";
-import { type OperationRegistry, verifyOperation } from "../../scripts/operations/registry.js";
 
 const repositoryRoot = resolve(import.meta.dirname, "../..");
 
@@ -60,6 +63,12 @@ describe("INT-FF-QUA-004-01 bounded quality tooling", () => {
     expect(receivedEnvironment).toEqual({ PATH: process.env.PATH, HOME: process.env.HOME });
     await expect(verifyOperation("OPS-FF-DEP-999-01", registry)).rejects.toThrow(
       "Unknown operation",
+    );
+  });
+
+  it("registers the completed bounded session operation verifiers", () => {
+    expect(Object.keys(operationRegistry)).toEqual(
+      expect.arrayContaining(["OPS-FF-AUTH-006-01", "OPS-FF-AUTH-009-01"]),
     );
   });
 

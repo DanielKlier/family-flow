@@ -454,7 +454,7 @@
     },
     {
       "id": "PH-10A",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Replace interim signed cookies with opaque PostgreSQL sessions.",
       "classification": "Behavior change"
     },
@@ -612,7 +612,7 @@
     },
     {
       "id": "FF-AUTH-003-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "INT-FF-AUTH-003-01",
       "file": "tests/integration/postgres-session-store.test.ts",
@@ -620,31 +620,31 @@
     },
     {
       "id": "FF-AUTH-003-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "INT-FF-AUTH-003-02",
-      "file": "tests/integration/oidc-http.test.ts",
+      "file": "tests/integration/session-http.test.ts",
       "operation": null
     },
     {
       "id": "FF-AUTH-004-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "INT-FF-AUTH-004-01",
-      "file": "tests/integration/oidc-http.test.ts",
+      "file": "tests/integration/session-http.test.ts",
       "operation": null
     },
     {
       "id": "FF-AUTH-004-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "INT-FF-AUTH-004-02",
-      "file": "tests/integration/oidc-http.test.ts",
+      "file": "tests/integration/session-http.test.ts",
       "operation": null
     },
     {
       "id": "FF-AUTH-005-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "E2E-FF-AUTH-005-01",
       "file": "tests/e2e/auth.test.ts",
@@ -652,7 +652,7 @@
     },
     {
       "id": "FF-AUTH-006-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "INT-FF-AUTH-006-01",
       "file": "tests/integration/postgres-session-store.test.ts",
@@ -660,7 +660,7 @@
     },
     {
       "id": "FF-AUTH-006-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "INT-FF-AUTH-006-02",
       "file": "tests/integration/postgres-session-store.test.ts",
@@ -668,10 +668,10 @@
     },
     {
       "id": "FF-AUTH-007-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "INT-FF-AUTH-007-01",
-      "file": "tests/integration/session-handling.test.ts",
+      "file": "tests/integration/session-http.test.ts",
       "operation": null
     },
     {
@@ -684,7 +684,7 @@
     },
     {
       "id": "FF-AUTH-009-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "SMOKE-FF-AUTH-009-01",
       "file": "tests/e2e/restore-smoke.test.ts",
@@ -692,7 +692,7 @@
     },
     {
       "id": "FF-AUTH-009-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10A",
       "test": "SMOKE-FF-AUTH-009-02",
       "file": "tests/e2e/restore-smoke.test.ts",
@@ -1666,7 +1666,7 @@
       "phase": "PH-10A",
       "file": "tests/e2e/auth.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "E2E-FF-CAT-001-01",
@@ -2186,39 +2186,39 @@
       "phase": "PH-10A",
       "file": "tests/integration/postgres-session-store.test.ts",
       "boundary": "PostgreSQL adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-003-02",
       "acceptance": "FF-AUTH-003-AC02",
       "phase": "PH-10A",
-      "file": "tests/integration/oidc-http.test.ts",
+      "file": "tests/integration/session-http.test.ts",
       "boundary": "HTTP adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-004-01",
       "acceptance": "FF-AUTH-004-AC01",
       "phase": "PH-10A",
-      "file": "tests/integration/oidc-http.test.ts",
+      "file": "tests/integration/session-http.test.ts",
       "boundary": "HTTP adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-004-02",
       "acceptance": "FF-AUTH-004-AC02",
       "phase": "PH-10A",
-      "file": "tests/integration/oidc-http.test.ts",
+      "file": "tests/integration/session-http.test.ts",
       "boundary": "HTTP adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-005-01",
       "acceptance": "FF-AUTH-005-AC01",
       "phase": "PH-10A",
-      "file": "tests/integration/postgres-session-store.test.ts",
-      "boundary": "PostgreSQL adapter",
-      "classification": "Expected red before production change"
+      "file": "tests/integration/session-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-006-01",
@@ -2226,7 +2226,7 @@
       "phase": "PH-10A",
       "file": "tests/integration/postgres-session-store.test.ts",
       "boundary": "PostgreSQL adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-006-02",
@@ -2234,15 +2234,15 @@
       "phase": "PH-10A",
       "file": "tests/integration/postgres-session-store.test.ts",
       "boundary": "PostgreSQL adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-007-01",
       "acceptance": "FF-AUTH-007-AC01",
       "phase": "PH-10A",
-      "file": "tests/integration/session-handling.test.ts",
-      "boundary": "Integration",
-      "classification": "Expected red before production change"
+      "file": "tests/integration/session-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-008-01",
@@ -2570,7 +2570,7 @@
       "phase": "PH-10A",
       "file": "tests/integration/request-logging.test.ts",
       "boundary": "Integration",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-OBS-002-01",
@@ -2738,7 +2738,7 @@
       "phase": "PH-10A",
       "file": "tests/e2e/restore-smoke.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "SMOKE-FF-AUTH-009-02",
@@ -2746,7 +2746,7 @@
       "phase": "PH-10A",
       "file": "tests/e2e/restore-smoke.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "SMOKE-FF-DEP-001-01",
@@ -2920,17 +2920,17 @@
       "id": "UNIT-FF-AUTH-004-01",
       "acceptance": "FF-AUTH-004-AC01",
       "phase": "PH-10A",
-      "file": "tests/unit/authentication.test.ts",
+      "file": "tests/unit/sessions.test.ts",
       "boundary": "Core",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "UNIT-FF-AUTH-006-01",
       "acceptance": "FF-AUTH-006-AC01",
       "phase": "PH-10A",
-      "file": "tests/unit/authentication.test.ts",
+      "file": "tests/unit/sessions.test.ts",
       "boundary": "Core",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "UNIT-FF-CAT-001-01",
@@ -3200,16 +3200,16 @@
     {
       "id": "OPS-FF-AUTH-006-01",
       "procedure": "**Session Cleanup**: `docker compose -f compose.yaml -f compose.prod.yaml run --rm app node dist/app/session-cleanup.js --limit 1000`.",
-      "outcome": "Each run deletes at most 1,000 eligible rows; repeat until zero; active rows remain.",
+      "outcome": "Startup runs exactly one batch of at most 1,000 eligible rows; maintenance repeats until zero; active rows remain.",
       "rollback": "Stop cleanup, restore database if financial/session tables were unexpectedly changed, and retain command output.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-AUTH-006-01"
     },
     {
       "id": "OPS-FF-AUTH-009-01",
       "procedure": "**Session Migration And Restore**: deploy migration and replay pre-migration/pre-backup tokens.",
       "outcome": "Old signed and restored tokens are rejected before traffic opens.",
       "rollback": "Keep service unavailable and roll back image/schema only through the documented compatible path.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-AUTH-009-01"
     },
     {
       "id": "OPS-FF-ARC-003-01",

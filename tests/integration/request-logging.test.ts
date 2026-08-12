@@ -12,7 +12,7 @@ class CapturingLogger implements RequestLogger {
 }
 
 describe("request logging", () => {
-  it("writes exactly one log entry for a request", async () => {
+  it("INT-FF-OBS-001-01 writes exactly one sanitized request-correlated log", async () => {
     const logger = new CapturingLogger();
     const server = buildServer({ logger });
 

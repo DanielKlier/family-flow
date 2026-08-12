@@ -10,6 +10,7 @@ import {
   type OidcProviderMetadata,
   type OidcRuntimeConfig,
 } from "../oidc/authentik-oidc.js";
+import type { SessionService } from "../../core/auth/session-service.js";
 import type { UserContext } from "../../ports/auth/user-context.js";
 import {
   getPath,
@@ -20,8 +21,6 @@ import {
   serializeNamedCookie,
 } from "./auth-http.js";
 import {
-  createSessionCookieValue,
-  readSessionCookieValue,
   serializeExpiredSessionCookie,
   serializeSessionCookie,
   sessionCookieName,
@@ -30,7 +29,6 @@ import { renderDashboard, renderLoginPage } from "./templates/auth.js";
 
 export type AuthRuntimeConfig = {
   mode: "test" | "oidc";
-  sessionSecret: string;
   baseUrl: string;
   oidc: OidcRuntimeConfig | null;
 };
@@ -45,16 +43,14 @@ const testUser: UserContext = {
   email: "test.user@example.invalid",
 };
 
-const publicPaths = new Set([
-  "/health",
-  "/auth/login",
-  "/auth/callback",
-  "/auth/logout",
-  "/auth/test-login",
-]);
+const publicPaths = new Set(["/health", "/auth/login", "/auth/callback", "/auth/test-login"]);
 const oidcStateCookieName = "ff_oidc_state";
 
-export function registerAuth(server: FastifyInstance, config: AuthRuntimeConfig): void {
+export function registerAuth(
+  server: FastifyInstance,
+  config: AuthRuntimeConfig,
+  sessions: SessionService,
+): void {
   const secureCookie = config.baseUrl.startsWith("https://");
   let oidcProviderMetadata: Promise<OidcProviderMetadata> | null = null;
 
@@ -66,10 +62,7 @@ export function registerAuth(server: FastifyInstance, config: AuthRuntimeConfig)
 
   server.addHook("preHandler", async (request: RequestWithUser, reply) => {
     const path = getPath(request.url);
-    const user = readSessionCookieValue(
-      readCookie(request.headers.cookie, sessionCookieName),
-      config.sessionSecret,
-    );
+    const user = await sessions.lookup(readCookie(request.headers.cookie, sessionCookieName));
     if (user !== null) {
       request.userContext = user;
     }
@@ -119,8 +112,11 @@ export function registerAuth(server: FastifyInstance, config: AuthRuntimeConfig)
     }
 
     const returnTo = readSafeReturnTo(request.query);
-    const cookie = createSessionCookieValue(testUser, config.sessionSecret);
-    reply.header("Set-Cookie", serializeSessionCookie(cookie, secureCookie));
+    const session = await sessions.create(testUser);
+    reply.header(
+      "Set-Cookie",
+      serializeSessionCookie(session.token, session.expiresAt, secureCookie),
+    );
 
     return reply.redirect(returnTo);
   });
@@ -148,16 +144,24 @@ export function registerAuth(server: FastifyInstance, config: AuthRuntimeConfig)
       displayName: oidcUser.name ?? oidcUser.preferred_username ?? oidcUser.email ?? oidcUser.sub,
       email: oidcUser.email ?? null,
     };
-    const cookie = createSessionCookieValue(user, config.sessionSecret);
+    const session = await sessions.create(user);
     reply.header("Set-Cookie", [
-      serializeSessionCookie(cookie, secureCookie),
+      serializeSessionCookie(session.token, session.expiresAt, secureCookie),
       serializeExpiredNamedCookie(oidcStateCookieName, secureCookie),
     ]);
 
     return reply.redirect("/");
   });
 
-  server.get("/auth/logout", async (_request, reply) => {
+  server.post("/auth/logout", async (request, reply) => {
+    if (!hasSameOrigin(request.headers.origin, config.baseUrl)) {
+      return reply.status(403).send("Invalid logout origin");
+    }
+
+    const token = readCookie(request.headers.cookie, sessionCookieName);
+    if (!(await sessions.revoke(token))) {
+      return reply.status(401).send("Invalid session");
+    }
     reply.header("Set-Cookie", serializeExpiredSessionCookie(secureCookie));
 
     if (config.mode === "oidc" && config.oidc !== null) {
@@ -167,4 +171,13 @@ export function registerAuth(server: FastifyInstance, config: AuthRuntimeConfig)
 
     return reply.redirect("/auth/login");
   });
+}
+
+function hasSameOrigin(origin: string | undefined, baseUrl: string): boolean {
+  if (origin === undefined) return false;
+  try {
+    return new URL(origin).origin === new URL(baseUrl).origin;
+  } catch {
+    return false;
+  }
 }

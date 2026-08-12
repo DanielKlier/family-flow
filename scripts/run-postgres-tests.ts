@@ -55,9 +55,49 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
   });
 }
 
+type SessionOperation = "OPS-FF-AUTH-006-01" | "OPS-FF-AUTH-009-01";
+
+function requestedOperation(arguments_: string[]): SessionOperation | undefined {
+  if (arguments_.length === 0) return undefined;
+  if (arguments_.length !== 2 || arguments_[0] !== "--operation") {
+    throw new Error("Usage: tsx scripts/run-postgres-tests.ts [--operation <OPS-ID>]");
+  }
+  const id = arguments_[1];
+  if (id !== "OPS-FF-AUTH-006-01" && id !== "OPS-FF-AUTH-009-01") {
+    throw new Error(`Unsupported PostgreSQL operation: ${id}`);
+  }
+  return id;
+}
+
+async function runEvidence(
+  operation: SessionOperation | undefined,
+  environment: NodeJS.ProcessEnv,
+): Promise<void> {
+  if (operation !== "OPS-FF-AUTH-009-01") {
+    const vitestArguments = ["exec", "vitest", "run", "--no-file-parallelism"];
+    if (operation === "OPS-FF-AUTH-006-01") {
+      vitestArguments.push(
+        "tests/integration/postgres-session-store.test.ts",
+        "--testNamePattern",
+        "INT-FF-AUTH-006",
+      );
+    }
+    await run("pnpm", vitestArguments, environment);
+    if (receivedSignal) return;
+  }
+  if (operation !== "OPS-FF-AUTH-006-01") {
+    await run(
+      "pnpm",
+      ["exec", "playwright", "test", "tests/e2e/restore-smoke.test.ts", "--workers=1"],
+      environment,
+    );
+  }
+}
+
 async function main(): Promise<void> {
   let failure: unknown;
   try {
+    const operation = requestedOperation(process.argv.slice(2));
     await run("docker", [...compose, "up", "-d", "--wait", "postgres"]);
     const address = await run("docker", [...compose, "port", "postgres", "5432"]);
     const match = /(?:127\.0\.0\.1|0\.0\.0\.0|\[::\]):([0-9]+)$/.exec(address);
@@ -66,7 +106,7 @@ async function main(): Promise<void> {
       ...process.env,
       TEST_DATABASE_URL: `postgres://family_flow_test:family_flow_test@127.0.0.1:${match[1]}/family_flow_test`,
     };
-    await run("pnpm", ["exec", "vitest", "run", "--no-file-parallelism"], testEnvironment);
+    await runEvidence(operation, testEnvironment);
   } catch (error) {
     failure = error;
   } finally {

@@ -11,7 +11,6 @@ export type AppConfig = {
 
 export type AuthConfig = {
   mode: "test" | "oidc";
-  sessionSecret: string;
   oidc: OidcConfig | null;
 };
 
@@ -79,19 +78,15 @@ function readUrl(value: string | undefined, name: string): string {
 
 function readAuthConfig(environment: Environment, nodeEnv: NodeEnv): AuthConfig {
   const mode = readAuthMode(environment.AUTH_MODE, nodeEnv);
-  const sessionSecret = readSessionSecret(environment.SESSION_SECRET);
-
   if (mode === "test") {
     return {
       mode,
-      sessionSecret,
       oidc: null,
     };
   }
 
   return {
     mode,
-    sessionSecret,
     oidc: {
       issuerUrl: readUrl(environment.OIDC_ISSUER_URL, "OIDC_ISSUER_URL"),
       clientId: readRequiredString(environment.OIDC_CLIENT_ID, "OIDC_CLIENT_ID"),
@@ -114,13 +109,4 @@ function readAuthMode(value: string | undefined, nodeEnv: NodeEnv): AuthConfig["
   }
 
   throw new Error("AUTH_MODE must be test or oidc");
-}
-
-function readSessionSecret(value: string | undefined): string {
-  const secret = readRequiredString(value, "SESSION_SECRET");
-  if (secret.length < 32) {
-    throw new Error("SESSION_SECRET must be at least 32 characters");
-  }
-
-  return secret;
 }

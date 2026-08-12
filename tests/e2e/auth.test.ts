@@ -38,21 +38,27 @@ test("authenticated test user sees the dashboard shell", async ({ request }) => 
   }
 });
 
-test("logout ends the session", async ({ request }) => {
+test("E2E-FF-AUTH-005-01: logout revokes a copied opaque session", async ({ request }) => {
   const server = buildServer();
 
   try {
     const baseUrl = await listen(server);
+    const loginResponse = await request.get(`${baseUrl}/auth/test-login`, { maxRedirects: 0 });
+    const sessionCookie = loginResponse.headers()["set-cookie"]?.split(";", 1)[0];
+    expect(sessionCookie).toMatch(/^ff_session=[A-Za-z0-9_-]{43}$/);
 
-    await loginAsTestUserRequest(request, baseUrl, "/admin/master-data");
-    const authenticatedResponse = await request.get(`${baseUrl}/admin/master-data`);
-    expect(authenticatedResponse.status()).toBe(200);
+    const logoutResponse = await request.post(`${baseUrl}/auth/logout`, {
+      headers: { Origin: "http://127.0.0.1:3000" },
+      maxRedirects: 0,
+    });
+    expect(logoutResponse.status()).toBe(302);
 
-    await request.get(`${baseUrl}/auth/logout`);
-    const response = await request.get(`${baseUrl}/admin/master-data`, { maxRedirects: 0 });
-
-    expect(response.status()).toBe(302);
-    expect(response.headers().location).toBe("/auth/login?returnTo=%2Fadmin%2Fmaster-data");
+    const replay = await fetch(`${baseUrl}/transactions`, {
+      headers: { Cookie: sessionCookie ?? "" },
+      redirect: "manual",
+    });
+    expect(replay.status).toBe(302);
+    expect(replay.headers.get("location")).toBe("/auth/login?returnTo=%2Ftransactions");
   } finally {
     await server.close();
   }

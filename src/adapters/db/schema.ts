@@ -1,4 +1,30 @@
-import { boolean, integer, pgTable, text } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: text("id").primaryKey(),
+    tokenHash: text("token_hash").notNull(),
+    userId: text("user_id").notNull(),
+    userDisplayName: text("user_display_name").notNull(),
+    userEmail: text("user_email"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex("sessions_token_hash_idx").on(table.tokenHash),
+    index("sessions_cleanup_order_idx").on(table.expiresAt, table.id),
+  ],
+);
 
 export const accounts = pgTable("accounts", {
   id: text("id").primaryKey(),

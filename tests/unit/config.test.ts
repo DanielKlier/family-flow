@@ -11,7 +11,6 @@ describe("loadConfig", () => {
       BASE_URL: "https://finances.home.arpa",
       DATABASE_URL: "postgres://family_flow:family_flow@localhost:5432/family_flow",
       AUTH_MODE: "test",
-      SESSION_SECRET: "test-session-secret-with-enough-length",
     });
 
     expect(config).toEqual({
@@ -22,7 +21,6 @@ describe("loadConfig", () => {
       databaseUrl: "postgres://family_flow:family_flow@localhost:5432/family_flow",
       auth: {
         mode: "test",
-        sessionSecret: "test-session-secret-with-enough-length",
         oidc: null,
       },
     });
@@ -37,7 +35,6 @@ describe("loadConfig", () => {
         BASE_URL: "https://finances.home.arpa",
         DATABASE_URL: "postgres://family_flow:family_flow@localhost:5432/family_flow",
         AUTH_MODE: "test",
-        SESSION_SECRET: "test-session-secret-with-enough-length",
       }),
     ).toThrow("PORT must be an integer between 1 and 65535");
   });
@@ -50,7 +47,6 @@ describe("loadConfig", () => {
       BASE_URL: "https://finances.home.arpa",
       DATABASE_URL: "postgres://family_flow:family_flow@postgres:5432/family_flow",
       AUTH_MODE: "oidc",
-      SESSION_SECRET: "production-session-secret-with-enough-length",
       OIDC_ISSUER_URL: "https://authentik.home.arpa/application/o/family-flow/",
       OIDC_CLIENT_ID: "family-flow",
       OIDC_CLIENT_SECRET: "client-secret-placeholder",
@@ -58,7 +54,6 @@ describe("loadConfig", () => {
 
     expect(config.auth).toEqual({
       mode: "oidc",
-      sessionSecret: "production-session-secret-with-enough-length",
       oidc: {
         issuerUrl: "https://authentik.home.arpa/application/o/family-flow",
         clientId: "family-flow",
@@ -76,7 +71,6 @@ describe("loadConfig", () => {
         BASE_URL: "https://finances.home.arpa",
         DATABASE_URL: "postgres://family_flow:family_flow@postgres:5432/family_flow",
         AUTH_MODE: "oidc",
-        SESSION_SECRET: "production-session-secret-with-enough-length",
         OIDC_CLIENT_ID: "family-flow",
         OIDC_CLIENT_SECRET: "client-secret-placeholder",
       }),

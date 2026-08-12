@@ -21,10 +21,10 @@ export function renderDashboard(user: UserContext): string {
       { href: "/income", label: "Income" },
       { href: "/imports/csv", label: "CSV Import" },
       { href: "/categorization-rules", label: "Rules" },
-      { href: "/auth/logout", label: "Logout" },
     ]),
     body: `<section class="panel">
         <p>Signed in as ${escapeHtml(user.displayName)}</p>
+        <form method="post" action="/auth/logout"><button type="submit">Logout</button></form>
       </section>`,
   });
 }
