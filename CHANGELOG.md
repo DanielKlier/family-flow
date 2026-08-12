@@ -4,6 +4,20 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.8.2] - 2026-08-12
+
+### Added
+
+- Add recurring monthly income planning with month-specific overrides.
+- Add editable owner-context labels across master data, transactions, imports, categorization rules, and income planning.
+- Add executable requirement, test-evidence, and operations verification tooling.
+
+### Changed
+
+- Replace signed session cookies with opaque eight-hour bearer tokens backed by PostgreSQL.
+- Add bounded session cleanup and mandatory restored-session invalidation procedures.
+- Remove the `SESSION_SECRET` configuration requirement; existing signed cookies are intentionally invalidated during deployment.
+
 ## [0.8.1] - 2026-08-01
 
 ### Fixed
