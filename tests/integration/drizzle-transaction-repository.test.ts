@@ -6,6 +6,7 @@ import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
+import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
 import { expectTransactionFilterContract } from "../support/transaction-repository-contract.js";
 import { aTransaction } from "../support/transactions.js";
 
@@ -28,6 +29,7 @@ describe("Drizzle transaction repository", () => {
         await seedMasterData({
           accounts: new DrizzleAccountRepository(connection.db),
           categories: new DrizzleCategoryRepository(connection.db),
+          ownerContexts: new DrizzleOwnerContextRepository(connection.db),
         });
 
         const rent = aTransaction({

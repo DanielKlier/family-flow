@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: family_flow_test
+      POSTGRES_USER: family_flow_test
+      POSTGRES_PASSWORD: family_flow_test
+    ports:
+      - "127.0.0.1::5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U family_flow_test -d family_flow_test"]
+      interval: 1s
+      timeout: 5s
+      retries: 30

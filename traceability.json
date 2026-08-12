@@ -1,0 +1,3390 @@
+{
+  "version": 1,
+  "requirements": [
+    {
+      "id": "FF-AUTH-001",
+      "acceptanceCriteria": ["FF-AUTH-001-AC01", "FF-AUTH-001-AC02", "FF-AUTH-001-AC03"]
+    },
+    {
+      "id": "FF-AUTH-002",
+      "acceptanceCriteria": ["FF-AUTH-002-AC01", "FF-AUTH-002-AC02", "FF-AUTH-002-AC03"]
+    },
+    {
+      "id": "FF-AUTH-003",
+      "acceptanceCriteria": ["FF-AUTH-003-AC01", "FF-AUTH-003-AC02"]
+    },
+    {
+      "id": "FF-AUTH-004",
+      "acceptanceCriteria": ["FF-AUTH-004-AC01", "FF-AUTH-004-AC02"]
+    },
+    {
+      "id": "FF-AUTH-005",
+      "acceptanceCriteria": ["FF-AUTH-005-AC01"]
+    },
+    {
+      "id": "FF-AUTH-006",
+      "acceptanceCriteria": ["FF-AUTH-006-AC01", "FF-AUTH-006-AC02"]
+    },
+    {
+      "id": "FF-AUTH-007",
+      "acceptanceCriteria": ["FF-AUTH-007-AC01"]
+    },
+    {
+      "id": "FF-AUTH-008",
+      "acceptanceCriteria": ["FF-AUTH-008-AC01"]
+    },
+    {
+      "id": "FF-AUTH-009",
+      "acceptanceCriteria": ["FF-AUTH-009-AC01", "FF-AUTH-009-AC02"]
+    },
+    {
+      "id": "FF-OBS-001",
+      "acceptanceCriteria": ["FF-OBS-001-AC01", "FF-OBS-001-AC02"]
+    },
+    {
+      "id": "FF-OBS-002",
+      "acceptanceCriteria": ["FF-OBS-002-AC01"]
+    },
+    {
+      "id": "FF-OBS-003",
+      "acceptanceCriteria": ["FF-OBS-003-AC01"]
+    },
+    {
+      "id": "FF-OBS-004",
+      "acceptanceCriteria": ["FF-OBS-004-AC01"]
+    },
+    {
+      "id": "FF-OBS-005",
+      "acceptanceCriteria": ["FF-OBS-005-AC01"]
+    },
+    {
+      "id": "FF-SCP-001",
+      "acceptanceCriteria": ["FF-SCP-001-AC01", "FF-SCP-001-AC02"]
+    },
+    {
+      "id": "FF-SCP-002",
+      "acceptanceCriteria": ["FF-SCP-002-AC01"]
+    },
+    {
+      "id": "FF-SCP-003",
+      "acceptanceCriteria": ["FF-SCP-003-AC01"]
+    },
+    {
+      "id": "FF-SCP-004",
+      "acceptanceCriteria": ["FF-SCP-004-AC01"]
+    },
+    {
+      "id": "FF-DEV-001",
+      "acceptanceCriteria": ["FF-DEV-001-AC01", "FF-DEV-001-AC02"]
+    },
+    {
+      "id": "FF-ARC-001",
+      "acceptanceCriteria": ["FF-ARC-001-AC01"]
+    },
+    {
+      "id": "FF-ARC-002",
+      "acceptanceCriteria": ["FF-ARC-002-AC01"]
+    },
+    {
+      "id": "FF-ARC-003",
+      "acceptanceCriteria": ["FF-ARC-003-AC01"]
+    },
+    {
+      "id": "FF-ARC-004",
+      "acceptanceCriteria": ["FF-ARC-004-AC01"]
+    },
+    {
+      "id": "FF-ARC-005",
+      "acceptanceCriteria": ["FF-ARC-005-AC01"]
+    },
+    {
+      "id": "FF-ARC-006",
+      "acceptanceCriteria": ["FF-ARC-006-AC01", "FF-ARC-006-AC02"]
+    },
+    {
+      "id": "FF-ARC-007",
+      "acceptanceCriteria": ["FF-ARC-007-AC01"]
+    },
+    {
+      "id": "FF-MDM-001",
+      "acceptanceCriteria": ["FF-MDM-001-AC01", "FF-MDM-001-AC02"]
+    },
+    {
+      "id": "FF-MDM-002",
+      "acceptanceCriteria": ["FF-MDM-002-AC01", "FF-MDM-002-AC02"]
+    },
+    {
+      "id": "FF-MDM-003",
+      "acceptanceCriteria": ["FF-MDM-003-AC01"]
+    },
+    {
+      "id": "FF-MDM-004",
+      "acceptanceCriteria": ["FF-MDM-004-AC01"]
+    },
+    {
+      "id": "FF-MDM-005",
+      "acceptanceCriteria": ["FF-MDM-005-AC01"]
+    },
+    {
+      "id": "FF-TXN-001",
+      "acceptanceCriteria": [
+        "FF-TXN-001-AC01",
+        "FF-TXN-001-AC02",
+        "FF-TXN-001-AC03",
+        "FF-TXN-001-AC04"
+      ]
+    },
+    {
+      "id": "FF-TXN-002",
+      "acceptanceCriteria": ["FF-TXN-002-AC01", "FF-TXN-002-AC02"]
+    },
+    {
+      "id": "FF-TXN-003",
+      "acceptanceCriteria": ["FF-TXN-003-AC01"]
+    },
+    {
+      "id": "FF-TXN-004",
+      "acceptanceCriteria": ["FF-TXN-004-AC01"]
+    },
+    {
+      "id": "FF-TXN-005",
+      "acceptanceCriteria": ["FF-TXN-005-AC01"]
+    },
+    {
+      "id": "FF-TXN-006",
+      "acceptanceCriteria": ["FF-TXN-006-AC01", "FF-TXN-006-AC02"]
+    },
+    {
+      "id": "FF-CSV-001",
+      "acceptanceCriteria": ["FF-CSV-001-AC01", "FF-CSV-001-AC02"]
+    },
+    {
+      "id": "FF-CSV-002",
+      "acceptanceCriteria": ["FF-CSV-002-AC01"]
+    },
+    {
+      "id": "FF-CSV-003",
+      "acceptanceCriteria": ["FF-CSV-003-AC01", "FF-CSV-003-AC02"]
+    },
+    {
+      "id": "FF-CSV-004",
+      "acceptanceCriteria": ["FF-CSV-004-AC01", "FF-CSV-004-AC02"]
+    },
+    {
+      "id": "FF-CSV-005",
+      "acceptanceCriteria": ["FF-CSV-005-AC01", "FF-CSV-005-AC02"]
+    },
+    {
+      "id": "FF-CSV-006",
+      "acceptanceCriteria": ["FF-CSV-006-AC01"]
+    },
+    {
+      "id": "FF-CSV-007",
+      "acceptanceCriteria": ["FF-CSV-007-AC01", "FF-CSV-007-AC02"]
+    },
+    {
+      "id": "FF-CSV-008",
+      "acceptanceCriteria": ["FF-CSV-008-AC01", "FF-CSV-008-AC02"]
+    },
+    {
+      "id": "FF-CSV-009",
+      "acceptanceCriteria": ["FF-CSV-009-AC01", "FF-CSV-009-AC02"]
+    },
+    {
+      "id": "FF-CSV-010",
+      "acceptanceCriteria": ["FF-CSV-010-AC01", "FF-CSV-010-AC02"]
+    },
+    {
+      "id": "FF-CSV-011",
+      "acceptanceCriteria": ["FF-CSV-011-AC01"]
+    },
+    {
+      "id": "FF-CAT-001",
+      "acceptanceCriteria": ["FF-CAT-001-AC01"]
+    },
+    {
+      "id": "FF-CAT-002",
+      "acceptanceCriteria": ["FF-CAT-002-AC01"]
+    },
+    {
+      "id": "FF-CAT-003",
+      "acceptanceCriteria": ["FF-CAT-003-AC01"]
+    },
+    {
+      "id": "FF-CAT-004",
+      "acceptanceCriteria": ["FF-CAT-004-AC01", "FF-CAT-004-AC02"]
+    },
+    {
+      "id": "FF-CAT-005",
+      "acceptanceCriteria": ["FF-CAT-005-AC01", "FF-CAT-005-AC02", "FF-CAT-005-AC03"]
+    },
+    {
+      "id": "FF-INC-001",
+      "acceptanceCriteria": ["FF-INC-001-AC01", "FF-INC-001-AC02"]
+    },
+    {
+      "id": "FF-INC-002",
+      "acceptanceCriteria": ["FF-INC-002-AC01"]
+    },
+    {
+      "id": "FF-INC-003",
+      "acceptanceCriteria": ["FF-INC-003-AC01"]
+    },
+    {
+      "id": "FF-INC-004",
+      "acceptanceCriteria": ["FF-INC-004-AC01"]
+    },
+    {
+      "id": "FF-INC-005",
+      "acceptanceCriteria": ["FF-INC-005-AC01"]
+    },
+    {
+      "id": "FF-DASH-001",
+      "acceptanceCriteria": ["FF-DASH-001-AC01"]
+    },
+    {
+      "id": "FF-DASH-002",
+      "acceptanceCriteria": ["FF-DASH-002-AC01"]
+    },
+    {
+      "id": "FF-DASH-003",
+      "acceptanceCriteria": ["FF-DASH-003-AC01"]
+    },
+    {
+      "id": "FF-DASH-004",
+      "acceptanceCriteria": ["FF-DASH-004-AC01"]
+    },
+    {
+      "id": "FF-FOR-001",
+      "acceptanceCriteria": ["FF-FOR-001-AC01"]
+    },
+    {
+      "id": "FF-FOR-002",
+      "acceptanceCriteria": ["FF-FOR-002-AC01"]
+    },
+    {
+      "id": "FF-FOR-003",
+      "acceptanceCriteria": ["FF-FOR-003-AC01"]
+    },
+    {
+      "id": "FF-FOR-004",
+      "acceptanceCriteria": ["FF-FOR-004-AC01"]
+    },
+    {
+      "id": "FF-SCN-001",
+      "acceptanceCriteria": ["FF-SCN-001-AC01", "FF-SCN-001-AC02"]
+    },
+    {
+      "id": "FF-SCN-002",
+      "acceptanceCriteria": ["FF-SCN-002-AC01", "FF-SCN-002-AC02"]
+    },
+    {
+      "id": "FF-SCN-003",
+      "acceptanceCriteria": ["FF-SCN-003-AC01"]
+    },
+    {
+      "id": "FF-SCN-004",
+      "acceptanceCriteria": ["FF-SCN-004-AC01", "FF-SCN-004-AC02"]
+    },
+    {
+      "id": "FF-SCN-005",
+      "acceptanceCriteria": ["FF-SCN-005-AC01"]
+    },
+    {
+      "id": "FF-SCN-006",
+      "acceptanceCriteria": ["FF-SCN-006-AC01"]
+    },
+    {
+      "id": "FF-LOC-001",
+      "acceptanceCriteria": ["FF-LOC-001-AC01", "FF-LOC-001-AC02", "FF-LOC-001-AC03"]
+    },
+    {
+      "id": "FF-LOC-002",
+      "acceptanceCriteria": ["FF-LOC-002-AC01", "FF-LOC-002-AC02"]
+    },
+    {
+      "id": "FF-LOC-003",
+      "acceptanceCriteria": ["FF-LOC-003-AC01"]
+    },
+    {
+      "id": "FF-LOC-004",
+      "acceptanceCriteria": ["FF-LOC-004-AC01"]
+    },
+    {
+      "id": "FF-UI-001",
+      "acceptanceCriteria": ["FF-UI-001-AC01", "FF-UI-001-AC02", "FF-UI-001-AC03"]
+    },
+    {
+      "id": "FF-UI-002",
+      "acceptanceCriteria": ["FF-UI-002-AC01"]
+    },
+    {
+      "id": "FF-UI-003",
+      "acceptanceCriteria": ["FF-UI-003-AC01"]
+    },
+    {
+      "id": "FF-OPS-001",
+      "acceptanceCriteria": ["FF-OPS-001-AC01"]
+    },
+    {
+      "id": "FF-OPS-002",
+      "acceptanceCriteria": ["FF-OPS-002-AC01"]
+    },
+    {
+      "id": "FF-OPS-003",
+      "acceptanceCriteria": ["FF-OPS-003-AC01"]
+    },
+    {
+      "id": "FF-DEP-001",
+      "acceptanceCriteria": ["FF-DEP-001-AC01"]
+    },
+    {
+      "id": "FF-DEP-002",
+      "acceptanceCriteria": ["FF-DEP-002-AC01"]
+    },
+    {
+      "id": "FF-DEP-003",
+      "acceptanceCriteria": ["FF-DEP-003-AC01"]
+    },
+    {
+      "id": "FF-DEP-004",
+      "acceptanceCriteria": ["FF-DEP-004-AC01"]
+    },
+    {
+      "id": "FF-DEP-005",
+      "acceptanceCriteria": ["FF-DEP-005-AC01"]
+    },
+    {
+      "id": "FF-REL-001",
+      "acceptanceCriteria": ["FF-REL-001-AC01"]
+    },
+    {
+      "id": "FF-REL-002",
+      "acceptanceCriteria": ["FF-REL-002-AC01", "FF-REL-002-AC02"]
+    },
+    {
+      "id": "FF-QUA-001",
+      "acceptanceCriteria": ["FF-QUA-001-AC01"]
+    },
+    {
+      "id": "FF-QUA-002",
+      "acceptanceCriteria": ["FF-QUA-002-AC01"]
+    },
+    {
+      "id": "FF-QUA-003",
+      "acceptanceCriteria": ["FF-QUA-003-AC01"]
+    },
+    {
+      "id": "FF-QUA-004",
+      "acceptanceCriteria": ["FF-QUA-004-AC01"]
+    }
+  ],
+  "phases": [
+    {
+      "id": "PH-00",
+      "status": "Completed",
+      "summary": "Repository, Fastify healthcheck, quality tooling, Docker, Compose, and initial documentation.",
+      "classification": null
+    },
+    {
+      "id": "PH-01",
+      "status": "Completed",
+      "summary": "Request IDs and one-request-log lifecycle.",
+      "classification": null
+    },
+    {
+      "id": "PH-02",
+      "status": "Completed",
+      "summary": "PostgreSQL, Drizzle, accounts, categories, seeds, and initial master-data UI.",
+      "classification": null
+    },
+    {
+      "id": "PH-03",
+      "status": "Completed",
+      "summary": "Authentik OIDC, test authentication, protected routes, and interim signed-cookie sessions. Current composition registers authentication before protected routes.",
+      "classification": null
+    },
+    {
+      "id": "PH-04",
+      "status": "Completed",
+      "summary": "Manual transactions, editing, deletion, and filters.",
+      "classification": null
+    },
+    {
+      "id": "PH-05",
+      "status": "Completed",
+      "summary": "Shared styling, HTMX interactions, and progressive enhancement.",
+      "classification": null
+    },
+    {
+      "id": "PH-06",
+      "status": "Completed",
+      "summary": "Initial profile-based CSV import, preview, duplicate detection, and confirmation.",
+      "classification": null
+    },
+    {
+      "id": "PH-07",
+      "status": "Completed",
+      "summary": "Categorization-rule maintenance and application.",
+      "classification": null
+    },
+    {
+      "id": "PH-08",
+      "status": "Completed",
+      "summary": "Editable and deactivatable accounts and categories.",
+      "classification": null
+    },
+    {
+      "id": "PH-09",
+      "status": "Completed",
+      "summary": "Recurring income, monthly overrides, and owner filters.",
+      "classification": null
+    },
+    {
+      "id": "PH-10",
+      "status": "Completed",
+      "summary": "Editable display names for stable owner contexts.",
+      "classification": null
+    },
+    {
+      "id": "PH-10D",
+      "status": "Completed",
+      "summary": "Requirement, acceptance, phase, test, and operations traceability is enforced before other pending work.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-10A",
+      "status": "Pending",
+      "summary": "Replace interim signed cookies with opaque PostgreSQL sessions.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-10B",
+      "status": "Pending",
+      "summary": "Replace TypeScript string rendering with the Nunjucks template boundary.",
+      "classification": "Behavior-preserving refactor"
+    },
+    {
+      "id": "PH-10C",
+      "status": "Pending",
+      "summary": "Harden CSV profiles, purpose persistence, preview, upload, and confirmation.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-00-R01",
+      "status": "Pending",
+      "summary": "Deployment and reverse-proxy smoke evidence.",
+      "classification": "Evidence-only; expected green after prerequisite phases"
+    },
+    {
+      "id": "PH-01-R01",
+      "status": "Pending",
+      "summary": "Request-ID validation, error-page IDs, lifecycle logs, and redaction.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-02-R01",
+      "status": "Pending",
+      "summary": "Executable migration, backup, and restore behavior.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-03-R01",
+      "status": "Pending",
+      "summary": "Exact OIDC issuer/claims and server-side state/nonce transactions.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-04-R01",
+      "status": "Pending",
+      "summary": "Transaction validation, filter, and HTTP/PostgreSQL acceptance.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-06-R01",
+      "status": "Pending",
+      "summary": "Complete CSV profile and row-outcome acceptance.",
+      "classification": "Evidence-only after `PH-10C`; expected green"
+    },
+    {
+      "id": "PH-07-R01",
+      "status": "Pending",
+      "summary": "Purpose matching, deterministic ties, rule CRUD, and reapplication acceptance.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-08-R01",
+      "status": "Pending",
+      "summary": "Master-data reactivation and mandatory adapter evidence.",
+      "classification": "Evidence-only; expected green"
+    },
+    {
+      "id": "PH-09-R01",
+      "status": "Pending",
+      "summary": "Income boundaries, controlled clock, and activation/deactivation.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-10-R01",
+      "status": "Pending",
+      "summary": "Owner-label and authenticated-user independence evidence.",
+      "classification": "Evidence-only; expected green"
+    },
+    {
+      "id": "PH-11",
+      "status": "Pending",
+      "summary": "Explicit internal-transfer classification and transaction-list behavior.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-12",
+      "status": "Pending",
+      "summary": "German localization for all surfaces delivered through `PH-11`.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-13",
+      "status": "Pending",
+      "summary": "Dashboard, historical averages, and monthly forecasting.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-14",
+      "status": "Pending",
+      "summary": "Family-finance scenarios and external calculator links.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-15",
+      "status": "Pending",
+      "summary": "Release hardening and full-system verification.",
+      "classification": "Behavior change"
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "FF-AUTH-001-AC01",
+      "status": "Gap",
+      "phase": "PH-03-R01",
+      "test": "E2E-FF-AUTH-001-01",
+      "file": "tests/e2e/auth.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-AUTH-001-AC02",
+      "status": "Gap",
+      "phase": "PH-03-R01",
+      "test": "E2E-FF-AUTH-001-02",
+      "file": "tests/e2e/auth.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-AUTH-001-AC03",
+      "status": "Gap",
+      "phase": "PH-03-R01",
+      "test": "E2E-FF-AUTH-001-03",
+      "file": "tests/e2e/auth.test.ts",
+      "operation": "OPS-FF-AUTH-002-01"
+    },
+    {
+      "id": "FF-AUTH-002-AC01",
+      "status": "Gap",
+      "phase": "PH-03-R01",
+      "test": "INT-FF-AUTH-002-01",
+      "file": "tests/integration/oidc-http.test.ts",
+      "operation": "OPS-FF-AUTH-002-01"
+    },
+    {
+      "id": "FF-AUTH-002-AC02",
+      "status": "Gap",
+      "phase": "PH-03-R01",
+      "test": "INT-FF-AUTH-002-02",
+      "file": "tests/integration/oidc-http.test.ts",
+      "operation": "OPS-FF-AUTH-002-01"
+    },
+    {
+      "id": "FF-AUTH-002-AC03",
+      "status": "Gap",
+      "phase": "PH-03-R01",
+      "test": "INT-FF-AUTH-002-03",
+      "file": "tests/integration/oidc-http.test.ts",
+      "operation": "OPS-FF-AUTH-002-01"
+    },
+    {
+      "id": "FF-AUTH-003-AC01",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "INT-FF-AUTH-003-01",
+      "file": "tests/integration/postgres-session-store.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-AUTH-003-AC02",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "INT-FF-AUTH-003-02",
+      "file": "tests/integration/oidc-http.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-AUTH-004-AC01",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "INT-FF-AUTH-004-01",
+      "file": "tests/integration/oidc-http.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-AUTH-004-AC02",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "INT-FF-AUTH-004-02",
+      "file": "tests/integration/oidc-http.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-AUTH-005-AC01",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "E2E-FF-AUTH-005-01",
+      "file": "tests/e2e/auth.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-AUTH-006-AC01",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "INT-FF-AUTH-006-01",
+      "file": "tests/integration/postgres-session-store.test.ts",
+      "operation": "OPS-FF-AUTH-006-01"
+    },
+    {
+      "id": "FF-AUTH-006-AC02",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "INT-FF-AUTH-006-02",
+      "file": "tests/integration/postgres-session-store.test.ts",
+      "operation": "OPS-FF-AUTH-006-01"
+    },
+    {
+      "id": "FF-AUTH-007-AC01",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "INT-FF-AUTH-007-01",
+      "file": "tests/integration/session-handling.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-AUTH-008-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-10-R01",
+      "test": "INT-FF-AUTH-008-01",
+      "file": "tests/integration/oidc-http.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-AUTH-009-AC01",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "SMOKE-FF-AUTH-009-01",
+      "file": "tests/e2e/restore-smoke.test.ts",
+      "operation": "OPS-FF-AUTH-009-01"
+    },
+    {
+      "id": "FF-AUTH-009-AC02",
+      "status": "Planned",
+      "phase": "PH-10A",
+      "test": "SMOKE-FF-AUTH-009-02",
+      "file": "tests/e2e/restore-smoke.test.ts",
+      "operation": "OPS-FF-AUTH-009-01"
+    },
+    {
+      "id": "FF-OBS-001-AC01",
+      "status": "Gap",
+      "phase": "PH-01-R01",
+      "test": "E2E-FF-OBS-001-01",
+      "file": "tests/e2e/request-id.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-OBS-001-AC02",
+      "status": "Gap",
+      "phase": "PH-01-R01",
+      "test": "E2E-FF-OBS-001-02",
+      "file": "tests/e2e/request-id.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-OBS-002-AC01",
+      "status": "Gap",
+      "phase": "PH-01-R01",
+      "test": "INT-FF-OBS-002-01",
+      "file": "tests/integration/request-logging.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-OBS-003-AC01",
+      "status": "Gap",
+      "phase": "PH-01-R01",
+      "test": "INT-FF-OBS-003-01",
+      "file": "tests/integration/request-logging.test.ts",
+      "operation": "OPS-FF-OBS-003-01"
+    },
+    {
+      "id": "FF-OBS-004-AC01",
+      "status": "Gap",
+      "phase": "PH-01-R01",
+      "test": "INT-FF-OBS-004-01",
+      "file": "tests/integration/request-logging.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-OBS-005-AC01",
+      "status": "Gap",
+      "phase": "PH-01-R01",
+      "test": "INT-FF-OBS-005-01",
+      "file": "tests/integration/request-logging.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCP-001-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-00-R01",
+      "test": "SMOKE-FF-SCP-001-01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCP-001-AC02",
+      "status": "Delivered-unverified",
+      "phase": "PH-00-R01",
+      "test": "SMOKE-FF-SCP-001-02",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCP-002-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "SMOKE-FF-SCP-002-01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCP-003-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-10-R01",
+      "test": "SMOKE-FF-SCP-003-01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCP-004-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "SMOKE-FF-SCP-004-01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-DEV-001-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "SMOKE-FF-DEV-001-01",
+      "file": "tests/integration/dev-oidc-compose.test.ts",
+      "operation": "OPS-FF-DEV-001-01"
+    },
+    {
+      "id": "FF-DEV-001-AC02",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "SMOKE-FF-DEV-001-02",
+      "file": "tests/integration/dev-oidc-compose.test.ts",
+      "operation": "OPS-FF-DEV-001-01"
+    },
+    {
+      "id": "FF-ARC-001-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "INT-FF-ARC-001-01",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-ARC-002-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "INT-FF-ARC-002-01",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-ARC-003-AC01",
+      "status": "Planned",
+      "phase": "PH-10B",
+      "test": "INT-FF-ARC-003-01",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "operation": "OPS-FF-ARC-003-01"
+    },
+    {
+      "id": "FF-ARC-004-AC01",
+      "status": "Planned",
+      "phase": "PH-10B",
+      "test": "INT-FF-ARC-004-01",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-ARC-005-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "INT-FF-ARC-005-01",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-ARC-006-AC01",
+      "status": "Gap",
+      "phase": "PH-04-R01",
+      "test": "UNIT-FF-ARC-006-01",
+      "file": "tests/unit/financial-boundaries.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-ARC-006-AC02",
+      "status": "Gap",
+      "phase": "PH-04-R01",
+      "test": "UNIT-FF-ARC-006-02",
+      "file": "tests/unit/financial-boundaries.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-ARC-007-AC01",
+      "status": "Planned",
+      "phase": "PH-12",
+      "test": "INT-FF-ARC-007-01",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-MDM-001-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-10-R01",
+      "test": "E2E-FF-MDM-001-01",
+      "file": "tests/e2e/master-data.test.ts",
+      "operation": "OPS-FF-MDM-001-01"
+    },
+    {
+      "id": "FF-MDM-001-AC02",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "E2E-FF-MDM-001-02",
+      "file": "tests/e2e/dashboard.test.ts",
+      "operation": "OPS-FF-MDM-001-01"
+    },
+    {
+      "id": "FF-MDM-002-AC01",
+      "status": "Gap",
+      "phase": "PH-02-R01",
+      "test": "INT-FF-MDM-002-01",
+      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-MDM-002-AC02",
+      "status": "Planned",
+      "phase": "PH-12",
+      "test": "INT-FF-MDM-002-02",
+      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-MDM-003-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-08-R01",
+      "test": "E2E-FF-MDM-003-01",
+      "file": "tests/e2e/master-data.test.ts",
+      "operation": "OPS-FF-MDM-003-01"
+    },
+    {
+      "id": "FF-MDM-004-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-08-R01",
+      "test": "E2E-FF-MDM-004-01",
+      "file": "tests/e2e/master-data.test.ts",
+      "operation": "OPS-FF-MDM-003-01"
+    },
+    {
+      "id": "FF-MDM-005-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-08-R01",
+      "test": "INT-FF-MDM-005-01",
+      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-TXN-001-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "INT-FF-TXN-001-01",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-TXN-001-AC02",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "UNIT-FF-TXN-001-02",
+      "file": "tests/unit/transactions.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-TXN-001-AC03",
+      "status": "Planned",
+      "phase": "PH-11",
+      "test": "INT-FF-TXN-001-03",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "operation": "OPS-FF-TXN-005-01"
+    },
+    {
+      "id": "FF-TXN-001-AC04",
+      "status": "Gap",
+      "phase": "PH-07-R01",
+      "test": "INT-FF-TXN-001-04",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "operation": "OPS-FF-CAT-002-01"
+    },
+    {
+      "id": "FF-TXN-002-AC01",
+      "status": "Gap",
+      "phase": "PH-04-R01",
+      "test": "E2E-FF-TXN-002-01",
+      "file": "tests/e2e/transactions.test.ts",
+      "operation": "OPS-FF-TXN-002-01"
+    },
+    {
+      "id": "FF-TXN-002-AC02",
+      "status": "Gap",
+      "phase": "PH-04-R01",
+      "test": "E2E-FF-TXN-002-02",
+      "file": "tests/e2e/transactions.test.ts",
+      "operation": "OPS-FF-TXN-002-01"
+    },
+    {
+      "id": "FF-TXN-003-AC01",
+      "status": "Gap",
+      "phase": "PH-04-R01",
+      "test": "E2E-FF-TXN-003-01",
+      "file": "tests/e2e/transactions.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-TXN-004-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-TXN-004-01",
+      "file": "tests/e2e/transactions.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-TXN-005-AC01",
+      "status": "Planned",
+      "phase": "PH-11",
+      "test": "E2E-FF-TXN-005-01",
+      "file": "tests/e2e/transactions.test.ts",
+      "operation": "OPS-FF-TXN-005-01"
+    },
+    {
+      "id": "FF-TXN-006-AC01",
+      "status": "Planned",
+      "phase": "PH-11",
+      "test": "UNIT-FF-TXN-006-01",
+      "file": "tests/unit/transactions.test.ts",
+      "operation": "OPS-FF-TXN-005-01"
+    },
+    {
+      "id": "FF-TXN-006-AC02",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "E2E-FF-TXN-006-02",
+      "file": "tests/e2e/dashboard.test.ts",
+      "operation": "OPS-FF-FOR-001-01"
+    },
+    {
+      "id": "FF-CSV-001-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-CSV-001-01",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": "OPS-FF-CSV-001-01"
+    },
+    {
+      "id": "FF-CSV-001-AC02",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-CSV-001-02",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": "OPS-FF-CSV-001-01"
+    },
+    {
+      "id": "FF-CSV-002-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-CSV-002-01",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-003-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "INT-FF-CSV-003-01",
+      "file": "tests/integration/csv-parser.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-003-AC02",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "INT-FF-CSV-003-02",
+      "file": "tests/integration/csv-parser.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-004-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-CSV-004-01",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-004-AC02",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-CSV-004-02",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-005-AC01",
+      "status": "Gap",
+      "phase": "PH-10C",
+      "test": "UNIT-FF-CSV-005-01",
+      "file": "tests/unit/imports.test.ts",
+      "operation": "OPS-FF-CSV-009-01"
+    },
+    {
+      "id": "FF-CSV-005-AC02",
+      "status": "Gap",
+      "phase": "PH-10C",
+      "test": "UNIT-FF-CSV-005-02",
+      "file": "tests/unit/imports.test.ts",
+      "operation": "OPS-FF-CSV-009-01"
+    },
+    {
+      "id": "FF-CSV-006-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-CSV-006-01",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": "OPS-FF-CSV-006-01"
+    },
+    {
+      "id": "FF-CSV-007-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-CSV-007-01",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-007-AC02",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-CSV-007-02",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-008-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "E2E-FF-CSV-008-01",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-008-AC02",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "UNIT-FF-CSV-008-01",
+      "file": "tests/unit/imports.test.ts",
+      "operation": "OPS-FF-CSV-009-01"
+    },
+    {
+      "id": "FF-CSV-009-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "INT-FF-CSV-009-01",
+      "file": "tests/integration/drizzle-import-confirmation.test.ts",
+      "operation": "OPS-FF-CSV-009-01"
+    },
+    {
+      "id": "FF-CSV-009-AC02",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "INT-FF-CSV-009-02",
+      "file": "tests/integration/drizzle-import-confirmation.test.ts",
+      "operation": "OPS-FF-CSV-009-01"
+    },
+    {
+      "id": "FF-CSV-010-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "INT-FF-CSV-010-01",
+      "file": "tests/integration/csv-import-hash-migration.test.ts",
+      "operation": "OPS-FF-CSV-009-01"
+    },
+    {
+      "id": "FF-CSV-010-AC02",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "INT-FF-CSV-010-02",
+      "file": "tests/integration/csv-import-hash-migration.test.ts",
+      "operation": "OPS-FF-CSV-009-01"
+    },
+    {
+      "id": "FF-CSV-011-AC01",
+      "status": "Planned",
+      "phase": "PH-10C",
+      "test": "INT-FF-CSV-011-01",
+      "file": "tests/integration/request-logging.test.ts",
+      "operation": "OPS-FF-CSV-011-01"
+    },
+    {
+      "id": "FF-CAT-001-AC01",
+      "status": "Gap",
+      "phase": "PH-07-R01",
+      "test": "UNIT-FF-CAT-001-01",
+      "file": "tests/unit/categorization-rules.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CAT-002-AC01",
+      "status": "Gap",
+      "phase": "PH-07-R01",
+      "test": "UNIT-FF-CAT-002-01",
+      "file": "tests/unit/categorization-rules.test.ts",
+      "operation": "OPS-FF-CAT-002-01"
+    },
+    {
+      "id": "FF-CAT-003-AC01",
+      "status": "Gap",
+      "phase": "PH-07-R01",
+      "test": "UNIT-FF-CAT-003-01",
+      "file": "tests/unit/categorization-rules.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CAT-004-AC01",
+      "status": "Gap",
+      "phase": "PH-07-R01",
+      "test": "E2E-FF-CAT-004-01",
+      "file": "tests/e2e/categorization-rules.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CAT-004-AC02",
+      "status": "Gap",
+      "phase": "PH-07-R01",
+      "test": "INT-FF-CAT-004-02",
+      "file": "tests/integration/categorization-rule-migration.test.ts",
+      "operation": "OPS-FF-CAT-002-01"
+    },
+    {
+      "id": "FF-CAT-005-AC01",
+      "status": "Gap",
+      "phase": "PH-07-R01",
+      "test": "E2E-FF-CAT-005-01",
+      "file": "tests/e2e/categorization-rules.test.ts",
+      "operation": "OPS-FF-CAT-002-01"
+    },
+    {
+      "id": "FF-CAT-005-AC02",
+      "status": "Gap",
+      "phase": "PH-07-R01",
+      "test": "E2E-FF-CAT-005-02",
+      "file": "tests/e2e/categorization-rules.test.ts",
+      "operation": "OPS-FF-CAT-002-01"
+    },
+    {
+      "id": "FF-CAT-005-AC03",
+      "status": "Gap",
+      "phase": "PH-07-R01",
+      "test": "INT-FF-CAT-005-03",
+      "file": "tests/integration/categorization-rule-migration.test.ts",
+      "operation": "OPS-FF-CAT-002-01"
+    },
+    {
+      "id": "FF-INC-001-AC01",
+      "status": "Gap",
+      "phase": "PH-09-R01",
+      "test": "E2E-FF-INC-001-01",
+      "file": "tests/e2e/income-planning.test.ts",
+      "operation": "OPS-FF-INC-001-01"
+    },
+    {
+      "id": "FF-INC-001-AC02",
+      "status": "Gap",
+      "phase": "PH-09-R01",
+      "test": "E2E-FF-INC-001-02",
+      "file": "tests/e2e/income-planning.test.ts",
+      "operation": "OPS-FF-INC-001-01"
+    },
+    {
+      "id": "FF-INC-002-AC01",
+      "status": "Gap",
+      "phase": "PH-09-R01",
+      "test": "UNIT-FF-INC-002-01",
+      "file": "tests/unit/income-plans.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-INC-003-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-09-R01",
+      "test": "E2E-FF-INC-003-01",
+      "file": "tests/e2e/income-planning.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-INC-004-AC01",
+      "status": "Gap",
+      "phase": "PH-09-R01",
+      "test": "UNIT-FF-INC-004-01",
+      "file": "tests/unit/income-plans.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-INC-005-AC01",
+      "status": "Gap",
+      "phase": "PH-09-R01",
+      "test": "E2E-FF-INC-005-01",
+      "file": "tests/e2e/income-planning.test.ts",
+      "operation": "OPS-FF-INC-001-01"
+    },
+    {
+      "id": "FF-DASH-001-AC01",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "E2E-FF-DASH-001-01",
+      "file": "tests/e2e/dashboard.test.ts",
+      "operation": "OPS-FF-DASH-001-01"
+    },
+    {
+      "id": "FF-DASH-002-AC01",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "E2E-FF-DASH-002-01",
+      "file": "tests/e2e/dashboard.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-DASH-003-AC01",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "E2E-FF-DASH-003-01",
+      "file": "tests/e2e/dashboard.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-DASH-004-AC01",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "E2E-FF-DASH-004-01",
+      "file": "tests/e2e/dashboard.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-FOR-001-AC01",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "UNIT-FF-FOR-001-01",
+      "file": "tests/unit/forecasting.test.ts",
+      "operation": "OPS-FF-FOR-001-01"
+    },
+    {
+      "id": "FF-FOR-002-AC01",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "UNIT-FF-FOR-002-01",
+      "file": "tests/unit/forecasting.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-FOR-003-AC01",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "UNIT-FF-FOR-003-01",
+      "file": "tests/unit/forecasting.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-FOR-004-AC01",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "UNIT-FF-FOR-004-01",
+      "file": "tests/unit/forecasting.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCN-001-AC01",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "E2E-FF-SCN-001-01",
+      "file": "tests/e2e/scenarios.test.ts",
+      "operation": "OPS-FF-SCN-001-01"
+    },
+    {
+      "id": "FF-SCN-001-AC02",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "E2E-FF-SCN-001-02",
+      "file": "tests/e2e/scenarios.test.ts",
+      "operation": "OPS-FF-SCN-001-01"
+    },
+    {
+      "id": "FF-SCN-002-AC01",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "UNIT-FF-SCN-002-01",
+      "file": "tests/unit/scenarios.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCN-002-AC02",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "UNIT-FF-SCN-002-02",
+      "file": "tests/unit/scenarios.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCN-003-AC01",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "E2E-FF-SCN-003-01",
+      "file": "tests/e2e/scenarios.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCN-004-AC01",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "UNIT-FF-SCN-004-01",
+      "file": "tests/unit/scenarios.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCN-004-AC02",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "UNIT-FF-SCN-004-02",
+      "file": "tests/unit/scenarios.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCN-005-AC01",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "UNIT-FF-SCN-005-01",
+      "file": "tests/unit/scenarios.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-SCN-006-AC01",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "E2E-FF-SCN-006-01",
+      "file": "tests/e2e/scenarios.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-LOC-001-AC01",
+      "status": "Planned",
+      "phase": "PH-12",
+      "test": "E2E-FF-LOC-001-01",
+      "file": "tests/e2e/german-localization.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-LOC-001-AC02",
+      "status": "Planned",
+      "phase": "PH-13",
+      "test": "E2E-FF-LOC-001-02",
+      "file": "tests/e2e/dashboard.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-LOC-001-AC03",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "E2E-FF-LOC-001-03",
+      "file": "tests/e2e/scenarios.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-LOC-002-AC01",
+      "status": "Planned",
+      "phase": "PH-12",
+      "test": "E2E-FF-LOC-002-01",
+      "file": "tests/e2e/german-localization.test.ts",
+      "operation": "OPS-FF-LOC-002-01"
+    },
+    {
+      "id": "FF-LOC-002-AC02",
+      "status": "Planned",
+      "phase": "PH-12",
+      "test": "INT-FF-LOC-002-02",
+      "file": "tests/integration/localization.test.ts",
+      "operation": "OPS-FF-LOC-002-01"
+    },
+    {
+      "id": "FF-LOC-003-AC01",
+      "status": "Planned",
+      "phase": "PH-12",
+      "test": "INT-FF-LOC-003-01",
+      "file": "tests/integration/localization.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-LOC-004-AC01",
+      "status": "Planned",
+      "phase": "PH-12",
+      "test": "INT-FF-LOC-004-01",
+      "file": "tests/integration/csv-parser.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-UI-001-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-10B",
+      "test": "E2E-FF-UI-001-01",
+      "file": "tests/e2e/styling-and-htmx.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-UI-001-AC02",
+      "status": "Planned",
+      "phase": "PH-11",
+      "test": "E2E-FF-UI-001-02",
+      "file": "tests/e2e/internal-transfers.test.ts",
+      "operation": "OPS-FF-TXN-005-01"
+    },
+    {
+      "id": "FF-UI-001-AC03",
+      "status": "Planned",
+      "phase": "PH-14",
+      "test": "E2E-FF-UI-001-03",
+      "file": "tests/e2e/scenarios.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-UI-002-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-10B",
+      "test": "E2E-FF-UI-002-01",
+      "file": "tests/e2e/styling-and-htmx.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-UI-003-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-10B",
+      "test": "E2E-FF-UI-003-01",
+      "file": "tests/e2e/styling-and-htmx.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-OPS-001-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "SMOKE-FF-OPS-001-01",
+      "file": "tests/integration/operations-manual.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-OPS-002-AC01",
+      "status": "Gap",
+      "phase": "PH-02-R01",
+      "test": "SMOKE-FF-OPS-002-01",
+      "file": "tests/e2e/backup-restore-smoke.test.ts",
+      "operation": "OPS-FF-OPS-002-01"
+    },
+    {
+      "id": "FF-OPS-003-AC01",
+      "status": "Gap",
+      "phase": "PH-02-R01",
+      "test": "SMOKE-FF-OPS-003-01",
+      "file": "tests/e2e/backup-restore-smoke.test.ts",
+      "operation": "OPS-FF-OPS-003-01"
+    },
+    {
+      "id": "FF-DEP-001-AC01",
+      "status": "Planned",
+      "phase": "PH-10B",
+      "test": "SMOKE-FF-DEP-001-01",
+      "file": "tests/e2e/image-smoke.test.ts",
+      "operation": "OPS-FF-DEP-001-01"
+    },
+    {
+      "id": "FF-DEP-002-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-00-R01",
+      "test": "SMOKE-FF-DEP-002-01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "operation": "OPS-FF-DEP-002-01"
+    },
+    {
+      "id": "FF-DEP-003-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-00-R01",
+      "test": "SMOKE-FF-DEP-003-01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "operation": "OPS-FF-DEP-003-01"
+    },
+    {
+      "id": "FF-DEP-004-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "INT-FF-DEP-004-01",
+      "file": "tests/integration/config-and-secrets.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-DEP-005-AC01",
+      "status": "Gap",
+      "phase": "PH-15",
+      "test": "SMOKE-FF-DEP-005-01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "operation": "OPS-FF-DEP-005-01"
+    },
+    {
+      "id": "FF-REL-001-AC01",
+      "status": "Gap",
+      "phase": "PH-15",
+      "test": "SMOKE-FF-REL-001-01",
+      "file": "tests/e2e/release-smoke.test.ts",
+      "operation": "OPS-FF-REL-001-01"
+    },
+    {
+      "id": "FF-REL-002-AC01",
+      "status": "Gap",
+      "phase": "PH-15",
+      "test": "SMOKE-FF-REL-002-01",
+      "file": "tests/e2e/release-smoke.test.ts",
+      "operation": "OPS-FF-REL-002-01"
+    },
+    {
+      "id": "FF-REL-002-AC02",
+      "status": "Gap",
+      "phase": "PH-15",
+      "test": "SMOKE-FF-REL-002-02",
+      "file": "tests/e2e/release-smoke.test.ts",
+      "operation": "OPS-FF-REL-002-01"
+    },
+    {
+      "id": "FF-QUA-001-AC01",
+      "status": "Verified",
+      "phase": "PH-10D",
+      "test": "INT-FF-QUA-001-01",
+      "file": "tests/integration/traceability-tooling.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-QUA-002-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "INT-FF-QUA-002-01",
+      "file": "tests/integration/requirement-traceability.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-QUA-003-AC01",
+      "status": "Delivered-unverified",
+      "phase": "PH-15",
+      "test": "INT-FF-QUA-003-01",
+      "file": "tests/integration/requirement-traceability.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-QUA-004-AC01",
+      "status": "Verified",
+      "phase": "PH-10D",
+      "test": "INT-FF-QUA-004-01",
+      "file": "tests/integration/requirement-traceability.test.ts",
+      "operation": null
+    }
+  ],
+  "tests": [
+    {
+      "id": "E2E-FF-AUTH-001-01",
+      "acceptance": "FF-AUTH-001-AC01",
+      "phase": "PH-03-R01",
+      "file": "tests/e2e/auth.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-AUTH-001-02",
+      "acceptance": "FF-AUTH-001-AC02",
+      "phase": "PH-03-R01",
+      "file": "tests/e2e/auth.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-AUTH-001-03",
+      "acceptance": "FF-AUTH-001-AC03",
+      "phase": "PH-03-R01",
+      "file": "tests/e2e/auth.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-AUTH-002-01",
+      "acceptance": "FF-AUTH-002-AC01",
+      "phase": "PH-03-R01",
+      "file": "tests/e2e/auth.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-AUTH-005-01",
+      "acceptance": "FF-AUTH-005-AC01",
+      "phase": "PH-10A",
+      "file": "tests/e2e/auth.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CAT-001-01",
+      "acceptance": "FF-CAT-001-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/e2e/categorization-rules.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CAT-004-01",
+      "acceptance": "FF-CAT-004-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/e2e/categorization-rules.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CAT-005-01",
+      "acceptance": "FF-CAT-005-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/e2e/categorization-rules.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CAT-005-02",
+      "acceptance": "FF-CAT-005-AC02",
+      "phase": "PH-07-R01",
+      "file": "tests/e2e/categorization-rules.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-001-01",
+      "acceptance": "FF-CSV-001-AC01",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-001-02",
+      "acceptance": "FF-CSV-001-AC02",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-002-01",
+      "acceptance": "FF-CSV-002-AC01",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-004-01",
+      "acceptance": "FF-CSV-004-AC01",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-004-02",
+      "acceptance": "FF-CSV-004-AC02",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-006-01",
+      "acceptance": "FF-CSV-006-AC01",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-007-01",
+      "acceptance": "FF-CSV-007-AC01",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-007-02",
+      "acceptance": "FF-CSV-007-AC02",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-008-01",
+      "acceptance": "FF-CSV-008-AC01",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-009-01",
+      "acceptance": "FF-CSV-009-AC01",
+      "phase": "PH-10C",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-DASH-001-01",
+      "acceptance": "FF-DASH-001-AC01",
+      "phase": "PH-13",
+      "file": "tests/e2e/dashboard.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-DASH-002-01",
+      "acceptance": "FF-DASH-002-AC01",
+      "phase": "PH-13",
+      "file": "tests/e2e/dashboard.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-DASH-003-01",
+      "acceptance": "FF-DASH-003-AC01",
+      "phase": "PH-13",
+      "file": "tests/e2e/dashboard.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-DASH-004-01",
+      "acceptance": "FF-DASH-004-AC01",
+      "phase": "PH-13",
+      "file": "tests/e2e/dashboard.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-FOR-001-01",
+      "acceptance": "FF-FOR-001-AC01",
+      "phase": "PH-13",
+      "file": "tests/e2e/dashboard.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-FOR-004-01",
+      "acceptance": "FF-FOR-004-AC01",
+      "phase": "PH-13",
+      "file": "tests/e2e/dashboard.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-INC-001-01",
+      "acceptance": "FF-INC-001-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/e2e/income-planning.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-INC-001-02",
+      "acceptance": "FF-INC-001-AC02",
+      "phase": "PH-09-R01",
+      "file": "tests/e2e/income-planning.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-INC-003-01",
+      "acceptance": "FF-INC-003-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/e2e/income-planning.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "E2E-FF-INC-005-01",
+      "acceptance": "FF-INC-005-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/e2e/income-planning.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-LOC-001-01",
+      "acceptance": "FF-LOC-001-AC01",
+      "phase": "PH-12",
+      "file": "tests/e2e/german-localization.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-LOC-001-02",
+      "acceptance": "FF-LOC-001-AC02",
+      "phase": "PH-13",
+      "file": "tests/e2e/dashboard.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-LOC-001-03",
+      "acceptance": "FF-LOC-001-AC03",
+      "phase": "PH-14",
+      "file": "tests/e2e/scenarios.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-LOC-002-01",
+      "acceptance": "FF-LOC-002-AC01",
+      "phase": "PH-12",
+      "file": "tests/e2e/german-localization.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-MDM-001-01",
+      "acceptance": "FF-MDM-001-AC01",
+      "phase": "PH-10-R01",
+      "file": "tests/e2e/master-data.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "E2E-FF-MDM-001-02",
+      "acceptance": "FF-MDM-001-AC02",
+      "phase": "PH-13",
+      "file": "tests/e2e/dashboard.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-MDM-003-01",
+      "acceptance": "FF-MDM-003-AC01",
+      "phase": "PH-08-R01",
+      "file": "tests/e2e/master-data.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "E2E-FF-MDM-003-02",
+      "acceptance": "FF-MDM-003-AC01",
+      "phase": "PH-08-R01",
+      "file": "tests/e2e/master-data.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "E2E-FF-MDM-004-01",
+      "acceptance": "FF-MDM-004-AC01",
+      "phase": "PH-08-R01",
+      "file": "tests/e2e/master-data.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "E2E-FF-MDM-004-02",
+      "acceptance": "FF-MDM-004-AC01",
+      "phase": "PH-08-R01",
+      "file": "tests/e2e/master-data.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "E2E-FF-OBS-001-01",
+      "acceptance": "FF-OBS-001-AC01",
+      "phase": "PH-01-R01",
+      "file": "tests/e2e/request-id.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-OBS-001-02",
+      "acceptance": "FF-OBS-001-AC02",
+      "phase": "PH-01-R01",
+      "file": "tests/e2e/request-id.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-SCN-001-01",
+      "acceptance": "FF-SCN-001-AC01",
+      "phase": "PH-14",
+      "file": "tests/e2e/scenarios.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-SCN-001-02",
+      "acceptance": "FF-SCN-001-AC02",
+      "phase": "PH-14",
+      "file": "tests/e2e/scenarios.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-SCN-003-01",
+      "acceptance": "FF-SCN-003-AC01",
+      "phase": "PH-14",
+      "file": "tests/e2e/scenarios.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-SCN-004-01",
+      "acceptance": "FF-SCN-004-AC01",
+      "phase": "PH-14",
+      "file": "tests/e2e/scenarios.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-SCN-006-01",
+      "acceptance": "FF-SCN-006-AC01",
+      "phase": "PH-14",
+      "file": "tests/e2e/scenarios.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-TXN-002-01",
+      "acceptance": "FF-TXN-002-AC01",
+      "phase": "PH-04-R01",
+      "file": "tests/e2e/transactions.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-TXN-002-02",
+      "acceptance": "FF-TXN-002-AC02",
+      "phase": "PH-04-R01",
+      "file": "tests/e2e/transactions.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-TXN-003-01",
+      "acceptance": "FF-TXN-003-AC01",
+      "phase": "PH-04-R01",
+      "file": "tests/e2e/transactions.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-TXN-004-01",
+      "acceptance": "FF-TXN-004-AC01",
+      "phase": "PH-10C",
+      "file": "tests/e2e/transactions.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-TXN-005-01",
+      "acceptance": "FF-TXN-005-AC01",
+      "phase": "PH-11",
+      "file": "tests/e2e/transactions.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-TXN-005-02",
+      "acceptance": "FF-TXN-005-AC01",
+      "phase": "PH-11",
+      "file": "tests/e2e/transactions.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-TXN-006-02",
+      "acceptance": "FF-TXN-006-AC02",
+      "phase": "PH-13",
+      "file": "tests/e2e/dashboard.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-UI-001-01",
+      "acceptance": "FF-UI-001-AC01",
+      "phase": "PH-10B",
+      "file": "tests/e2e/styling-and-htmx.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "E2E-FF-UI-001-02",
+      "acceptance": "FF-UI-001-AC02",
+      "phase": "PH-11",
+      "file": "tests/e2e/internal-transfers.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-UI-001-03",
+      "acceptance": "FF-UI-001-AC03",
+      "phase": "PH-14",
+      "file": "tests/e2e/scenarios.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-UI-002-01",
+      "acceptance": "FF-UI-002-AC01",
+      "phase": "PH-10B",
+      "file": "tests/e2e/styling-and-htmx.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "E2E-FF-UI-003-01",
+      "acceptance": "FF-UI-003-AC01",
+      "phase": "PH-10B",
+      "file": "tests/e2e/styling-and-htmx.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-ARC-001-01",
+      "acceptance": "FF-ARC-001-AC01",
+      "phase": "PH-15",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-ARC-002-01",
+      "acceptance": "FF-ARC-002-AC01",
+      "phase": "PH-15",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-ARC-003-01",
+      "acceptance": "FF-ARC-003-AC01",
+      "phase": "PH-10B",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-ARC-004-01",
+      "acceptance": "FF-ARC-004-AC01",
+      "phase": "PH-10B",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-ARC-004-02",
+      "acceptance": "FF-ARC-004-AC01",
+      "phase": "PH-10B",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-ARC-004-03",
+      "acceptance": "FF-ARC-004-AC01",
+      "phase": "PH-12",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-ARC-005-01",
+      "acceptance": "FF-ARC-005-AC01",
+      "phase": "PH-15",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-ARC-007-01",
+      "acceptance": "FF-ARC-007-AC01",
+      "phase": "PH-12",
+      "file": "tests/integration/architecture-requirements.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-002-01",
+      "acceptance": "FF-AUTH-002-AC01",
+      "phase": "PH-03-R01",
+      "file": "tests/integration/oidc-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-002-02",
+      "acceptance": "FF-AUTH-002-AC02",
+      "phase": "PH-03-R01",
+      "file": "tests/integration/oidc-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-002-03",
+      "acceptance": "FF-AUTH-002-AC03",
+      "phase": "PH-03-R01",
+      "file": "tests/integration/oidc-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-003-01",
+      "acceptance": "FF-AUTH-003-AC01",
+      "phase": "PH-10A",
+      "file": "tests/integration/postgres-session-store.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-003-02",
+      "acceptance": "FF-AUTH-003-AC02",
+      "phase": "PH-10A",
+      "file": "tests/integration/oidc-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-004-01",
+      "acceptance": "FF-AUTH-004-AC01",
+      "phase": "PH-10A",
+      "file": "tests/integration/oidc-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-004-02",
+      "acceptance": "FF-AUTH-004-AC02",
+      "phase": "PH-10A",
+      "file": "tests/integration/oidc-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-005-01",
+      "acceptance": "FF-AUTH-005-AC01",
+      "phase": "PH-10A",
+      "file": "tests/integration/postgres-session-store.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-006-01",
+      "acceptance": "FF-AUTH-006-AC01",
+      "phase": "PH-10A",
+      "file": "tests/integration/postgres-session-store.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-006-02",
+      "acceptance": "FF-AUTH-006-AC02",
+      "phase": "PH-10A",
+      "file": "tests/integration/postgres-session-store.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-007-01",
+      "acceptance": "FF-AUTH-007-AC01",
+      "phase": "PH-10A",
+      "file": "tests/integration/session-handling.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-AUTH-008-01",
+      "acceptance": "FF-AUTH-008-AC01",
+      "phase": "PH-10-R01",
+      "file": "tests/integration/oidc-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-CAT-004-02",
+      "acceptance": "FF-CAT-004-AC02",
+      "phase": "PH-07-R01",
+      "file": "tests/integration/categorization-rule-migration.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CAT-005-01",
+      "acceptance": "FF-CAT-005-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/integration/categorization-rule-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CAT-005-02",
+      "acceptance": "FF-CAT-005-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/integration/drizzle-categorization-rule-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CAT-005-03",
+      "acceptance": "FF-CAT-005-AC03",
+      "phase": "PH-07-R01",
+      "file": "tests/integration/categorization-rule-migration.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-002-01",
+      "acceptance": "FF-CSV-002-AC01",
+      "phase": "PH-06-R01",
+      "file": "tests/integration/csv-parser.test.ts",
+      "boundary": "CSV adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-CSV-002-02",
+      "acceptance": "FF-CSV-002-AC01",
+      "phase": "PH-06-R01",
+      "file": "tests/integration/drizzle-import-profile-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-CSV-003-01",
+      "acceptance": "FF-CSV-003-AC01",
+      "phase": "PH-10C",
+      "file": "tests/integration/csv-parser.test.ts",
+      "boundary": "CSV adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-003-02",
+      "acceptance": "FF-CSV-003-AC02",
+      "phase": "PH-10C",
+      "file": "tests/integration/csv-parser.test.ts",
+      "boundary": "CSV adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-007-01",
+      "acceptance": "FF-CSV-007-AC01",
+      "phase": "PH-10C",
+      "file": "tests/integration/csv-parser.test.ts",
+      "boundary": "CSV adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-008-01",
+      "acceptance": "FF-CSV-008-AC01",
+      "phase": "PH-10C",
+      "file": "tests/integration/csv-import-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-008-02",
+      "acceptance": "FF-CSV-008-AC02",
+      "phase": "PH-10C",
+      "file": "tests/integration/drizzle-import-preview-batch-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-009-01",
+      "acceptance": "FF-CSV-009-AC01",
+      "phase": "PH-10C",
+      "file": "tests/integration/drizzle-import-confirmation.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-009-02",
+      "acceptance": "FF-CSV-009-AC02",
+      "phase": "PH-10C",
+      "file": "tests/integration/drizzle-import-confirmation.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-010-01",
+      "acceptance": "FF-CSV-010-AC01",
+      "phase": "PH-10C",
+      "file": "tests/integration/csv-import-hash-migration.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-010-02",
+      "acceptance": "FF-CSV-010-AC02",
+      "phase": "PH-10C",
+      "file": "tests/integration/csv-import-hash-migration.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-011-01",
+      "acceptance": "FF-CSV-011-AC01",
+      "phase": "PH-10C",
+      "file": "tests/integration/request-logging.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-DASH-001-01",
+      "acceptance": "FF-DASH-001-AC01",
+      "phase": "PH-13",
+      "file": "tests/integration/drizzle-dashboard-query-adapter.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-DASH-003-01",
+      "acceptance": "FF-DASH-003-AC01",
+      "phase": "PH-13",
+      "file": "tests/integration/dashboard-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-DEP-001-01",
+      "acceptance": "FF-DEP-001-AC01",
+      "phase": "PH-10B",
+      "file": "tests/integration/template-packaging.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-DEP-004-01",
+      "acceptance": "FF-DEP-004-AC01",
+      "phase": "PH-15",
+      "file": "tests/integration/config-and-secrets.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-DEV-001-01",
+      "acceptance": "FF-DEV-001-AC01",
+      "phase": "PH-03-R01",
+      "file": "tests/integration/dev-oidc-compose.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-INC-001-01",
+      "acceptance": "FF-INC-001-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/integration/drizzle-income-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-INC-001-02",
+      "acceptance": "FF-INC-001-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/integration/income-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-INC-005-01",
+      "acceptance": "FF-INC-005-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/integration/drizzle-income-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-INC-005-02",
+      "acceptance": "FF-INC-005-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/integration/income-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-LOC-001-04",
+      "acceptance": "FF-LOC-001-AC01",
+      "phase": "PH-12",
+      "file": "tests/integration/localization.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-LOC-002-01",
+      "acceptance": "FF-LOC-002-AC01",
+      "phase": "PH-12",
+      "file": "tests/integration/localization.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-LOC-002-02",
+      "acceptance": "FF-LOC-002-AC02",
+      "phase": "PH-12",
+      "file": "tests/integration/localization.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-LOC-003-01",
+      "acceptance": "FF-LOC-003-AC01",
+      "phase": "PH-12",
+      "file": "tests/integration/localization.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-LOC-004-01",
+      "acceptance": "FF-LOC-004-AC01",
+      "phase": "PH-12",
+      "file": "tests/integration/csv-parser.test.ts",
+      "boundary": "CSV adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-MDM-001-01",
+      "acceptance": "FF-MDM-001-AC01",
+      "phase": "PH-10-R01",
+      "file": "tests/integration/master-data-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-MDM-001-02",
+      "acceptance": "FF-MDM-001-AC01",
+      "phase": "PH-10-R01",
+      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-MDM-002-01",
+      "acceptance": "FF-MDM-002-AC01",
+      "phase": "PH-02-R01",
+      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-MDM-002-02",
+      "acceptance": "FF-MDM-002-AC02",
+      "phase": "PH-12",
+      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-MDM-003-01",
+      "acceptance": "FF-MDM-003-AC01",
+      "phase": "PH-08-R01",
+      "file": "tests/integration/master-data-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-MDM-003-02",
+      "acceptance": "FF-MDM-003-AC01",
+      "phase": "PH-08-R01",
+      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-MDM-004-01",
+      "acceptance": "FF-MDM-004-AC01",
+      "phase": "PH-08-R01",
+      "file": "tests/integration/master-data-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-MDM-004-02",
+      "acceptance": "FF-MDM-004-AC01",
+      "phase": "PH-08-R01",
+      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-MDM-005-01",
+      "acceptance": "FF-MDM-005-AC01",
+      "phase": "PH-08-R01",
+      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-OBS-001-01",
+      "acceptance": "FF-OBS-001-AC01",
+      "phase": "PH-10A",
+      "file": "tests/integration/request-logging.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-OBS-002-01",
+      "acceptance": "FF-OBS-002-AC01",
+      "phase": "PH-01-R01",
+      "file": "tests/integration/request-logging.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-OBS-003-01",
+      "acceptance": "FF-OBS-003-AC01",
+      "phase": "PH-01-R01",
+      "file": "tests/integration/request-logging.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-OBS-004-01",
+      "acceptance": "FF-OBS-004-AC01",
+      "phase": "PH-01-R01",
+      "file": "tests/integration/request-logging.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-OBS-005-01",
+      "acceptance": "FF-OBS-005-AC01",
+      "phase": "PH-01-R01",
+      "file": "tests/integration/request-logging.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-QUA-001-01",
+      "acceptance": "FF-QUA-001-AC01",
+      "phase": "PH-10D",
+      "file": "tests/integration/traceability-tooling.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-QUA-002-01",
+      "acceptance": "FF-QUA-002-AC01",
+      "phase": "PH-15",
+      "file": "tests/integration/requirement-traceability.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-QUA-003-01",
+      "acceptance": "FF-QUA-003-AC01",
+      "phase": "PH-15",
+      "file": "tests/integration/requirement-traceability.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-QUA-004-01",
+      "acceptance": "FF-QUA-004-AC01",
+      "phase": "PH-10D",
+      "file": "tests/integration/requirement-traceability.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-SCN-001-01",
+      "acceptance": "FF-SCN-001-AC01",
+      "phase": "PH-14",
+      "file": "tests/integration/drizzle-scenario-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-SCN-001-02",
+      "acceptance": "FF-SCN-001-AC02",
+      "phase": "PH-14",
+      "file": "tests/integration/drizzle-scenario-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-SCN-001-03",
+      "acceptance": "FF-SCN-001-AC01",
+      "phase": "PH-14",
+      "file": "tests/integration/scenario-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-SCP-003-01",
+      "acceptance": "FF-SCP-003-AC01",
+      "phase": "PH-10-R01",
+      "file": "tests/integration/oidc-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-TXN-001-01",
+      "acceptance": "FF-TXN-001-AC01",
+      "phase": "PH-10C",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-TXN-001-03",
+      "acceptance": "FF-TXN-001-AC03",
+      "phase": "PH-11",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-TXN-001-04",
+      "acceptance": "FF-TXN-001-AC04",
+      "phase": "PH-07-R01",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-TXN-002-01",
+      "acceptance": "FF-TXN-002-AC01",
+      "phase": "PH-04-R01",
+      "file": "tests/integration/transaction-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-TXN-003-01",
+      "acceptance": "FF-TXN-003-AC01",
+      "phase": "PH-04-R01",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-TXN-004-01",
+      "acceptance": "FF-TXN-004-AC01",
+      "phase": "PH-10C",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-TXN-005-01",
+      "acceptance": "FF-TXN-005-AC01",
+      "phase": "PH-11",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-TXN-005-02",
+      "acceptance": "FF-TXN-005-AC01",
+      "phase": "PH-11",
+      "file": "tests/integration/transaction-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-AUTH-009-01",
+      "acceptance": "FF-AUTH-009-AC01",
+      "phase": "PH-10A",
+      "file": "tests/e2e/restore-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-AUTH-009-02",
+      "acceptance": "FF-AUTH-009-AC02",
+      "phase": "PH-10A",
+      "file": "tests/e2e/restore-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-DEP-001-01",
+      "acceptance": "FF-DEP-001-AC01",
+      "phase": "PH-10B",
+      "file": "tests/e2e/image-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-DEP-002-01",
+      "acceptance": "FF-DEP-002-AC01",
+      "phase": "PH-00-R01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "SMOKE-FF-DEP-003-01",
+      "acceptance": "FF-DEP-003-AC01",
+      "phase": "PH-00-R01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "SMOKE-FF-DEP-005-01",
+      "acceptance": "FF-DEP-005-AC01",
+      "phase": "PH-15",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-DEV-001-01",
+      "acceptance": "FF-DEV-001-AC01",
+      "phase": "PH-15",
+      "file": "tests/integration/dev-oidc-compose.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "SMOKE-FF-DEV-001-02",
+      "acceptance": "FF-DEV-001-AC02",
+      "phase": "PH-15",
+      "file": "tests/integration/dev-oidc-compose.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "SMOKE-FF-OPS-001-01",
+      "acceptance": "FF-OPS-001-AC01",
+      "phase": "PH-15",
+      "file": "tests/integration/operations-manual.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "SMOKE-FF-OPS-002-01",
+      "acceptance": "FF-OPS-002-AC01",
+      "phase": "PH-02-R01",
+      "file": "tests/e2e/backup-restore-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-OPS-003-01",
+      "acceptance": "FF-OPS-003-AC01",
+      "phase": "PH-02-R01",
+      "file": "tests/e2e/backup-restore-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-REL-001-01",
+      "acceptance": "FF-REL-001-AC01",
+      "phase": "PH-15",
+      "file": "tests/e2e/release-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-REL-002-01",
+      "acceptance": "FF-REL-002-AC01",
+      "phase": "PH-15",
+      "file": "tests/e2e/release-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-REL-002-02",
+      "acceptance": "FF-REL-002-AC02",
+      "phase": "PH-15",
+      "file": "tests/e2e/release-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "SMOKE-FF-SCP-001-01",
+      "acceptance": "FF-SCP-001-AC01",
+      "phase": "PH-00-R01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "SMOKE-FF-SCP-001-02",
+      "acceptance": "FF-SCP-001-AC02",
+      "phase": "PH-00-R01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "SMOKE-FF-SCP-002-01",
+      "acceptance": "FF-SCP-002-AC01",
+      "phase": "PH-15",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "SMOKE-FF-SCP-003-01",
+      "acceptance": "FF-SCP-003-AC01",
+      "phase": "PH-10-R01",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "SMOKE-FF-SCP-004-01",
+      "acceptance": "FF-SCP-004-AC01",
+      "phase": "PH-15",
+      "file": "tests/e2e/deployment-smoke.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected green evidence"
+    },
+    {
+      "id": "UNIT-FF-ARC-006-01",
+      "acceptance": "FF-ARC-006-AC01",
+      "phase": "PH-04-R01",
+      "file": "tests/unit/financial-boundaries.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-ARC-006-02",
+      "acceptance": "FF-ARC-006-AC02",
+      "phase": "PH-04-R01",
+      "file": "tests/unit/financial-boundaries.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-ARC-007-01",
+      "acceptance": "FF-ARC-007-AC01",
+      "phase": "PH-12",
+      "file": "tests/unit/localized-domain-boundaries.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-AUTH-002-01",
+      "acceptance": "FF-AUTH-002-AC01",
+      "phase": "PH-03-R01",
+      "file": "tests/unit/authentication.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-AUTH-004-01",
+      "acceptance": "FF-AUTH-004-AC01",
+      "phase": "PH-10A",
+      "file": "tests/unit/authentication.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-AUTH-006-01",
+      "acceptance": "FF-AUTH-006-AC01",
+      "phase": "PH-10A",
+      "file": "tests/unit/authentication.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CAT-001-01",
+      "acceptance": "FF-CAT-001-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/unit/categorization-rules.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CAT-002-01",
+      "acceptance": "FF-CAT-002-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/unit/categorization-rules.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CAT-003-01",
+      "acceptance": "FF-CAT-003-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/unit/categorization-rules.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CAT-004-01",
+      "acceptance": "FF-CAT-004-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/unit/categorization-rules.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CAT-005-02",
+      "acceptance": "FF-CAT-005-AC02",
+      "phase": "PH-07-R01",
+      "file": "tests/unit/categorization-rules.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CSV-004-01",
+      "acceptance": "FF-CSV-004-AC01",
+      "phase": "PH-10C",
+      "file": "tests/unit/imports.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CSV-005-01",
+      "acceptance": "FF-CSV-005-AC01",
+      "phase": "PH-10C",
+      "file": "tests/unit/imports.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CSV-005-02",
+      "acceptance": "FF-CSV-005-AC02",
+      "phase": "PH-10C",
+      "file": "tests/unit/imports.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CSV-008-01",
+      "acceptance": "FF-CSV-008-AC02",
+      "phase": "PH-10C",
+      "file": "tests/unit/imports.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-DASH-001-01",
+      "acceptance": "FF-DASH-001-AC01",
+      "phase": "PH-13",
+      "file": "tests/unit/dashboard.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-DASH-002-01",
+      "acceptance": "FF-DASH-002-AC01",
+      "phase": "PH-13",
+      "file": "tests/unit/dashboard.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-DASH-003-01",
+      "acceptance": "FF-DASH-003-AC01",
+      "phase": "PH-13",
+      "file": "tests/unit/dashboard.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-DASH-004-01",
+      "acceptance": "FF-DASH-004-AC01",
+      "phase": "PH-13",
+      "file": "tests/unit/dashboard.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-FOR-001-01",
+      "acceptance": "FF-FOR-001-AC01",
+      "phase": "PH-13",
+      "file": "tests/unit/forecasting.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-FOR-002-01",
+      "acceptance": "FF-FOR-002-AC01",
+      "phase": "PH-13",
+      "file": "tests/unit/forecasting.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-FOR-003-01",
+      "acceptance": "FF-FOR-003-AC01",
+      "phase": "PH-13",
+      "file": "tests/unit/forecasting.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-FOR-004-01",
+      "acceptance": "FF-FOR-004-AC01",
+      "phase": "PH-13",
+      "file": "tests/unit/forecasting.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-INC-001-01",
+      "acceptance": "FF-INC-001-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/unit/income-plans.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-INC-002-01",
+      "acceptance": "FF-INC-002-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/unit/income-plans.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-INC-004-01",
+      "acceptance": "FF-INC-004-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/unit/income-plans.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-INC-005-01",
+      "acceptance": "FF-INC-005-AC01",
+      "phase": "PH-09-R01",
+      "file": "tests/unit/income-plans.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-LOC-003-02",
+      "acceptance": "FF-LOC-003-AC01",
+      "phase": "PH-12",
+      "file": "tests/unit/localized-domain-boundaries.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-SCN-001-01",
+      "acceptance": "FF-SCN-001-AC01",
+      "phase": "PH-14",
+      "file": "tests/unit/scenarios.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-SCN-002-01",
+      "acceptance": "FF-SCN-002-AC01",
+      "phase": "PH-14",
+      "file": "tests/unit/scenarios.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-SCN-002-02",
+      "acceptance": "FF-SCN-002-AC02",
+      "phase": "PH-14",
+      "file": "tests/unit/scenarios.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-SCN-004-01",
+      "acceptance": "FF-SCN-004-AC01",
+      "phase": "PH-14",
+      "file": "tests/unit/scenarios.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-SCN-004-02",
+      "acceptance": "FF-SCN-004-AC02",
+      "phase": "PH-14",
+      "file": "tests/unit/scenarios.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-SCN-005-01",
+      "acceptance": "FF-SCN-005-AC01",
+      "phase": "PH-14",
+      "file": "tests/unit/scenarios.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-TXN-001-01",
+      "acceptance": "FF-TXN-001-AC01",
+      "phase": "PH-10C",
+      "file": "tests/unit/transactions.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-TXN-001-02",
+      "acceptance": "FF-TXN-001-AC02",
+      "phase": "PH-10C",
+      "file": "tests/unit/transactions.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-TXN-005-01",
+      "acceptance": "FF-TXN-005-AC01",
+      "phase": "PH-11",
+      "file": "tests/unit/transactions.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-TXN-006-01",
+      "acceptance": "FF-TXN-006-AC01",
+      "phase": "PH-11",
+      "file": "tests/unit/transactions.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    }
+  ],
+  "operations": [
+    {
+      "id": "OPS-FF-AUTH-002-01",
+      "procedure": "**OIDC/Auth Problems**: run documented Authentik and Dex discovery/callback diagnostics with invalid issuer/state/nonce fixtures.",
+      "outcome": "Valid flow succeeds; every invalid flow is request-correlated without protocol leakage.",
+      "rollback": "Disable traffic, restore prior auth image/config, and inspect sanitized request ID logs.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-AUTH-006-01",
+      "procedure": "**Session Cleanup**: `docker compose -f compose.yaml -f compose.prod.yaml run --rm app node dist/app/session-cleanup.js --limit 1000`.",
+      "outcome": "Each run deletes at most 1,000 eligible rows; repeat until zero; active rows remain.",
+      "rollback": "Stop cleanup, restore database if financial/session tables were unexpectedly changed, and retain command output.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-AUTH-009-01",
+      "procedure": "**Session Migration And Restore**: deploy migration and replay pre-migration/pre-backup tokens.",
+      "outcome": "Old signed and restored tokens are rejected before traffic opens.",
+      "rollback": "Keep service unavailable and roll back image/schema only through the documented compatible path.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-ARC-003-01",
+      "procedure": "**Template Diagnostics**: render named full-page and HTMX fixture from the production image.",
+      "outcome": "Packaged templates resolve and user markup is escaped.",
+      "rollback": "Roll back to prior image; inspect template path/config without enabling `safe`.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-CAT-002-01",
+      "procedure": "**Categorization Rules**: apply deterministic fixture rules to preview and persisted transactions.",
+      "outcome": "Category/fixed-cost outcomes and changed/unchanged counts match.",
+      "rollback": "Stop reapplication and restore backup if persisted scope was wrong.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-CSV-001-01",
+      "procedure": "**CSV Profiles**: import named fixtures for every finite profile option.",
+      "outcome": "Saved and reloaded profiles produce identical canonical previews.",
+      "rollback": "Delete only the test profile/data by stable fixture IDs.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-CSV-006-01",
+      "procedure": "**CSV Limits**: run exact-boundary and boundary-plus-one fixtures.",
+      "outcome": "Exact limits preview; over-limit requests reject before persistence.",
+      "rollback": "Disable upload endpoint or roll back image if limits fail.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-CSV-009-01",
+      "procedure": "**CSV Atomicity And Collision Recovery**: run rollback/concurrency fixtures and collision preflight.",
+      "outcome": "No partial/duplicate writes; collisions abort with IDs and no mutation.",
+      "rollback": "Keep migration stopped, restore backup after unexpected writes, and resolve listed IDs manually.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-CSV-011-01",
+      "procedure": "**CSV Troubleshooting**: reject a sanitized invalid fixture and correlate its request ID.",
+      "outcome": "One sanitized log, visible request ID, and zero writes.",
+      "rollback": "Remove captured output if fixture contents appear and treat leakage as an incident.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-DASH-001-01",
+      "procedure": "**Dashboard Interpretation**: load named monthly fixture and reconcile totals/breakdowns.",
+      "outcome": "Group totals equal filtered overall total.",
+      "rollback": "Mark dashboard unavailable and roll back if financial totals differ.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-DEP-001-01",
+      "procedure": "**Production Image**: start digest-pinned Linux/amd64 image and resolve code, migrations, templates, assets, labels, and maintenance entry points.",
+      "outcome": "Image starts without pnpm/install, every artifact resolves, and version/revision labels match.",
+      "rollback": "Roll back to the compatible digest from its annotated tag; restore its paired backup first when schema-incompatible.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-DEP-002-01",
+      "procedure": "**Deployment And Migrations**: run empty-database and update Compose smoke.",
+      "outcome": "Migrations complete before readiness and healthchecks pass.",
+      "rollback": "Stop deployment and restore the pre-migration backup/image pair.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-DEP-003-01",
+      "procedure": "**Reverse Proxy**: smoke with `BASE_URL=https://finances.home.arpa`.",
+      "outcome": "Links, secure cookies, callback, and redirects use external HTTPS URL.",
+      "rollback": "Remove new route from proxy and restore prior config/image.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-DEP-005-01",
+      "procedure": "**Production Deployment**: pull and start digest-pinned `APP_IMAGE=registry/repository@sha256:<digest>` with build disabled.",
+      "outcome": "Target host installs no packages and the running image reports the configured digest.",
+      "rollback": "Restore the preceding digest-pinned `APP_IMAGE` and compatible database backup.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-DEV-001-01",
+      "procedure": "**Local OIDC Development**: start PostgreSQL/Dex with `.env.dev`, then run `pnpm dev:oidc`.",
+      "outcome": "Documented developer login succeeds without changing production configuration.",
+      "rollback": "Stop Dex and remove only development containers/volumes named by the procedure.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-FOR-001-01",
+      "procedure": "**Forecast Interpretation**: run current, past, and future month fixtures.",
+      "outcome": "Current month shows components; past shows actuals without forecast; future selection is rejected.",
+      "rollback": "Hide forecast and roll back if any component is miscounted.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-INC-001-01",
+      "procedure": "**Income Maintenance**: create, override, deactivate, reactivate named fixture.",
+      "outcome": "Totals and preserved history match exact minor units.",
+      "rollback": "Restore affected fixture IDs from backup if totals diverge.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-LOC-002-01",
+      "procedure": "**German Input Formats**: submit documented valid/invalid amount/date fixtures.",
+      "outcome": "Valid inputs canonicalize once; invalid inputs make no change.",
+      "rollback": "Roll back parser image and use canonical maintenance input.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-MDM-001-01",
+      "procedure": "**Owner Labels**: edit labels and inspect authenticated identity plus filters.",
+      "outcome": "Labels change; stable owner keys/user identity do not.",
+      "rollback": "Restore labels by stable key.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-MDM-003-01",
+      "procedure": "**Master Data**: deactivate/reactivate fixture account/category.",
+      "outcome": "History remains; new-choice availability follows active state.",
+      "rollback": "Reactivate by stable ID or restore fixture.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-OBS-003-01",
+      "procedure": "**Log Analysis**: exercise finite lifecycle fixture and correlate request IDs.",
+      "outcome": "Exactly one complete sanitized log per request.",
+      "rollback": "Restrict log access and roll back if secrets/financial text leak.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-OPS-002-01",
+      "procedure": "**Backup**: back up deterministic record/count/minor-unit fixture.",
+      "outcome": "Backup completes and manifest records counts/totals.",
+      "rollback": "Keep prior verified backup and diagnose before deployment.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-OPS-003-01",
+      "procedure": "**Restore**: restore fixture, reconcile IDs/counts/totals, invalidate sessions, and verify health.",
+      "outcome": "Financial records match and old sessions fail.",
+      "rollback": "Keep traffic closed and restore the previous verified database/image pair.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-REL-001-01",
+      "procedure": "**Release**: compare `package.json`, `CHANGELOG.md`, new annotated Git tag, image version label, and recorded OCI digest.",
+      "outcome": "All version labels agree and the digest resolves before publication.",
+      "rollback": "Delete an unpublished incorrect tag/image and correct metadata; never rewrite a published historical tag.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-REL-002-01",
+      "procedure": "**Update And Rollback**: before B, record B digest, previous A digest, pre-B backup ID/path/checksum, before/after schemas, and compatibility; exercise direct and restore rollback fixtures.",
+      "outcome": "Compatible rollback starts A directly; incompatible rollback restores B's verified pre-deployment backup before A; data reconciles.",
+      "rollback": "Keep traffic closed and use only B's append-only deployment record; never substitute A's older historical backup.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-SCN-001-01",
+      "procedure": "**Scenario Maintenance**: create snapshot fixture, change source transactions, and reload.",
+      "outcome": "Snapshot and exact results remain unchanged.",
+      "rollback": "Remove test scenario; roll back if persisted source data changed.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-TXN-002-01",
+      "procedure": "**Transaction Maintenance**: create/edit/delete signed-amount fixture through UI.",
+      "outcome": "Positive UI amount maps once to negative persisted minor units.",
+      "rollback": "Correct by stable transaction ID or restore backup.",
+      "verifier": null
+    },
+    {
+      "id": "OPS-FF-TXN-005-01",
+      "procedure": "**Internal Transfers**: mark/unmark fixture and inspect list/aggregates.",
+      "outcome": "Visibility remains and marked expense contribution is zero.",
+      "rollback": "Unmark by stable transaction ID and roll back if aggregates remain wrong.",
+      "verifier": null
+    }
+  ]
+}

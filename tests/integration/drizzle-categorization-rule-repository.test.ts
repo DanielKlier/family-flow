@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategorizationRuleRepository } from "../../src/adapters/db/drizzle-categorization-rule-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
+import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
@@ -22,6 +23,7 @@ describe("Drizzle categorization rule repository", () => {
     const repositories = {
       accounts: new DrizzleAccountRepository(connection.db),
       categories: new DrizzleCategoryRepository(connection.db),
+      ownerContexts: new DrizzleOwnerContextRepository(connection.db),
       rules: new DrizzleCategorizationRuleRepository(connection.db),
     };
 
