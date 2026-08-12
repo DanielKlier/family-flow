@@ -99,12 +99,11 @@ Migration troubleshooting:
 
 ## Authentication And Sessions
 
-All non-health application routes are protected. `/health` remains public for local health checks. Login and logout are handled through `/auth/login`, `/auth/callback`, and `/auth/logout`.
+All non-health application routes are protected. `/health` remains public for local health checks. Login uses `/auth/login` and `/auth/callback`. Logout is authenticated `POST /auth/logout` and requires an `Origin` matching the normalized `BASE_URL` origin; failed origin checks do not revoke.
 
 Production uses Authentik through `AUTH_MODE=oidc` and requires these environment variables:
 
 - `BASE_URL`: the externally visible application URL, normally `https://finances.home.arpa`.
-- `SESSION_SECRET`: at least 32 random characters, used to sign local session cookies.
 - `OIDC_ISSUER_URL`: the Authentik provider URL for the FamilyFlow application.
 - `OIDC_CLIENT_ID`: the Authentik client ID.
 - `OIDC_CLIENT_SECRET`: the Authentik client secret.
@@ -115,7 +114,19 @@ Authentik application settings:
 - Post-logout redirect URI: `https://finances.home.arpa/auth/login`.
 - Scopes: `openid`, `email`, and `profile`.
 
-Local E2E tests and development without Authentik can use `AUTH_MODE=test`. In this mode `/auth/test-login` creates a signed session for the deterministic `test-user`. Do not run production with `AUTH_MODE=test`.
+Local E2E tests and development without Authentik can use `AUTH_MODE=test`. In this mode `/auth/test-login` creates an opaque PostgreSQL-backed session for the deterministic `test-user`. Do not run production with `AUTH_MODE=test`.
+
+Session cookies contain only a random 256-bit token and expire after an absolute eight hours. PostgreSQL stores its SHA-256 hash and user/lifetime/revocation metadata. `SESSION_SECRET`, signed sessions, and Redis are not used; deployment of migration `0011_sessions.sql` intentionally rejects old signed cookies.
+
+### Session cleanup
+
+Startup deletes one deterministic batch of at most 1,000 expired or revoked sessions. For maintenance, repeat `docker compose -f compose.prod.yaml run --rm app node dist/app/session-cleanup.js --limit 1000` until it reports `0 row(s)`. Active sessions are preserved and authentication never depends on cleanup.
+
+Run `pnpm ops:verify -- --id OPS-FF-AUTH-006-01` to verify against PostgreSQL that startup invokes exactly one bounded batch and that the repeatable maintenance entry point preserves active sessions.
+
+### Restored session safety
+
+A database backup includes bearer-session rows. The canonical `Restore` runbook below requires invalidation and cleanup before application startup or traffic.
 
 Local development can also use Dex as a lightweight OIDC provider instead of Authentik. Start it with `docker compose --env-file .env.dev -f compose.yaml -f compose.dev.yaml up -d dex` and run the app on the host with `pnpm dev:oidc`.
 
@@ -252,7 +263,16 @@ PostgreSQL stores master data, transactions, income plans, monthly income overri
 
 ## Restore 
 
-Restore is not fully automated yet. For local recovery, stop the app, restore a PostgreSQL dump into the `family_flow` database, then start the app so pending migrations and idempotent seeds can run.
+Restore is not fully automated yet. Use this canonical sequence:
+
+1. Stop the app and keep all application traffic blocked.
+2. Restore a PostgreSQL dump into the `family_flow` database.
+3. Before starting the app, run `docker compose -f compose.prod.yaml run --rm app node dist/app/session-invalidate.js` and require a successful exit. This entry point applies pending migrations before revoking every restored session.
+4. Repeat `docker compose -f compose.prod.yaml run --rm app node dist/app/session-cleanup.js --limit 1000` until it reports `0 row(s)`.
+5. Start the app so idempotent seeds run, then reopen traffic.
+6. Verify that a session cookie captured before backup redirects from `/transactions` to login.
+
+If invalidation or cleanup fails, keep the app and traffic stopped, inspect PostgreSQL and migration state, and retry. Never start the app with restored sessions active.
 
 ## Debugging
 

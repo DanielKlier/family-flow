@@ -13,7 +13,7 @@ FamilyFlow is a local web application for household and family finance planning.
 1. Install dependencies with `pnpm install`.
 2. Copy `.env.example` to `.env` and adjust values if needed.
 3. Start PostgreSQL with `docker compose -f compose.yaml -f compose.dev.yaml up -d postgres`. The development override exposes PostgreSQL on `127.0.0.1:5432` for host-based development.
-4. For local development without Authentik, set `AUTH_MODE=test` and a local `SESSION_SECRET` with at least 32 characters in `.env`.
+4. For local development without Authentik, set `AUTH_MODE=test` in `.env`.
 5. Start the development server with `pnpm dev`.
 6. Open `http://127.0.0.1:3000/health` to verify the app is running.
 7. Open `http://127.0.0.1:3000/auth/test-login` in `AUTH_MODE=test`, then open `http://127.0.0.1:3000/admin/master-data` to verify seeded accounts and categories.
@@ -34,7 +34,6 @@ The local Dex flow uses the committed `.env.dev` file:
 - `OIDC_ISSUER_URL=http://127.0.0.1:5556/dex`
 - `OIDC_CLIENT_ID=family-flow-dev`
 - `OIDC_CLIENT_SECRET=family-flow-dev-secret`
-- `SESSION_SECRET=replace-with-at-least-32-random-characters`
 
 Start the app with `pnpm dev:oidc`, open `http://127.0.0.1:3000/`, and sign in through Dex with:
 
@@ -56,6 +55,8 @@ Start the app with `pnpm dev:oidc`, open `http://127.0.0.1:3000/`, and sign in t
 - `pnpm test:e2e`: run E2E tests.
 - `pnpm build`: compile TypeScript and copy runtime assets into `dist`.
 - `pnpm db:migrate`: run pending SQL migrations against `DATABASE_URL` during local development.
+- `node dist/app/session-cleanup.js --limit 1000`: delete one bounded batch of expired/revoked sessions.
+- `node dist/app/session-invalidate.js`: revoke all sessions after restoring a backup, before reopening traffic.
 - `pnpm dev:oidc`: run the local app with `.env.dev` for the Dex development OIDC flow.
 
 ## Versioning
@@ -74,7 +75,7 @@ Start the app and PostgreSQL with `docker compose up`.
 
 The app applies SQL migrations from `drizzle/` and seeds initial accounts and categories during startup. Transactions, income plans, monthly income overrides, and CSV import profiles are stored in PostgreSQL. Transactions are available at `/transactions`, income planning is available at `/income`, and CSV imports are available at `/imports/csv` after login.
 
-The app protects all non-health app routes. Production Compose defaults to `AUTH_MODE=oidc` and requires Authentik OIDC settings plus `SESSION_SECRET`.
+The app protects all non-health app routes. Production Compose defaults to `AUTH_MODE=oidc` and requires Authentik OIDC settings. Sessions are opaque eight-hour bearer tokens backed by PostgreSQL; Redis and `SESSION_SECRET` are not used.
 
 The runtime image starts with `node dist/app/server.js`. It does not include pnpm and does not install packages at container startup.
 

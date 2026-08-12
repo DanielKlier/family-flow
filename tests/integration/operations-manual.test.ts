@@ -18,4 +18,13 @@ describe("operations manual", () => {
     expect(manual).toContain("/income");
     expect(manual).toContain("Monthly overrides replace the recurring amount");
   });
+
+  it("requires restored-session invalidation before application startup", async () => {
+    const manual = await readFile("OPERATIONS.md", "utf8");
+    const restore = manual.slice(manual.indexOf("## Restore "), manual.indexOf("## Debugging"));
+
+    expect(restore).toMatch(
+      /restore a PostgreSQL dump[\s\S]*session-invalidate\.js[\s\S]*session-cleanup\.js[\s\S]*start the app/i,
+    );
+  });
 });

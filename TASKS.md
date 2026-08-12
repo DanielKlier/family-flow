@@ -148,7 +148,7 @@ The current composition registers authentication before protected routes. This d
 
 **Requirements represented:** `FF-AUTH-001`, `FF-AUTH-002`, `FF-AUTH-007`, `FF-AUTH-008`.
 
-**Existing evidence:** `tests/e2e/auth.test.ts`, `tests/integration/session-handling.test.ts`, and OIDC unit tests.
+**Existing evidence:** `tests/e2e/auth.test.ts`, `tests/integration/session-http.test.ts`, and OIDC unit tests.
 
 **Pending gaps:** `PH-03-R01` adds realistic OIDC and HTTP boundary coverage. Target session requirements `FF-AUTH-003`, `FF-AUTH-004`, `FF-AUTH-005`, `FF-AUTH-006`, and `FF-AUTH-009` belong to `PH-10A`.
 
@@ -274,7 +274,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-10A — Opaque PostgreSQL Sessions
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-AUTH-003`, `FF-AUTH-004`, `FF-AUTH-005`, `FF-AUTH-006`, `FF-AUTH-009`
 **Verifies:** `FF-AUTH-001`, `FF-AUTH-007`, `FF-AUTH-008`, `FF-OBS-001`, `FF-OBS-002`, `FF-OBS-003`, `FF-OBS-004`, `FF-OPS-002`, `FF-OPS-003`, `FF-QUA-003`
@@ -282,40 +282,40 @@ The current composition registers authentication before protected routes. This d
 
 **Red:**
 
-- [ ] Add `E2E-FF-AUTH-005-01`: copy a valid session token, log out in the original context, replay the copy against `/transactions`, and expect login redirection.
-- [ ] Observe failure because the delivered signed cookie remains independently valid after browser logout.
+- [x] Add `E2E-FF-AUTH-005-01`: copy a valid session token, log out in the original context, replay the copy against `/transactions`, and expect login redirection.
+- [x] Preserve the handoff's reviewed Red evidence: the prerequisite POST logout contract was absent and GET logout remained independently valid.
 
 **Tasks:**
 
-- [ ] Define authentication use cases for lifetime, lookup outcomes, revocation, and bounded cleanup behind session-store, controlled-clock, token-generation, and token-hashing ports.
-- [ ] Generate a cryptographically random 256-bit bearer token.
-- [ ] Add a session migration and Drizzle adapter storing only SHA-256 token hashes and required metadata.
-- [ ] Keep the raw token only in the secure cookie.
-- [ ] Resolve every authenticated request through the session store.
-- [ ] Revoke the database session before expiring the browser cookie.
-- [ ] Delete at most 1,000 expired/revoked rows per invocation in expiry/session-ID order; invoke one batch at startup and expose `node dist/app/session-cleanup.js --limit 1000` in the production image.
-- [ ] Preserve the eight-hour absolute lifetime and cookie attributes.
-- [ ] Remove signed payload handling and `SESSION_SECRET`; intentionally invalidate old signed cookies.
-- [ ] Preserve authentication-before-protected-route composition.
-- [ ] Invalidate restored sessions before accepting traffic.
-- [ ] Update configuration, README, and Operations runbooks. Do not introduce Redis.
+- [x] Define authentication use cases for lifetime, lookup outcomes, revocation, and bounded cleanup behind session-store, controlled-clock, token-generation, and token-hashing ports.
+- [x] Generate a cryptographically random 256-bit bearer token.
+- [x] Add a session migration and Drizzle adapter storing only SHA-256 token hashes and required metadata.
+- [x] Keep the raw token only in the secure cookie.
+- [x] Resolve every authenticated request through the session store.
+- [x] Revoke the database session before expiring the browser cookie.
+- [x] Delete at most 1,000 expired/revoked rows per invocation in expiry/session-ID order; invoke one batch at startup and expose `node dist/app/session-cleanup.js --limit 1000` in the production image.
+- [x] Preserve the eight-hour absolute lifetime and cookie attributes.
+- [x] Remove signed payload handling and `SESSION_SECRET`; intentionally invalidate old signed cookies.
+- [x] Preserve authentication-before-protected-route composition.
+- [x] Invalidate restored sessions before accepting traffic.
+- [x] Update configuration, README, and Operations runbooks. Do not introduce Redis.
 
 **Tests:**
 
-- [ ] `E2E-FF-AUTH-005-01`: copied opaque token is rejected after the original session is logged out.
-- [ ] `UNIT-FF-AUTH-004-01`: active, exactly expired, revoked, and unknown outcomes with a controlled clock.
-- [ ] `INT-FF-AUTH-003-01`: PostgreSQL stores the hash and metadata but never the raw token.
-- [ ] `INT-FF-AUTH-003-02`: authenticated HTTP requests resolve opaque tokens through PostgreSQL and reject unknown tokens.
-- [ ] `INT-FF-AUTH-004-01`: the HTTP/session boundary rejects exactly expired sessions using the controlled clock.
-- [ ] `INT-FF-AUTH-004-02`: session creation and lookup preserve the absolute eight-hour lifetime without sliding extension.
-- [ ] `INT-FF-AUTH-005-01`: logout records revocation and subsequent lookup fails.
-- [ ] `UNIT-FF-AUTH-006-01`: authentication cleanup use case enforces limit, ordering, eligibility, and idempotent outcomes.
-- [ ] `INT-FF-AUTH-006-01`: PostgreSQL cleanup removes eligible rows and preserves active rows.
-- [ ] `INT-FF-AUTH-006-02`: startup and maintenance entry points invoke bounded cleanup and report deterministic outcomes.
-- [ ] `INT-FF-AUTH-007-01`: verify every cookie attribute.
-- [ ] `INT-FF-OBS-001-01`: authentication failures retain request IDs and produce one sanitized request log.
-- [ ] `SMOKE-FF-AUTH-009-01`: deployment rejects old signed cookies.
-- [ ] `SMOKE-FF-AUTH-009-02`: restore invalidates pre-backup sessions.
+- [x] `E2E-FF-AUTH-005-01`: copied opaque token is rejected after the original session is logged out.
+- [x] `UNIT-FF-AUTH-004-01`: active, exactly expired, revoked, and unknown outcomes with a controlled clock.
+- [x] `INT-FF-AUTH-003-01`: PostgreSQL stores the hash and metadata but never the raw token.
+- [x] `INT-FF-AUTH-003-02`: authenticated HTTP requests resolve opaque tokens through PostgreSQL, exclude the raw bearer token from persistence and request logs, and reject unknown tokens.
+- [x] `INT-FF-AUTH-004-01`: the HTTP/session boundary rejects exactly expired sessions using the controlled clock.
+- [x] `INT-FF-AUTH-004-02`: session creation and lookup preserve the absolute eight-hour lifetime without sliding extension.
+- [x] `INT-FF-AUTH-005-01`: logout records revocation and subsequent lookup fails.
+- [x] `UNIT-FF-AUTH-006-01`: authentication cleanup use case enforces limit, ordering, eligibility, and idempotent outcomes.
+- [x] `INT-FF-AUTH-006-01`: PostgreSQL cleanup removes eligible rows and preserves active rows.
+- [x] `INT-FF-AUTH-006-02`: startup and maintenance entry points invoke bounded cleanup and report deterministic outcomes.
+- [x] `INT-FF-AUTH-007-01`: verify every cookie attribute.
+- [x] `INT-FF-OBS-001-01`: authentication failures retain request IDs and produce one sanitized request log.
+- [x] `SMOKE-FF-AUTH-009-01`: deployment rejects old signed cookies.
+- [x] `SMOKE-FF-AUTH-009-02`: restore invalidates pre-backup sessions.
 
 **Quality gates:** the five canonical commands plus `docker compose build`.
 
