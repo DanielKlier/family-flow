@@ -4,7 +4,7 @@ const expectedScripts: Readonly<Record<string, string>> = {
   test: "vitest run",
   "test:e2e": "playwright test",
   build:
-    "tsc -p tsconfig.json && mkdir -p dist/adapters/http/assets && cp src/adapters/http/assets/app.css dist/adapters/http/assets/app.css",
+    "tsc -p tsconfig.json && mkdir -p dist/adapters/http/assets && cp src/adapters/http/assets/app.css dist/adapters/http/assets/app.css && mkdir -p dist/views && cp -R src/views/. dist/views/",
   "requirements:check": "tsx scripts/check-requirement-traceability.ts",
   "evidence:check": "tsx scripts/check-test-evidence.ts",
   "test:postgres": "tsx scripts/run-postgres-tests.ts",

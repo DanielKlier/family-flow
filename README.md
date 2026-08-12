@@ -45,7 +45,7 @@ Start the app with `pnpm dev:oidc`, open `http://127.0.0.1:3000/`, and sign in t
 - `pnpm format`: format files with Biome.
 - `pnpm format:check`: check formatting.
 - `pnpm lint`: run Biome linting, the architecture import check, and requirement traceability validation.
-- `pnpm arch:check`: verify core import boundaries.
+- `pnpm arch:check`: verify core import boundaries and reject unsafe or non-presentational Nunjucks constructs.
 - `pnpm requirements:check`: validate the schema, identifiers, cross-references, statuses, mappings, adapter boundaries, and exact package-script allowlist in `traceability.json`. Markdown is documentation, not validator input.
 - `pnpm evidence:check`: compare test IDs owned by completed phases with tests collected by Vitest and Playwright.
 - `pnpm test`: run unit and integration tests; PostgreSQL tests still require `TEST_DATABASE_URL` when this general command is used.
@@ -53,7 +53,7 @@ Start the app with `pnpm dev:oidc`, open `http://127.0.0.1:3000/`, and sign in t
 - `pnpm ops:verify --id OPS-FF-...`: invoke only a verifier explicitly registered in `scripts/operations/registry.ts`. Unregistered IDs fail without interpreting Markdown or arbitrary shell commands.
 - `pnpm verify`: run every canonical local gate. Run this once before the final commit and before pushing; add conditional PostgreSQL, Docker, migration, or smoke gates when the changed boundary requires them.
 - `pnpm test:e2e`: run E2E tests.
-- `pnpm build`: compile TypeScript and copy runtime assets into `dist`.
+- `pnpm build`: compile TypeScript and copy runtime CSS and Nunjucks templates into `dist`.
 - `pnpm db:migrate`: run pending SQL migrations against `DATABASE_URL` during local development.
 - `node dist/app/session-cleanup.js --limit 1000`: delete one bounded batch of expired/revoked sessions.
 - `node dist/app/session-invalidate.js`: revoke all sessions after restoring a backup, before reopening traffic.
@@ -77,6 +77,6 @@ The app applies SQL migrations from `drizzle/` and seeds initial accounts and ca
 
 The app protects all non-health app routes. Production Compose defaults to `AUTH_MODE=oidc` and requires Authentik OIDC settings. Sessions are opaque eight-hour bearer tokens backed by PostgreSQL; Redis and `SESSION_SECRET` are not used.
 
-The runtime image starts with `node dist/app/server.js`. It does not include pnpm and does not install packages at container startup.
+The runtime image starts with `node dist/app/server.js`. It includes the compiled application and packaged `dist/views` templates, but it does not include pnpm or install packages at container startup.
 
 Deployment to the target server is documented in `OPERATIONS.md`. Production deployment uses `compose.prod.yaml` with a prebuilt `APP_IMAGE`. The production server does not run `docker compose build`, does not install npm packages, and does not need pnpm.

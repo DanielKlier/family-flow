@@ -241,6 +241,19 @@ Operational notes:
 - If an income calculation looks unexpected, verify the selected calculation month, owner-context filter, start and end months, and matching monthly overrides before editing database rows directly.
 - For support cases, capture the visible `X-Request-Id` and use minimized examples. Avoid exporting broad income or household finance data into logs or tickets.
 
+## Template Packaging And Rendering
+
+Transaction pages and HTMX fragments are rendered through `@fastify/view` from globally autoescaped Nunjucks templates. Source execution (`pnpm dev` and `pnpm dev:oidc`) always loads `src/views`, even when a previous build left `dist/views` in the worktree. `pnpm build` copies the templates recursively to `dist/views`; compiled execution and the production image load that packaged directory.
+
+Packaging verification:
+
+1. Install the locked dependencies with `pnpm install --frozen-lockfile`.
+2. Run `pnpm build` from the repository root.
+3. Run `find dist/views -type f -name '*.njk' -print` and verify that `dist/views/transactions.njk` is listed.
+4. For image-facing changes, run `pnpm exec playwright test tests/e2e/image-smoke.test.ts --reporter=line`. The smoke fixture requires Docker, starts isolated PostgreSQL and application containers, authenticates in test mode, and expects both a complete transaction page and an HTMX list fragment.
+
+If the compiled template is absent, inspect the `build` script and rerun the build from a clean checkout; do not copy templates into a running production container. If startup reports a missing template, verify that the deployed immutable image contains `/app/dist/views`, roll back to the previous known-good image, and rebuild rather than editing the container. If rendering succeeds but an HTMX replacement fails, verify that the fragment retains `id="transactions-list"` and does not contain a full document. Run `pnpm arch:check` after template edits; disabled autoescaping, `safe`, calculations, imports, calls, repository access, and use-case access are prohibited in templates.
+
 ## Static Assets And HTMX
 
 The app serves its own UI assets from `/assets/`.

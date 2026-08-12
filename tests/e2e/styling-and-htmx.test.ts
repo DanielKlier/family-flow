@@ -4,7 +4,7 @@ import { buildServer } from "../../src/app/server.js";
 import { loginAsTestUserPage, loginAsTestUserRequest } from "../support/auth.js";
 import { listen } from "../support/server.js";
 
-test("transaction page includes the stylesheet and no inline style attributes", async ({
+test("E2E-FF-UI-002-01 transaction page includes the stylesheet and no inline style attributes", async ({
   request,
 }) => {
   const server = buildServer();
@@ -24,7 +24,7 @@ test("transaction page includes the stylesheet and no inline style attributes", 
   }
 });
 
-test("transaction creation updates the list with HTMX without a full page reload", async ({
+test("E2E-FF-UI-001-01 transaction creation updates the list with HTMX without a full page reload", async ({
   page,
 }) => {
   const server = buildServer();
@@ -93,6 +93,46 @@ test("transaction filters update the list with HTMX without a full page reload",
         ),
       )
       .toBe("kept");
+  } finally {
+    await server.close();
+  }
+});
+
+test("E2E-FF-UI-003-01 transaction text is escaped in full-page and HTMX responses", async ({
+  request,
+}) => {
+  const server = buildServer();
+  const unsafeDescription = "<script>globalThis.familyFlowXss = true</script>";
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserRequest(request, baseUrl);
+    const create = await request.post(`${baseUrl}/transactions`, {
+      form: {
+        accountId: "account-person-a-checking",
+        categoryId: "category-groceries",
+        date: "2026-07-15",
+        description: unsafeDescription,
+        amount: "42.99",
+        status: "booked",
+      },
+    });
+    expect(create.status()).toBe(200);
+
+    const fullPage = await request.get(`${baseUrl}/transactions`);
+    const fullBody = await fullPage.text();
+    const fragment = await request.get(`${baseUrl}/transactions`, {
+      headers: { "HX-Request": "true" },
+    });
+    const fragmentBody = await fragment.text();
+
+    for (const body of [fullBody, fragmentBody]) {
+      expect(body).toContain("&lt;script&gt;globalThis.familyFlowXss = true&lt;/script&gt;");
+      expect(body).not.toContain("<script>globalThis.familyFlowXss = true</script>");
+    }
+    expect(fullBody).toContain("<!doctype html>");
+    expect(fragmentBody).toContain('id="transactions-list"');
+    expect(fragmentBody).not.toContain("<!doctype html>");
   } finally {
     await server.close();
   }

@@ -131,6 +131,8 @@ HTTP and template adapters prepare typed, presentation-ready view models. View m
 
 User-controlled content remains an ordinary escaped value. Pre-rendered or explicitly safe HTML requires a narrow reviewed adapter boundary and must never contain user-controlled content.
 
+Phase 10B migrates route families incrementally behind named rendering methods. Transaction pages and HTMX fragments are the first packaged Nunjucks surfaces; the remaining route-family migration and removal of legacy TypeScript string renderers remain tracked in `TASKS.md`.
+
 ### Localization Boundary
 
 Core values are locale-neutral. Money uses integer minor units. Dates and months use canonical domain representations. Business failures use typed error codes and structured details rather than translated text.

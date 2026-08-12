@@ -1,0 +1,71 @@
+{% if fullPage %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/assets/app.css">
+    <script src="/assets/htmx.min.js" defer></script>
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <h1 class="app-title">{{ heading }}</h1>
+        <nav class="app-nav">
+          {% for link in navigation %}<a href="{{ link.href }}">{{ link.label }}</a>{% endfor %}
+        </nav>
+      </header>
+{% endif %}
+{% if panel %}<section id="transactions-panel">
+  <section class="panel" aria-labelledby="transaction-form-heading">
+    <h2 id="transaction-form-heading">{{ form.heading }}</h2>
+    {% if form.formError %}<p class="form-error">{{ form.formError }}</p>{% endif %}
+    <form id="transaction-form" class="grid-form" method="post" action="{{ form.actionUrl }}"{% if form.create %} hx-post="/transactions" hx-target="#transactions-list" hx-swap="outerHTML"{% endif %}>
+      <label class="field">Transaction account
+        <select name="accountId">{% for option in form.accounts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select>
+      </label>
+      <label class="field">Category
+        <select name="categoryId">{% for option in form.categories %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select>
+      </label>
+      <label class="field">Date <input name="date" type="date" value="{{ form.date }}" required></label>
+      <label class="field">Description <input name="description" value="{{ form.description }}" required></label>
+      <label class="field">Payee <input name="payee" value="{{ form.payee }}"></label>
+      <label class="field">Amount <input name="amount" inputmode="decimal" value="{{ form.amount }}" required></label>
+      <label class="field">Transaction status
+        <select name="status">{% for option in form.statuses %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select>
+      </label>
+      <label class="checkbox-field">Fixed cost <input name="fixedCost" type="checkbox"{% if form.fixedCostChecked %} checked{% endif %}></label>
+      <label class="field">Note <textarea name="note">{{ form.note }}</textarea></label>
+      <button type="submit">{{ form.submitLabel }}</button>
+    </form>
+  </section>
+  {% if filters %}<section class="panel" aria-labelledby="transaction-filters-heading">
+    <h2 id="transaction-filters-heading">Filters</h2>
+    <form id="transaction-filters" class="grid-form" method="get" action="/transactions" hx-get="/transactions" hx-target="#transactions-list" hx-swap="outerHTML">
+      <label class="field">Month <input name="month" type="month" placeholder="YYYY-MM" value="{{ filters.month }}"></label>
+      <label class="field">Filter account <select name="accountId">{% for option in filters.accounts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+      <label class="field">Owner context <select name="ownerContext">{% for option in filters.ownerContexts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+      <label class="field">Category <select name="categoryId">{% for option in filters.categories %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+      <label class="field">Filter status <select name="status">{% for option in filters.statuses %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+      <label class="field">Fixed cost filter <select name="fixedCost">{% for option in filters.fixedCosts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+      <button type="submit">Apply filters</button>
+    </form>
+  </section>{% endif %}
+{% endif %}
+{% if list %}<section id="transactions-list" class="panel" aria-labelledby="transactions-list-heading">
+  <h2 id="transactions-list-heading">Transaction list</h2>
+  {% if list.empty %}<p class="empty-state">No transactions found.</p>{% else %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Status</th><th>Fixed cost</th><th>Actions</th></tr></thead>
+    <tbody>{% for row in list.rows %}<tr>
+      <td>{{ row.date }}</td><td>{{ row.description }}</td><td>{{ row.category }}</td><td>{{ row.amount }}</td><td>{{ row.status }}</td><td>{{ row.fixedCostLabel }}</td>
+      <td class="actions-cell"><a class="action-link" href="{{ row.editUrl }}" aria-label="Edit" title="Edit">Edit</a>
+        <form class="inline-form" method="post" action="{{ row.deleteUrl }}" hx-post="{{ row.deleteUrl }}" hx-target="#transactions-list" hx-swap="outerHTML"><button class="link-button" type="submit" aria-label="Delete" title="Delete">Delete</button></form>
+      </td>
+    </tr>{% endfor %}</tbody>
+  </table></div>{% endif %}
+</section>{% endif %}
+{% if panel %}</section>{% endif %}
+{% if fullPage %}    </main>
+  </body>
+</html>{% endif %}

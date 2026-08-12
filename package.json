@@ -7,10 +7,10 @@
   "scripts": {
     "dev": "node --env-file=.env --watch --import tsx src/app/server.ts",
     "dev:oidc": "node --env-file=.env.dev --watch --import tsx src/app/server.ts",
-    "build": "tsc -p tsconfig.json && mkdir -p dist/adapters/http/assets && cp src/adapters/http/assets/app.css dist/adapters/http/assets/app.css",
+    "build": "tsc -p tsconfig.json && mkdir -p dist/adapters/http/assets && cp src/adapters/http/assets/app.css dist/adapters/http/assets/app.css && mkdir -p dist/views && cp -R src/views/. dist/views/",
     "start": "node dist/app/server.js",
     "db:migrate": "tsx src/adapters/db/migrate.ts",
-    "arch:check": "tsx scripts/check-architecture.ts",
+    "arch:check": "tsx scripts/check-architecture.ts && tsx scripts/check-template-architecture.ts",
     "requirements:check": "tsx scripts/check-requirement-traceability.ts",
     "evidence:check": "tsx scripts/check-test-evidence.ts",
     "test": "vitest run",
@@ -23,15 +23,18 @@
     "format:check": "biome format ."
   },
   "dependencies": {
+    "@fastify/view": "^12.0.0",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.6.0",
     "htmx.org": "^2.0.10",
+    "nunjucks": "^3.2.4",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.5",
     "@playwright/test": "^1.54.2",
     "@types/node": "^24.1.0",
+    "@types/nunjucks": "^3.2.6",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",

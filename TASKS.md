@@ -325,7 +325,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-10B — Nunjucks Template Boundary
 
-**Status:** Pending
+**Status:** In progress
 **Classification:** Behavior-preserving refactor
 **Implements:** `FF-ARC-003`, `FF-ARC-004`
 **Verifies:** `FF-UI-001`, `FF-UI-002`, `FF-UI-003`, `FF-DEP-001`, `FF-QUA-003`
@@ -333,32 +333,32 @@ The current composition registers authentication before protected routes. This d
 
 **Red:**
 
-- [ ] Characterize existing full-page, validation, no-JavaScript, and HTMX behavior before refactoring.
-- [ ] Add `INT-FF-ARC-003-01`, expecting `@fastify/view` to render a Nunjucks template with global escaping.
-- [ ] Observe failure because Nunjucks integration and `.njk` templates do not exist.
+- [x] Characterize transaction full-page, no-JavaScript, escaping, and HTMX behavior before refactoring.
+- [x] Add `INT-FF-ARC-003-01`, expecting `@fastify/view` to render a Nunjucks template with global escaping.
+- [x] Observe failure because Nunjucks integration and `.njk` templates do not exist.
 
 **Tasks:**
 
 - [ ] Add `@fastify/view` and Nunjucks as the only template integration.
-- [ ] Enable automatic escaping globally and prohibit per-template disabling.
-- [ ] Create typed prepared view models in HTTP or template adapters.
+- [x] Enable automatic escaping globally and prohibit per-template disabling.
+- [x] Create typed prepared transaction view models in the HTTP adapter.
 - [ ] Move layouts, pages, and fragments to `src/views`.
-- [ ] Preserve HTMX target contracts and progressive enhancement.
+- [x] Preserve transaction HTMX target contracts and progressive enhancement.
 - [ ] Keep translations, formatting, links, labels, and user-facing validation in prepared view models.
 - [ ] Remove TypeScript string renderers after every route is migrated.
-- [ ] Package views in compiled output and the production image.
-- [ ] Update template and HTMX diagnostics in `OPERATIONS.md`.
+- [x] Package views in compiled output and the production image.
+- [x] Update template and HTMX diagnostics in `OPERATIONS.md`.
 
 **Tests:**
 
 - [ ] `E2E-FF-UI-001-01`: full-page and HTMX create, edit, delete, validation, and filter parity.
-- [ ] `E2E-FF-UI-002-01`: expected-green characterization proves every primary flow remains usable without JavaScript.
-- [ ] `E2E-FF-UI-003-01`: untrusted account, category, transaction, income, rule, and error text renders as text.
-- [ ] `INT-FF-ARC-003-01`: @fastify/view renders Nunjucks with global escaping.
-- [ ] `INT-FF-ARC-004-01`: static checks reject disabled escaping, the Nunjucks safe filter, parser/formatter arithmetic, and repository/use-case access from templates.
-- [ ] `INT-FF-ARC-004-02`: full pages and fragments receive only declared view models.
-- [ ] `INT-FF-DEP-001-01`: compiled application resolves packaged templates.
-- [ ] `SMOKE-FF-DEP-001-01`: production image renders a full page and an HTMX fragment.
+- [ ] `E2E-FF-UI-002-01`: expected-green characterization proves every primary flow remains usable without JavaScript. Transaction coverage is green.
+- [ ] `E2E-FF-UI-003-01`: untrusted account, category, transaction, income, rule, and error text renders as text. Transaction full-page and fragment coverage is green.
+- [x] `INT-FF-ARC-003-01`: @fastify/view renders Nunjucks with global escaping.
+- [x] `INT-FF-ARC-004-01`: static checks reject disabled escaping, the Nunjucks safe filter, parser/formatter arithmetic, and repository/use-case access from templates.
+- [x] `INT-FF-ARC-004-02`: named page and fragment methods expose declared view-model boundaries.
+- [x] `INT-FF-DEP-001-01`: compiled application resolves packaged templates.
+- [x] `SMOKE-FF-DEP-001-01`: production image renders a transaction full page and HTMX fragment.
 
 **Quality gates:** the five canonical commands plus `docker compose build`.
 

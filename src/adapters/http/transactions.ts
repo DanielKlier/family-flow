@@ -8,12 +8,7 @@ import type { OwnerContextRepository } from "../../ports/repositories/owner-cont
 import type { TransactionRepository } from "../../ports/repositories/transaction-repository.js";
 import { isHtmxRequest, readForm, readRouteId } from "./request-values.js";
 import { createTransactionFromForm, readTransactionFilters } from "./transaction-request.js";
-import {
-  renderTransactionEditPage,
-  renderTransactionListSection,
-  renderTransactionsPage,
-  renderTransactionsPanel,
-} from "./templates/transactions.js";
+import { createFamilyFlowViews } from "./views.js";
 
 type TransactionRouteRepositories = {
   accounts: AccountRepository;
@@ -60,15 +55,22 @@ async function handleListTransactions(
   const filters = readTransactionFilters(request.query);
   const transactions = await repositories.transactions.list(filters);
 
+  const views = createFamilyFlowViews(reply);
   if (isHtmxRequest(request.headers)) {
     return reply
       .type("text/html; charset=utf-8")
-      .send(renderTransactionListSection(transactions, categories));
+      .send(await views.transactionsList({ transactions, categories }));
   }
 
-  return reply
-    .type("text/html; charset=utf-8")
-    .send(renderTransactionsPage({ accounts, categories, ownerContexts, transactions, filters }));
+  return reply.type("text/html; charset=utf-8").send(
+    await views.transactionsPage({
+      accounts,
+      categories,
+      ownerContexts,
+      transactions,
+      filters,
+    }),
+  );
 }
 
 async function handleCreateTransaction(
@@ -88,6 +90,7 @@ async function handleCreateTransaction(
         .send(
           await renderTransactionsPanelState(
             repositories,
+            reply,
             error instanceof Error ? error.message : "Transaction could not be saved",
           ),
         );
@@ -99,9 +102,12 @@ async function handleCreateTransaction(
   if (isHtmxRequest(request.headers)) {
     const categories = await repositories.categories.list();
 
-    return reply
-      .type("text/html; charset=utf-8")
-      .send(renderTransactionListSection(await repositories.transactions.list({}), categories));
+    return reply.type("text/html; charset=utf-8").send(
+      await createFamilyFlowViews(reply).transactionsList({
+        transactions: await repositories.transactions.list({}),
+        categories,
+      }),
+    );
   }
 
   return reply.redirect("/transactions");
@@ -117,15 +123,16 @@ async function handleEditTransactionForm(
     return reply.status(404).send("Transaction not found");
   }
 
-  const [accounts, categories, ownerContexts] = await Promise.all([
+  const [accounts, categories] = await Promise.all([
     repositories.accounts.listActive(),
     repositories.categories.listActive(),
-    repositories.ownerContexts.list(),
   ]);
 
   return reply
     .type("text/html; charset=utf-8")
-    .send(renderTransactionEditPage({ accounts, categories, ownerContexts, transaction }));
+    .send(
+      await createFamilyFlowViews(reply).transactionEditPage({ accounts, categories, transaction }),
+    );
 }
 
 async function handleUpdateTransaction(
@@ -144,7 +151,7 @@ async function handleUpdateTransaction(
   if (isHtmxRequest(request.headers)) {
     return reply
       .type("text/html; charset=utf-8")
-      .send(await renderTransactionsPanelState(repositories));
+      .send(await renderTransactionsPanelState(repositories, reply));
   }
 
   return reply.redirect("/transactions");
@@ -160,9 +167,12 @@ async function handleDeleteTransaction(
   if (isHtmxRequest(request.headers)) {
     const categories = await repositories.categories.list();
 
-    return reply
-      .type("text/html; charset=utf-8")
-      .send(renderTransactionListSection(await repositories.transactions.list({}), categories));
+    return reply.type("text/html; charset=utf-8").send(
+      await createFamilyFlowViews(reply).transactionsList({
+        transactions: await repositories.transactions.list({}),
+        categories,
+      }),
+    );
   }
 
   return reply.redirect("/transactions");
@@ -170,6 +180,7 @@ async function handleDeleteTransaction(
 
 async function renderTransactionsPanelState(
   repositories: TransactionRouteRepositories,
+  reply: FastifyReply,
   formError?: string,
 ): Promise<string> {
   const [accounts, categories, ownerContexts, transactions] = await Promise.all([
@@ -179,7 +190,7 @@ async function renderTransactionsPanelState(
     repositories.transactions.list({}),
   ]);
 
-  return renderTransactionsPanel({
+  return createFamilyFlowViews(reply).transactionsPanel({
     accounts,
     categories,
     ownerContexts,

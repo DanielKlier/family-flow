@@ -7,26 +7,26 @@ import {
   Sha256SessionTokenHasher,
 } from "../adapters/auth/session-cryptography.js";
 import { SystemClock } from "../adapters/clock/system-clock.js";
-import { createSeededInMemoryRepositories } from "../adapters/db/default-repositories.js";
 import { SimpleCsvParser } from "../adapters/csv/simple-csv-parser.js";
+import { createSeededInMemoryRepositories } from "../adapters/db/default-repositories.js";
 import { DrizzleAccountRepository } from "../adapters/db/drizzle-account-repository.js";
 import { DrizzleCategorizationRuleRepository } from "../adapters/db/drizzle-categorization-rule-repository.js";
 import { DrizzleCategoryRepository } from "../adapters/db/drizzle-category-repository.js";
 import { DrizzleImportProfileRepository } from "../adapters/db/drizzle-import-profile-repository.js";
 import { DrizzleIncomeRepository } from "../adapters/db/drizzle-income-repository.js";
-import { DrizzleSessionStore } from "../adapters/db/drizzle-session-store.js";
 import { DrizzleOwnerContextRepository } from "../adapters/db/drizzle-owner-context-repository.js";
+import { DrizzleSessionStore } from "../adapters/db/drizzle-session-store.js";
 import { DrizzleTransactionRepository } from "../adapters/db/drizzle-transaction-repository.js";
 import { InMemorySessionStore } from "../adapters/db/in-memory-session-store.js";
 import { migrate } from "../adapters/db/migrate.js";
 import { createPostgresConnection } from "../adapters/db/postgres.js";
 import {
-  seedImportProfiles,
   type ImportProfileRepositories,
+  seedImportProfiles,
 } from "../adapters/db/seeds/import-profiles.js";
-import { seedMasterData, type MasterDataRepositories } from "../adapters/db/seeds/master-data.js";
+import { type MasterDataRepositories, seedMasterData } from "../adapters/db/seeds/master-data.js";
 import { registerStaticAssets } from "../adapters/http/assets.js";
-import { registerAuth, type AuthRuntimeConfig } from "../adapters/http/auth.js";
+import { type AuthRuntimeConfig, registerAuth } from "../adapters/http/auth.js";
 import { registerCategorizationRuleRoutes } from "../adapters/http/categorization-rules.js";
 import { registerFormParser } from "../adapters/http/form-parser.js";
 import { registerCsvImportRoutes } from "../adapters/http/imports.js";
@@ -34,10 +34,11 @@ import { registerIncomeRoutes } from "../adapters/http/income.js";
 import { registerMasterDataRoutes } from "../adapters/http/master-data.js";
 import { registerRequestLifecycle } from "../adapters/http/request-lifecycle.js";
 import { registerTransactionRoutes } from "../adapters/http/transactions.js";
+import { registerTemplateRenderer } from "../adapters/http/views.js";
 import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-logger.js";
 import { SessionService } from "../core/auth/session-service.js";
-import type { RequestLogger } from "../ports/logging/logger.js";
 import type { CsvParser } from "../ports/csv/csv-parser.js";
+import type { RequestLogger } from "../ports/logging/logger.js";
 import type { CategorizationRuleRepository } from "../ports/repositories/categorization-rule-repository.js";
 import type { IncomeRepository } from "../ports/repositories/income-repository.js";
 import type { TransactionRepository } from "../ports/repositories/transaction-repository.js";
@@ -83,6 +84,7 @@ export function buildServer(options: ServerOptions = {}) {
 
   registerFormParser(server);
   registerRequestLifecycle(server, logger);
+  registerTemplateRenderer(server);
   registerAuth(server, auth, sessions);
 
   registerStaticAssets(server);
