@@ -6,6 +6,9 @@ const imageName = "family-flow-phase-10b-smoke";
 const networkName = "family-flow-phase-10b-smoke-network";
 const postgresName = "family-flow-phase-10b-smoke-postgres";
 const appName = "family-flow-phase-10b-smoke-app";
+const smokeTimeoutMs = 120_000;
+
+test.setTimeout(smokeTimeoutMs);
 
 function docker(arguments_: string[]): Buffer;
 function docker(arguments_: string[], encoding: "utf8"): string;
@@ -37,7 +40,23 @@ async function waitForApp(baseUrl: string): Promise<void> {
   throw new Error("production image did not start; inspect its container logs");
 }
 
+function cleanupSmokeResources(): void {
+  for (const resource of [appName, postgresName]) {
+    try {
+      docker(["rm", "--force", resource]);
+    } catch {
+      // Missing resources are already clean.
+    }
+  }
+  try {
+    docker(["network", "rm", networkName]);
+  } catch {
+    // A missing network is already clean.
+  }
+}
+
 test("SMOKE-FF-DEP-001-01 production image packages every template family and serves full and HTMX responses", async () => {
+  cleanupSmokeResources();
   docker(["build", "--tag", imageName, "."]);
 
   const packagedTemplates = docker(
@@ -161,17 +180,6 @@ test("SMOKE-FF-DEP-001-01 production image packages every template family and se
     expect(escapedBody).toContain("&lt;script&gt;globalThis.familyFlowXss=true&lt;/script&gt;");
     expect(escapedBody).not.toContain("<script>globalThis.familyFlowXss=true</script>");
   } finally {
-    for (const resource of [appName, postgresName]) {
-      try {
-        docker(["rm", "--force", resource]);
-      } catch {
-        // Cleanup must not hide the smoke assertion failure.
-      }
-    }
-    try {
-      docker(["network", "rm", networkName]);
-    } catch {
-      // Cleanup must not hide the smoke assertion failure.
-    }
+    cleanupSmokeResources();
   }
 });
