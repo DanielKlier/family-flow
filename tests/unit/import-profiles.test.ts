@@ -22,10 +22,13 @@ describe("import profiles", () => {
       kind: "custom",
       delimiter: ";",
       encoding: "utf8",
+      dateFormat: "DD.MM.YYYY",
+      decimalFormat: "comma-decimal",
       dateColumn: "Date",
       amountColumn: "Amount",
       descriptionColumn: "Description",
       payeeColumn: "Payee",
+      purposeColumn: null,
       categoryColumn: null,
     });
   });

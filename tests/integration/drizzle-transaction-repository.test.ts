@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-
+import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
+import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
+import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
 import { DrizzleTransactionRepository } from "../../src/adapters/db/drizzle-transaction-repository.js";
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
-import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
-import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
-import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
 import { expectTransactionFilterContract } from "../support/transaction-repository-contract.js";
 import { aTransaction } from "../support/transactions.js";
 
@@ -40,6 +39,8 @@ describe("Drizzle transaction repository", () => {
           amountCents: -120000,
           description: "Drizzle rent",
           payee: "Landlord",
+          purpose: "Imported purpose",
+          importHash: "v2:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
           status: "planned",
           fixedCost: true,
         });
@@ -53,6 +54,8 @@ describe("Drizzle transaction repository", () => {
         await transactions.save({ ...rent, status: "booked", description: "Booked rent" });
         await expect(transactions.get(rent.id)).resolves.toMatchObject({
           description: "Booked rent",
+          purpose: "Imported purpose",
+          importHash: "v2:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
           status: "booked",
         });
 

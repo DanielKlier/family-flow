@@ -9,6 +9,7 @@ export type Transaction = {
   amountCents: number;
   description: string;
   payee: string | null;
+  purpose: string | null;
   source: TransactionSource;
   status: TransactionStatus;
   fixedCost: boolean;
@@ -16,8 +17,9 @@ export type Transaction = {
   importHash: string | null;
 };
 
-export type TransactionInput = Omit<Transaction, "importHash"> & {
+export type TransactionInput = Omit<Transaction, "importHash" | "purpose"> & {
   importHash?: string | null;
+  purpose?: string | null;
 };
 
 export type ManualExpenseInput = {
@@ -55,6 +57,7 @@ export function createTransaction(input: TransactionInput): Transaction {
   const categoryId = input.categoryId.trim();
   const description = input.description.trim();
   const payee = normalizeOptionalText(input.payee);
+  const purpose = normalizeOptionalText(input.purpose);
   const note = normalizeOptionalText(input.note);
   const importHash = normalizeOptionalText(input.importHash ?? null);
 
@@ -70,7 +73,10 @@ export function createTransaction(input: TransactionInput): Transaction {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
     throw new Error("Transaction date must use YYYY-MM-DD");
   }
-  if (!Number.isInteger(input.amountCents) || input.amountCents >= 0) {
+  if (!Number.isSafeInteger(input.amountCents)) {
+    throw new Error("Transaction amount must be a negative safe integer expense");
+  }
+  if (input.amountCents >= 0) {
     throw new Error("Transaction amount must be a negative expense");
   }
   if (description === "") {
@@ -91,6 +97,7 @@ export function createTransaction(input: TransactionInput): Transaction {
     amountCents: input.amountCents,
     description,
     payee,
+    purpose,
     source: input.source,
     status: input.status,
     fixedCost: input.fixedCost,

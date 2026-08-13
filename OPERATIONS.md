@@ -318,20 +318,28 @@ Authenticated users can import expense CSV files at `/imports/csv`.
 Supported import flow:
 
 - Select an import account.
-- Select CSV encoding, currently `UTF-8` or `Latin1`.
-- Map date, amount, description, optional payee, and optional category columns.
+- Select comma, semicolon, or tab delimiter; `UTF-8` or `Latin1` encoding; one of the three date formats; and comma- or dot-decimal amounts.
+- Map date, amount, description, and optional payee, purpose, and category columns.
 - Save reusable custom import profiles without bank-specific default data.
-- Preview normalized rows before writing transactions.
-- Confirm the preview to store non-duplicate expenses.
+- Preview normalized rows before writing transactions. Importable rows are kept separate from ignored non-expenses and invalid required values.
+- Confirm the preview with the opaque server-generated batch ID to store non-duplicate expenses. Browser-submitted transaction values are never used for confirmation.
 
 Operational notes:
 
-- Only expense rows are imported. Zero amounts and positive amounts are ignored by the importer.
-- Supported date formats are `DD.MM.YY`, `DD.MM.YYYY`, and `YYYY-MM-DD`.
-- Duplicate detection uses account, date, amount, normalized description, and normalized payee.
+- Only expense rows are imported. Zero amounts and positive amounts receive the deterministic `amount-not-negative` ignored outcome. Invalid dates, amounts, and missing descriptions remain line-aware invalid outcomes and cannot be confirmed.
+- Supported date formats are `DD.MM.YY`, `DD.MM.YYYY`, and `YYYY-MM-DD`; dates must also exist in the Gregorian calendar.
+- Comma-decimal amounts allow optional dot grouping, and dot-decimal amounts allow optional comma grouping. Grouped integer segments after the first must contain exactly three digits. Conversion to minor units is exact; values outside JavaScript's safe-integer range are line-aware `invalid-amount` outcomes.
+- Preview batches are persisted in PostgreSQL with immutable profile/outcome snapshots, bound to the authenticated user and selected account, expire after 30 minutes, and are single-use. Every stored outcome retains its CSV line and canonical reason (or `null` for importable rows), and the complete snapshot shape is validated when loaded. Confirmation consumes the batch and inserts every accepted transaction in one database transaction; a failure rolls back both operations and permits a safe retry.
+- New duplicate identities use `v2:` SHA-256 hashes with NFKC normalization and length-framed fields. Duplicate lookup also recognizes historical unprefixed v1 hashes; operators must not rewrite existing hashes manually.
+- Duplicate detection uses account, date, amount, normalized description, and normalized payee. PostgreSQL enforces account-scoped import-hash uniqueness, including during concurrent confirmations.
+- Multipart requests may be at most 6 MiB, the extracted CSV at most 5 MiB, and files at most 10,000 data rows. Each exact limit is accepted. Binary/NUL data, malformed UTF-8 or quotes, inconsistent columns, missing mapped headers, and unsupported profile options reject the whole file.
 - Category matching uses exact normalized names when a category column is mapped; unmatched rows are checked against categorization rules before falling back to `Sonstiges`.
 - If an import fails, reproduce the problem with a minimized CSV containing only representative rows. Do not log or paste complete bank exports.
 - Use the visible `X-Request-Id` response header to find the matching request log entry in `docker compose logs app`.
+
+Migration `0012_csv_security_atomicity.sql` first validates all historical import-profile options and required mappings. Unknown delimiters, encodings, date/decimal formats, kinds, or blank required fields abort the migration with every affected profile ID, this runbook reference, and remediation instructions. Correct the listed profile records deliberately and rerun `pnpm db:migrate`; the failed migration transaction leaves them unchanged.
+
+The same migration validates every historical non-null import hash before creating the unique index. It aborts on anything outside lowercase 64-character v1 or `v2:` grammar, or on an account/hash collision, and reports only account, hash, and transaction identifiers. On abort: keep the database backup, inspect those identifiers, correct the source records deliberately, and rerun `pnpm db:migrate`. The migration never rewrites or deletes hashes and its transaction leaves schema and records unchanged on failure.
 
 ## Log Analysis
 

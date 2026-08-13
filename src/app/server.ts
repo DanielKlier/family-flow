@@ -12,11 +12,13 @@ import { createSeededInMemoryRepositories } from "../adapters/db/default-reposit
 import { DrizzleAccountRepository } from "../adapters/db/drizzle-account-repository.js";
 import { DrizzleCategorizationRuleRepository } from "../adapters/db/drizzle-categorization-rule-repository.js";
 import { DrizzleCategoryRepository } from "../adapters/db/drizzle-category-repository.js";
+import { DrizzleImportPreviewBatchRepository } from "../adapters/db/drizzle-import-preview-batch-repository.js";
 import { DrizzleImportProfileRepository } from "../adapters/db/drizzle-import-profile-repository.js";
 import { DrizzleIncomeRepository } from "../adapters/db/drizzle-income-repository.js";
 import { DrizzleOwnerContextRepository } from "../adapters/db/drizzle-owner-context-repository.js";
 import { DrizzleSessionStore } from "../adapters/db/drizzle-session-store.js";
 import { DrizzleTransactionRepository } from "../adapters/db/drizzle-transaction-repository.js";
+import { InMemoryImportPreviewBatchRepository } from "../adapters/db/in-memory-import-preview-batch-repository.js";
 import { InMemorySessionStore } from "../adapters/db/in-memory-session-store.js";
 import { migrate } from "../adapters/db/migrate.js";
 import { createPostgresConnection } from "../adapters/db/postgres.js";
@@ -37,9 +39,11 @@ import { registerTransactionRoutes } from "../adapters/http/transactions.js";
 import { registerTemplateRenderer } from "../adapters/http/views.js";
 import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-logger.js";
 import { SessionService } from "../core/auth/session-service.js";
+import type { Clock } from "../ports/clock/clock.js";
 import type { CsvParser } from "../ports/csv/csv-parser.js";
 import type { RequestLogger } from "../ports/logging/logger.js";
 import type { CategorizationRuleRepository } from "../ports/repositories/categorization-rule-repository.js";
+import type { ImportPreviewBatchRepository } from "../ports/repositories/import-preview-batch-repository.js";
 import type { IncomeRepository } from "../ports/repositories/income-repository.js";
 import type { TransactionRepository } from "../ports/repositories/transaction-repository.js";
 import { loadConfig } from "./config.js";
@@ -57,15 +61,22 @@ type ServerOptions = {
   csvParser?: CsvParser;
   auth?: AuthRuntimeConfig;
   sessions?: SessionService;
+  importPreviewBatches?: ImportPreviewBatchRepository;
+  clock?: Clock;
 };
 
 export function buildServer(options: ServerOptions = {}) {
   const server = Fastify({
     logger: false,
+    bodyLimit: 6 * 1024 * 1024,
   });
   const logger = options.logger ?? new HumanReadableRequestLogger();
   const repositories = options.repositories ?? createSeededInMemoryRepositories();
   const csvParser = options.csvParser ?? new SimpleCsvParser();
+  const clock = options.clock ?? new SystemClock();
+  const importPreviewBatches =
+    options.importPreviewBatches ??
+    new InMemoryImportPreviewBatchRepository(repositories.transactions);
   const auth =
     options.auth ??
     ({
@@ -92,7 +103,7 @@ export function buildServer(options: ServerOptions = {}) {
   registerMasterDataRoutes(server, repositories);
   registerTransactionRoutes(server, repositories);
   registerCategorizationRuleRoutes(server, repositories);
-  registerCsvImportRoutes(server, repositories, csvParser);
+  registerCsvImportRoutes(server, { ...repositories, importPreviewBatches }, csvParser, clock);
   registerIncomeRoutes(server, repositories);
 
   return server;
@@ -132,6 +143,7 @@ async function main() {
       baseUrl: config.baseUrl,
     },
     sessions,
+    importPreviewBatches: new DrizzleImportPreviewBatchRepository(connection.db),
   });
 
   server.addHook("onClose", async () => {

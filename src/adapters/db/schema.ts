@@ -1,7 +1,9 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -44,36 +46,61 @@ export const categories = pgTable("categories", {
   active: boolean("active").notNull().default(true),
 });
 
-export const transactions = pgTable("transactions", {
-  id: text("id").primaryKey(),
-  accountId: text("account_id")
-    .notNull()
-    .references(() => accounts.id),
-  categoryId: text("category_id")
-    .notNull()
-    .references(() => categories.id),
-  date: text("date").notNull(),
-  amountCents: integer("amount_cents").notNull(),
-  description: text("description").notNull(),
-  payee: text("payee"),
-  source: text("source").notNull(),
-  status: text("status").notNull(),
-  fixedCost: boolean("fixed_cost").notNull().default(false),
-  note: text("note"),
-  importHash: text("import_hash"),
-});
+export const transactions = pgTable(
+  "transactions",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => accounts.id),
+    categoryId: text("category_id")
+      .notNull()
+      .references(() => categories.id),
+    date: text("date").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    description: text("description").notNull(),
+    payee: text("payee"),
+    purpose: text("purpose"),
+    source: text("source").notNull(),
+    status: text("status").notNull(),
+    fixedCost: boolean("fixed_cost").notNull().default(false),
+    note: text("note"),
+    importHash: text("import_hash"),
+  },
+  (table) => [
+    uniqueIndex("transactions_account_import_hash_unique_idx")
+      .on(table.accountId, table.importHash)
+      .where(sql`${table.importHash} is not null`),
+  ],
+);
 
 export const importProfiles = pgTable("import_profiles", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   kind: text("kind").notNull().$type<"custom">(),
-  delimiter: text("delimiter").notNull(),
+  delimiter: text("delimiter").notNull().$type<"," | ";" | "\t">(),
   encoding: text("encoding").notNull().$type<"utf8" | "latin1">(),
+  dateFormat: text("date_format").notNull().$type<"DD.MM.YY" | "DD.MM.YYYY" | "YYYY-MM-DD">(),
+  decimalFormat: text("decimal_format").notNull().$type<"comma-decimal" | "dot-decimal">(),
   dateColumn: text("date_column").notNull(),
   amountColumn: text("amount_column").notNull(),
   descriptionColumn: text("description_column").notNull(),
   payeeColumn: text("payee_column"),
+  purposeColumn: text("purpose_column"),
   categoryColumn: text("category_column"),
+});
+
+export const importPreviewBatches = pgTable("import_preview_batches", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  accountId: text("account_id")
+    .notNull()
+    .references(() => accounts.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  consumedAt: timestamp("consumed_at", { withTimezone: true }),
+  profileSnapshot: jsonb("profile_snapshot").notNull(),
+  outcomeSnapshot: jsonb("outcome_snapshot").notNull(),
 });
 
 export const categorizationRules = pgTable("categorization_rules", {

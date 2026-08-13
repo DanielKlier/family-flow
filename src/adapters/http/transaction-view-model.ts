@@ -40,6 +40,7 @@ const transactionText = {
   date: "Date",
   description: "Description",
   payee: "Payee",
+  purpose: "Purpose",
   amount: "Amount",
   status: "Transaction status",
   fixedCost: "Fixed cost",
@@ -83,6 +84,7 @@ export function prepareTransactionFormViewModel(input: {
     date: transaction?.date ?? "",
     description: transaction?.description ?? "",
     payee: transaction?.payee ?? "",
+    purpose: transaction?.purpose ?? "",
     amount: transaction === undefined ? "" : formatExpenseAmount(transaction.amountCents),
     statuses: [
       { value: "booked", label: "booked", selected: transaction?.status === "booked" },

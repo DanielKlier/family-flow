@@ -6,6 +6,7 @@ export type CsvTransactionRowInput = {
   amount: string;
   description: string;
   payee?: string | null;
+  purpose?: string | null;
 };
 
 export type NormalizedCsvTransactionRow = {
@@ -14,11 +15,12 @@ export type NormalizedCsvTransactionRow = {
   amountCents: number;
   description: string;
   payee: string | null;
+  purpose: string | null;
 };
 
 export type ImportDuplicateKey = Pick<
   NormalizedCsvTransactionRow,
-  "accountId" | "date" | "amountCents" | "description" | "payee"
+  "accountId" | "date" | "amountCents" | "description" | "payee" | "purpose"
 >;
 
 export type CsvTransactionImportRow = NormalizedCsvTransactionRow & {
@@ -42,19 +44,31 @@ export function normalizeCsvTransactionRow(
     amountCents: parseCsvAmountCents(input.amount),
     description,
     payee: normalizeOptionalText(input.payee),
+    purpose: normalizeOptionalText(input.purpose),
   };
 }
 
 export function createImportHash(input: ImportDuplicateKey): string {
-  const key = [
+  const framedKey = importIdentityFields(input)
+    .map((field) => `${Buffer.byteLength(field, "utf8")}:${field}`)
+    .join("");
+
+  return `v2:${createHash("sha256").update(framedKey).digest("hex")}`;
+}
+
+export function createLegacyImportHash(input: ImportDuplicateKey): string {
+  const legacyKey = [
     input.accountId.trim(),
     input.date,
     input.amountCents.toString(),
-    normalizeImportText(input.description),
-    normalizeImportText(input.payee ?? ""),
+    normalizeLegacyImportText(input.description),
+    normalizeLegacyImportText(input.payee ?? ""),
   ].join("|");
+  return createHash("sha256").update(legacyKey).digest("hex");
+}
 
-  return createHash("sha256").update(key).digest("hex");
+export function createImportHashCandidates(input: ImportDuplicateKey): ReadonlySet<string> {
+  return new Set([createImportHash(input), createLegacyImportHash(input)]);
 }
 
 export function detectDuplicateImportRows(
@@ -65,7 +79,10 @@ export function detectDuplicateImportRows(
 
   return rows.map((row) => {
     const importHash = createImportHash(row);
-    const duplicate = existingImportHashes.has(importHash) || seenImportHashes.has(importHash);
+    const candidates = createImportHashCandidates(row);
+    const duplicate =
+      [...candidates].some((candidate) => existingImportHashes.has(candidate)) ||
+      seenImportHashes.has(importHash);
     seenImportHashes.add(importHash);
 
     return {
@@ -83,38 +100,47 @@ function normalizeCsvDate(value: string): string {
 
   if (germanDate !== null) {
     const [, day, month, year] = germanDate;
-    return `${year}-${month}-${day}`;
+    return requireGregorianDate(`${year}-${month}-${day}`);
   }
 
   if (shortGermanDate !== null) {
     const [, day, month, year] = shortGermanDate;
-    return `20${year}-${month}-${day}`;
+    return requireGregorianDate(`20${year}-${month}-${day}`);
   }
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return trimmed;
+    return requireGregorianDate(trimmed);
   }
 
   throw new Error("CSV date must use DD.MM.YY, DD.MM.YYYY, or YYYY-MM-DD");
 }
 
 function parseCsvAmountCents(value: string): number {
-  const compact = value.trim().replaceAll(" ", "");
-  const normalized = compact.includes(",")
-    ? compact.replaceAll(".", "").replace(",", ".")
-    : compact;
+  const compact = value.trim();
+  const normalized = normalizeAmountDecimal(compact);
+  const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(normalized);
+  if (match === null) throw new Error("CSV amount must be a decimal value");
 
-  if (!/^-?\d+(\.\d{1,2})?$/.test(normalized)) {
+  const [, sign, whole, fraction = ""] = match;
+  const magnitude = BigInt(whole ?? "0") * 100n + BigInt(fraction.padEnd(2, "0"));
+  const signedCents = sign === "-" ? -magnitude : magnitude;
+  if (
+    signedCents > BigInt(Number.MAX_SAFE_INTEGER) ||
+    signedCents < BigInt(Number.MIN_SAFE_INTEGER)
+  ) {
+    throw new Error("CSV amount exceeds the safe minor-unit range");
+  }
+  if (signedCents === 0n) throw new Error("CSV amount must not be zero");
+
+  return Number(signedCents);
+}
+
+function normalizeAmountDecimal(compact: string): string {
+  if (!compact.includes(",")) return compact;
+  if (!/^-?(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(compact)) {
     throw new Error("CSV amount must be a decimal value");
   }
-
-  const amountCents = Math.round(Number(normalized) * 100);
-
-  if (amountCents === 0) {
-    throw new Error("CSV amount must not be zero");
-  }
-
-  return amountCents;
+  return compact.replaceAll(".", "").replace(",", ".");
 }
 
 function normalizeRequiredText(value: string, message: string): string {
@@ -140,6 +166,34 @@ function normalizeDisplayText(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
+function importIdentityFields(input: ImportDuplicateKey): string[] {
+  return [
+    input.accountId.trim().normalize("NFKC"),
+    input.date.normalize("NFKC"),
+    input.amountCents.toString(),
+    normalizeImportText(input.description),
+    normalizeImportText(input.payee ?? ""),
+  ];
+}
+
 function normalizeImportText(value: string): string {
+  return normalizeDisplayText(value).normalize("NFKC").toLocaleLowerCase("de-DE");
+}
+
+function normalizeLegacyImportText(value: string): string {
   return normalizeDisplayText(value).toLocaleLowerCase("de-DE");
+}
+
+function requireGregorianDate(value: string): string {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year ?? 0, (month ?? 0) - 1, day ?? 0));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() + 1 !== month ||
+    date.getUTCDate() !== day
+  ) {
+    throw new Error("CSV date is invalid");
+  }
+
+  return value;
 }

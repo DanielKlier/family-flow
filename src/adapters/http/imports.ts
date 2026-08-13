@@ -3,29 +3,40 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import {
-  findCategorizationMatch,
   type CategorizationRule,
+  findCategorizationMatch,
 } from "../../core/categorization/categorization-rule.js";
-import { detectDuplicateImportRows } from "../../core/imports/csv-import.js";
-import type { CsvTransactionImportRow } from "../../core/imports/csv-import.js";
-import { createTransaction } from "../../core/transactions/transaction.js";
-import type { CsvParser } from "../../ports/csv/csv-parser.js";
-import type { ParsedCsvTransactionRow } from "../../ports/csv/csv-parser.js";
+import {
+  confirmCsvImportBatch,
+  type StoredImportOutcome,
+} from "../../core/imports/confirm-csv-import.js";
+import {
+  type CsvTransactionImportRow,
+  detectDuplicateImportRows,
+} from "../../core/imports/csv-import.js";
+import type { UserContext } from "../../ports/auth/user-context.js";
+import type { Clock } from "../../ports/clock/clock.js";
+import type {
+  CsvParser,
+  CsvRowOutcome,
+  ParsedCsvTransactionRow,
+} from "../../ports/csv/csv-parser.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
-import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
+import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
+import type { ImportPreviewBatchRepository } from "../../ports/repositories/import-preview-batch-repository.js";
 import type { ImportProfileRepository } from "../../ports/repositories/import-profile-repository.js";
 import type { TransactionRepository } from "../../ports/repositories/transaction-repository.js";
+import type { CsvImportPreviewRow } from "./csv-import-view-model.js";
 import {
   createImportProfileFromForm,
   createPreviewImportProfile,
-  parsePreviewRows,
   readImportAccountId,
+  readImportBatchId,
   readMultipartForm,
   readRequiredFile,
 } from "./import-request.js";
 import { readForm, readOptionalQueryValue } from "./request-values.js";
-import type { CsvImportPreviewRow } from "./csv-import-view-model.js";
 import { createFamilyFlowViews } from "./views.js";
 
 type CsvImportRouteRepositories = {
@@ -33,6 +44,7 @@ type CsvImportRouteRepositories = {
   categories: CategoryRepository;
   categorizationRules: CategorizationRuleRepository;
   importProfiles: ImportProfileRepository;
+  importPreviewBatches: ImportPreviewBatchRepository;
   transactions: TransactionRepository;
 };
 
@@ -40,42 +52,41 @@ export function registerCsvImportRoutes(
   server: FastifyInstance,
   repositories: CsvImportRouteRepositories,
   csvParser: CsvParser,
+  clock: Clock,
 ): void {
   server.get("/imports/csv", async (request, reply) => {
-    const [accounts, categories, importProfiles] = await Promise.all([
-      repositories.accounts.list(),
-      repositories.categories.list(),
-      repositories.importProfiles.list(),
-    ]);
+    const [accounts, categories, importProfiles] = await readPageData(repositories);
     const query = typeof request.query === "object" && request.query !== null ? request.query : {};
     const selectedProfileId = readOptionalQueryValue(query, "profileId");
-    const profileSaved = readOptionalQueryValue(query, "saved") === "1";
     const selectedProfile =
       selectedProfileId === undefined
         ? undefined
         : await repositories.importProfiles.get(selectedProfileId);
-
     return reply.type("text/html; charset=utf-8").send(
       await createFamilyFlowViews(reply).csvImportPage({
         accounts,
         categories,
         importProfiles,
         selectedProfile: selectedProfile ?? undefined,
-        profileSaved,
+        profileSaved: readOptionalQueryValue(query, "saved") === "1",
       }),
     );
   });
 
-  server.post("/imports/csv/profiles", async (request, reply) => {
-    return handleSaveImportProfile(repositories, request, reply);
-  });
-
-  server.post("/imports/csv/preview", async (request, reply) => {
-    return handleCsvImportPreview(repositories, csvParser, request, reply);
-  });
-
+  server.post("/imports/csv/profiles", async (request, reply) =>
+    handleSaveImportProfile(repositories, request, reply),
+  );
+  server.post("/imports/csv/preview", async (request, reply) =>
+    handleCsvImportPreview(repositories, csvParser, clock, request, reply),
+  );
   server.post("/imports/csv/confirm", async (request, reply) => {
-    return handleCsvImportConfirm(repositories, request, reply);
+    await confirmCsvImportBatch({
+      batchId: readImportBatchId(readForm(request.body)),
+      userId: requireUserId(request),
+      now: clock.now(),
+      persistence: repositories.importPreviewBatches,
+    });
+    return reply.redirect("/transactions");
   });
 }
 
@@ -84,18 +95,10 @@ async function handleSaveImportProfile(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const [accounts, categories, importProfiles] = await Promise.all([
-    repositories.accounts.list(),
-    repositories.categories.list(),
-    repositories.importProfiles.list(),
-  ]);
-
+  const [accounts, categories, importProfiles] = await readPageData(repositories);
   try {
-    const form = readForm(request.body);
-    const profile = createImportProfileFromForm(form, randomUUID());
-
+    const profile = createImportProfileFromForm(readForm(request.body), randomUUID());
     await repositories.importProfiles.save(profile);
-
     return reply.redirect(`/imports/csv?profileId=${encodeURIComponent(profile.id)}&saved=1`);
   } catch (error: unknown) {
     return reply
@@ -115,35 +118,42 @@ async function handleSaveImportProfile(
 async function handleCsvImportPreview(
   repositories: CsvImportRouteRepositories,
   csvParser: CsvParser,
+  clock: Clock,
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const [accounts, categories, importProfiles] = await Promise.all([
-    repositories.accounts.list(),
-    repositories.categories.list(),
-    repositories.importProfiles.list(),
-  ]);
-
+  const [accounts, categories, importProfiles] = await readPageData(repositories);
   try {
     const form = readMultipartForm(request.body);
     const profile = createPreviewImportProfile(form);
-    const rows = await csvParser.parse(readRequiredFile(form, "csvFile"), {
-      accountId: readImportAccountId(form),
+    const accountId = readImportAccountId(form);
+    const parsedOutcomes = await csvParser.parse(readRequiredFile(form, "csvFile"), {
+      accountId,
       profile,
     });
-    const previewRows = createPreviewRows({
-      parsedRows: rows,
-      importRows: detectDuplicateImportRows(rows, await readExistingImportHashes(repositories)),
+    const { previewRows, storedOutcomes } = await prepareOutcomes(
+      parsedOutcomes,
       categories,
-      rules: await repositories.categorizationRules.list(),
+      repositories,
+    );
+    const createdAt = clock.now();
+    const batchId = randomUUID();
+    await repositories.importPreviewBatches.save({
+      id: batchId,
+      userId: requireUserId(request),
+      accountId,
+      createdAt,
+      expiresAt: new Date(createdAt.getTime() + 30 * 60 * 1_000),
+      profileSnapshot: profile,
+      outcomes: storedOutcomes,
     });
-
     return reply.type("text/html; charset=utf-8").send(
       await createFamilyFlowViews(reply).csvImportPage({
         accounts,
         categories,
         importProfiles,
         previewRows,
+        batchId,
       }),
     );
   } catch (error: unknown) {
@@ -161,107 +171,103 @@ async function handleCsvImportPreview(
   }
 }
 
-async function handleCsvImportConfirm(
+async function prepareOutcomes(
+  outcomes: CsvRowOutcome[],
+  categories: { id: string; name: string }[],
   repositories: CsvImportRouteRepositories,
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  const form = readForm(request.body);
-  const rows = parsePreviewRows(form.rowsJson);
-  const existingImportHashes = await readExistingImportHashes(repositories);
+): Promise<{ previewRows: CsvImportPreviewRow[]; storedOutcomes: StoredImportOutcome[] }> {
+  const parsedRows = outcomes.flatMap((outcome) =>
+    outcome.outcome === "importable" ? [outcome.row] : [],
+  );
+  const importRows = detectDuplicateImportRows(
+    parsedRows,
+    await readExistingImportHashes(repositories),
+  );
+  const rules = await repositories.categorizationRules.list();
+  let importableIndex = 0;
+  const previewRows: CsvImportPreviewRow[] = [];
+  const storedOutcomes: StoredImportOutcome[] = [];
 
-  for (const row of rows) {
-    if (row.duplicate || existingImportHashes.has(row.importHash)) {
+  for (const outcome of outcomes) {
+    if (outcome.outcome !== "importable") {
+      previewRows.push(outcome);
+      storedOutcomes.push(outcome);
       continue;
     }
-
-    await repositories.transactions.save(
-      createTransaction({
-        id: randomUUID(),
-        accountId: row.accountId,
-        categoryId: row.categoryId,
-        date: row.date,
-        amountCents: row.amountCents,
-        description: row.description,
-        payee: row.payee,
-        source: "csv",
-        status: "booked",
-        fixedCost: row.fixedCost,
-        note: null,
-        importHash: row.importHash,
-      }),
-    );
-    existingImportHashes.add(row.importHash);
-  }
-
-  return reply.redirect("/transactions");
-}
-
-function createPreviewRows(input: {
-  parsedRows: ParsedCsvTransactionRow[];
-  importRows: CsvTransactionImportRow[];
-  categories: { id: string; name: string }[];
-  rules: CategorizationRule[];
-}): CsvImportPreviewRow[] {
-  return input.importRows.map((row, index) => {
-    const parsedRow = input.parsedRows[index];
-    const matchedCategory = matchCategory(
-      input.categories,
-      input.rules,
-      row,
-      parsedRow?.categoryName ?? null,
-    );
-
-    return {
+    const row = importRows[importableIndex++];
+    if (row === undefined) throw new Error("CSV preview outcome is inconsistent");
+    const category = matchCategory(categories, rules, row, outcome.row);
+    const preview = {
       ...row,
-      categoryId: matchedCategory.id,
-      categoryName: matchedCategory.name,
-      fixedCost: matchedCategory.fixedCost,
+      line: outcome.line,
+      categoryId: category.id,
+      categoryName: category.name,
+      fixedCost: category.fixedCost,
     };
-  });
+    previewRows.push({
+      ...preview,
+      outcome: row.duplicate ? "duplicate" : "importable",
+      reason: row.duplicate ? "already-imported" : null,
+    });
+    storedOutcomes.push(
+      row.duplicate
+        ? { line: outcome.line, outcome: "duplicate", reason: "already-imported" }
+        : {
+            line: outcome.line,
+            outcome: "importable",
+            reason: null,
+            transaction: {
+              id: randomUUID(),
+              ...row,
+              categoryId: category.id,
+              fixedCost: category.fixedCost,
+            },
+          },
+    );
+  }
+  return { previewRows, storedOutcomes };
 }
 
 function matchCategory(
   categories: { id: string; name: string }[],
   rules: CategorizationRule[],
   row: CsvTransactionImportRow,
-  csvCategoryName: string | null,
+  parsedRow: ParsedCsvTransactionRow,
 ): { id: string; name: string; fixedCost: boolean } {
-  const matchedRule = findCategorizationMatch(rules, {
-    accountId: row.accountId,
-    description: row.description,
-    payee: row.payee,
-  });
-  const normalizedCsvCategoryName = normalizeMatchText(csvCategoryName ?? "");
-  const matchedCategory = categories.find(
-    (category) => normalizeMatchText(category.name) === normalizedCsvCategoryName,
-  );
-  if (matchedCategory !== undefined) {
-    return { ...matchedCategory, fixedCost: matchedRule?.fixedCost ?? false };
-  }
-
+  const matchedRule = findCategorizationMatch(rules, row);
+  const csvName = normalizeMatchText(parsedRow.categoryName ?? "");
+  const csvCategory = categories.find((category) => normalizeMatchText(category.name) === csvName);
+  if (csvCategory !== undefined)
+    return { ...csvCategory, fixedCost: matchedRule?.fixedCost ?? false };
   const ruleCategory = categories.find((category) => category.id === matchedRule?.categoryId);
-  if (ruleCategory !== undefined) {
+  if (ruleCategory !== undefined)
     return { ...ruleCategory, fixedCost: matchedRule?.fixedCost ?? false };
-  }
-
-  const fallbackCategory = categories.find((category) => category.id === "category-other") ??
+  const fallback = categories.find((category) => category.id === "category-other") ??
     categories[0] ?? { id: "category-other", name: "Other" };
-
-  return { ...fallbackCategory, fixedCost: false };
+  return { ...fallback, fixedCost: false };
 }
 
 function normalizeMatchText(value: string): string {
   return value.trim().replace(/\s+/g, " ").toLocaleLowerCase("de-DE");
 }
 
+function requireUserId(request: FastifyRequest): string {
+  const user = (request as FastifyRequest & { userContext?: UserContext }).userContext;
+  if (user === undefined) throw new Error("Authenticated user is required");
+  return user.id;
+}
+
 async function readExistingImportHashes(
   repositories: CsvImportRouteRepositories,
 ): Promise<Set<string>> {
-  const transactions = await repositories.transactions.list({});
-  return new Set(
-    transactions
-      .map((transaction) => transaction.importHash)
-      .filter((importHash): importHash is string => importHash !== null),
-  );
+  const all = await repositories.transactions.list({});
+  return new Set(all.map((row) => row.importHash).filter((hash): hash is string => hash !== null));
+}
+
+async function readPageData(repositories: CsvImportRouteRepositories) {
+  return Promise.all([
+    repositories.accounts.list(),
+    repositories.categories.list(),
+    repositories.importProfiles.list(),
+  ]);
 }

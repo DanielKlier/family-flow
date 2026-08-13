@@ -368,7 +368,8 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-10C — CSV Security And Atomicity
 
-**Status:** Pending
+**Status:** Completed
+**Evidence refs:** `2110f62 feat: strengthen csv import identities`, `a9dac26 fix: trust server csv import previews`, `b0dfbaa fix: harden csv import atomicity`, `e4a51ae fix: validate csv amount boundaries`, `4f0edd1 fix: preflight historical import profiles`, and `1717db6 fix: persist canonical csv outcomes`.
 **Classification:** Behavior change
 **Implements:** `FF-TXN-001`, `FF-TXN-004`, `FF-CSV-001`, `FF-CSV-002`, `FF-CSV-003`, `FF-CSV-004`, `FF-CSV-005`, `FF-CSV-006`, `FF-CSV-007`, `FF-CSV-008`, `FF-CSV-009`, `FF-CSV-010`, `FF-CSV-011`
 **Verifies:** `FF-CSV-005`, `FF-OBS-001`, `FF-OBS-002`, `FF-OBS-003`, `FF-OBS-004`, `FF-QUA-003`
@@ -376,55 +377,57 @@ The current composition registers authentication before protected routes. This d
 
 **Red:**
 
-- [ ] Add and independently observe `E2E-FF-CSV-001-01`, `E2E-FF-CSV-001-02`, `E2E-FF-CSV-002-01`, `E2E-FF-CSV-004-01`, `E2E-FF-CSV-004-02`, `E2E-FF-CSV-006-01`, `E2E-FF-CSV-007-01`, `E2E-FF-CSV-007-02`, `E2E-FF-CSV-008-01`, and `E2E-FF-CSV-009-01` failing because profile options/purpose, profile persistence, row preview outcomes, limits, file validation, trusted confirmation, atomicity, and database uniqueness are absent.
+- [x] Add and independently observe `E2E-FF-CSV-001-01`, `E2E-FF-CSV-001-02`, `E2E-FF-CSV-002-01`, `E2E-FF-CSV-004-01`, `E2E-FF-CSV-004-02`, `E2E-FF-CSV-006-01`, `E2E-FF-CSV-007-01`, `E2E-FF-CSV-007-02`, `E2E-FF-CSV-008-01`, and `E2E-FF-CSV-009-01` failing because profile options/purpose, profile persistence, row preview outcomes, limits, file validation, trusted confirmation, atomicity, and database uniqueness are absent.
 
 **Tasks:**
 
-- [ ] Add finite persisted profile options: comma/semicolon/tab delimiter, UTF-8/Latin1 encoding, three date formats, and two decimal formats.
-- [ ] Add nullable imported purpose to transaction core, schema, repositories, preview, confirmation, editing, and rule reapplication.
-- [ ] Enforce inclusive 6 MiB multipart, 5 MiB extracted-file, and 10,000-data-row limits before filtering.
-- [ ] Make overflow, binary/NUL, malformed encoding/quotes, inconsistent structure, missing mapped headers, and unsupported options whole-file failures.
-- [ ] Make invalid required mapped cells, Gregorian dates, amounts, or descriptions visible invalid-row outcomes; never confirm them.
-- [ ] Keep source interpretation in the CSV adapter and canonical eligibility/duplicate decisions in the core.
-- [ ] Persist a 30-minute, single-use server-side preview batch with opaque ID, user/account binding, immutable profile snapshot, canonical row outcomes, and controlled timestamps.
-- [ ] Put confirmation orchestration in a core use case behind a transactional persistence port; atomically consume the server batch and ignore browser-supplied financial values/outcomes/hashes.
-- [ ] Introduce v2 length-prefixed NFKC hashes while preserving byte-identical historical v1 hashes; lookup computes both versions and new rows store v2.
-- [ ] Persist batch consumption and accepted transactions in one PostgreSQL transaction with account-scoped same-version uniqueness and conflict-safe inserts.
-- [ ] Abort migration for every non-null hash outside exact lowercase v1/v2 grammar and for same-version collisions, reporting account/hash/transaction identifiers; never recompute, mutate, or delete historical hashes automatically.
-- [ ] Return request-correlated failures with allowlisted identifiers/counts and no CSV content.
-- [ ] Update profile, limit, preview, migration-abort, rollback, retry, and troubleshooting runbooks.
+- [x] Add finite persisted profile options: comma/semicolon/tab delimiter, UTF-8/Latin1 encoding, three date formats, and two decimal formats.
+- [x] Add nullable imported purpose to transaction core, schema, repositories, preview, confirmation, editing, and rule reapplication.
+- [x] Enforce inclusive 6 MiB multipart, 5 MiB extracted-file, and 10,000-data-row limits before filtering.
+- [x] Make overflow, binary/NUL, malformed encoding/quotes, inconsistent structure, missing mapped headers, and unsupported options whole-file failures.
+- [x] Make invalid required mapped cells, Gregorian dates, amounts, or descriptions visible invalid-row outcomes; never confirm them.
+- [x] Keep source interpretation in the CSV adapter and canonical eligibility/duplicate decisions in the core.
+- [x] Persist a 30-minute, single-use server-side preview batch with opaque ID, user/account binding, immutable profile snapshot, canonical row outcomes, and controlled timestamps.
+- [x] Put confirmation orchestration in a core use case behind a transactional persistence port; atomically consume the server batch and ignore browser-supplied financial values/outcomes/hashes.
+- [x] Introduce v2 length-prefixed NFKC hashes while preserving byte-identical historical v1 hashes; lookup computes both versions and new rows store v2.
+- [x] Persist batch consumption and accepted transactions in one PostgreSQL transaction with account-scoped same-version uniqueness and conflict-safe inserts.
+- [x] Abort migration for every non-null hash outside exact lowercase v1/v2 grammar and for same-version collisions, reporting account/hash/transaction identifiers; never recompute, mutate, or delete historical hashes automatically.
+- [x] Return request-correlated failures with allowlisted identifiers/counts and no CSV content.
+- [x] Update profile, limit, preview, migration-abort, rollback, retry, and troubleshooting runbooks.
 
 **Tests:**
 
-- [ ] `UNIT-FF-TXN-001-01` and `UNIT-FF-TXN-001-02`: purpose-inclusive field contract and negative persisted amount invariant.
-- [ ] `INT-FF-TXN-001-01`: PostgreSQL preserves the complete post-PH-10C transaction round-trip contract.
-- [ ] `E2E-FF-TXN-004-01`: imported transaction editing preserves source, purpose, and import hash.
-- [ ] `INT-FF-TXN-004-01`: PostgreSQL round-trips imported purpose and import identity.
-- [ ] `E2E-FF-CSV-001-01`, `E2E-FF-CSV-001-02`, and `E2E-FF-CSV-002-01`: finite profile options, persistence, reuse, and every mapped field including purpose.
-- [ ] `INT-FF-CSV-008-01`: HTTP preview/confirmation mapping cannot authorize tampered data.
-- [ ] `INT-FF-CSV-003-01`: every encoding/delimiter/date/decimal option, including 31.12.26 → 2026-12-31.
-- [ ] `INT-FF-CSV-003-02`: CSV structure, header mapping, and finite parser options remain adapter-owned and deterministic.
-- [ ] `E2E-FF-CSV-004-01`: one mixed file shows importable, ignored, invalid, and duplicate rows.
-- [ ] `E2E-FF-CSV-004-02`: preview exposes deterministic row-level reasons and never makes invalid rows confirmable.
-- [ ] `E2E-FF-CSV-007-01` and `E2E-FF-CSV-007-02`: binary, malformed encoding/quotes, inconsistent structure, missing mapped headers, and every other structural trust-boundary failure reject the whole file.
-- [ ] `E2E-FF-CSV-006-01`: exact three limits succeed; each boundary plus one fails.
-- [ ] `INT-FF-CSV-007-01`: every whole-file failure and every row-level invalid outcome.
-- [ ] `UNIT-FF-CSV-004-01`: core row eligibility and deterministic preview outcomes.
-- [ ] `E2E-FF-CSV-008-01`: invalid, expired, reused, other-user/account, or tampered batches cannot be confirmed.
-- [ ] `UNIT-FF-CSV-008-01`: core confirmation permits only eligible rows from one unexpired unused server batch.
-- [ ] `INT-FF-CSV-008-02`: PostgreSQL batch creation, expiry, and atomic consumption; HTTP opaque-ID mapping remains exclusively in `INT-FF-CSV-008-01`.
-- [ ] `E2E-FF-CSV-009-01`: confirmation persists every accepted row atomically or none.
-- [ ] `INT-FF-CSV-009-01`: a later-row failure rolls back every row.
-- [ ] `INT-FF-CSV-009-02`: concurrent confirmation creates no duplicate or unhandled conflict.
-- [ ] `INT-FF-CSV-010-01`: collision/malformed-version abort reports identifiers and leaves all records unchanged.
-- [ ] `INT-FF-CSV-010-02`: v1 hashes remain byte-identical, v2 rows persist, and same-version uniqueness is enforced.
-- [ ] `UNIT-FF-CSV-005-01`: canonical duplicate identity changes only when an identity field changes.
-- [ ] `UNIT-FF-CSV-005-02`: v1 compatibility, v2 length framing, Unicode normalization, delimiter safety, and dual-version lookup.
-- [ ] `INT-FF-CSV-011-01`: rejection persists nothing, returns a request ID, and emits one sanitized log.
+- [x] `UNIT-FF-TXN-001-01` and `UNIT-FF-TXN-001-02`: purpose-inclusive field contract and negative persisted amount invariant.
+- [x] `INT-FF-TXN-001-01`: PostgreSQL preserves the complete post-PH-10C transaction round-trip contract.
+- [x] `E2E-FF-TXN-004-01`: imported transaction editing preserves source, purpose, and import hash.
+- [x] `INT-FF-TXN-004-01`: PostgreSQL round-trips imported purpose and import identity.
+- [x] `E2E-FF-CSV-001-01`, `E2E-FF-CSV-001-02`, and `E2E-FF-CSV-002-01`: finite profile options, persistence, reuse, and every mapped field including purpose.
+- [x] `INT-FF-CSV-008-01`: HTTP preview/confirmation mapping cannot authorize tampered data.
+- [x] `INT-FF-CSV-003-01`: every encoding/delimiter/date/decimal option, including 31.12.26 → 2026-12-31.
+- [x] `INT-FF-CSV-003-02`: CSV structure, header mapping, and finite parser options remain adapter-owned and deterministic.
+- [x] `E2E-FF-CSV-004-01`: one mixed file shows importable, ignored, invalid, and duplicate rows.
+- [x] `E2E-FF-CSV-004-02`: preview exposes deterministic row-level reasons and never makes invalid rows confirmable.
+- [x] `E2E-FF-CSV-007-01` and `E2E-FF-CSV-007-02`: binary, malformed encoding/quotes, inconsistent structure, missing mapped headers, and every other structural trust-boundary failure reject the whole file.
+- [x] `E2E-FF-CSV-006-01`: exact three limits succeed; each boundary plus one fails.
+- [x] `INT-FF-CSV-007-01`: every whole-file failure and every row-level invalid outcome.
+- [x] `UNIT-FF-CSV-004-01`: core row eligibility and deterministic preview outcomes.
+- [x] `E2E-FF-CSV-008-01`: invalid, expired, reused, other-user/account, or tampered batches cannot be confirmed.
+- [x] `UNIT-FF-CSV-008-01`: core confirmation permits only eligible rows from one unexpired unused server batch.
+- [x] `INT-FF-CSV-008-02`: PostgreSQL batch creation, expiry, and atomic consumption; HTTP opaque-ID mapping remains exclusively in `INT-FF-CSV-008-01`.
+- [x] `E2E-FF-CSV-009-01`: confirmation persists every accepted row atomically or none.
+- [x] `INT-FF-CSV-009-01`: a later-row failure rolls back every row.
+- [x] `INT-FF-CSV-009-02`: concurrent confirmation creates no duplicate or unhandled conflict.
+- [x] `INT-FF-CSV-010-01`: collision/malformed-version abort reports identifiers and leaves all records unchanged.
+- [x] `INT-FF-CSV-010-02`: v1 hashes remain byte-identical, v2 rows persist, and same-version uniqueness is enforced.
+- [x] `UNIT-FF-CSV-005-01`: canonical duplicate identity changes only when an identity field changes.
+- [x] `UNIT-FF-CSV-005-02`: v1 compatibility, v2 length framing, Unicode normalization, delimiter safety, and dual-version lookup.
+- [x] `INT-FF-CSV-011-01`: rejection persists nothing, returns a request ID, and emits one sanitized log.
 
 **Quality gates:** the five canonical commands plus `docker compose build`.
 
 **Targeted verification:** execute documented profile migration, collision-abort, rollback, concurrency, exact-limit, and production Compose CSV procedures with named deterministic fixtures.
+
+**Completion evidence (2026-08-13):** `pnpm verify`, isolated `pnpm test:postgres`, `docker compose build`, and an isolated empty-volume Docker Compose startup smoke all passed. The startup smoke reached `/health`, applied all 12 migrations through `0012_csv_security_atomicity.sql`, and verified the preview-batch table and account/import-hash unique index.
 
 **Commit:** `fix: harden csv import confirmation`
 

@@ -31,10 +31,13 @@ export class DrizzleImportProfileRepository implements ImportProfileRepository {
           kind: importProfile.kind,
           delimiter: importProfile.delimiter,
           encoding: importProfile.encoding,
+          dateFormat: importProfile.dateFormat,
+          decimalFormat: importProfile.decimalFormat,
           dateColumn: importProfile.dateColumn,
           amountColumn: importProfile.amountColumn,
           descriptionColumn: importProfile.descriptionColumn,
           payeeColumn: importProfile.payeeColumn,
+          purposeColumn: importProfile.purposeColumn,
           categoryColumn: importProfile.categoryColumn,
         },
       });
@@ -50,10 +53,13 @@ function mapImportProfileRow(row: ImportProfileRow): ImportProfile {
     kind: row.kind,
     delimiter: row.delimiter,
     encoding: row.encoding,
+    dateFormat: row.dateFormat,
+    decimalFormat: row.decimalFormat,
     dateColumn: row.dateColumn,
     amountColumn: row.amountColumn,
     descriptionColumn: row.descriptionColumn,
     payeeColumn: row.payeeColumn,
+    purposeColumn: row.purposeColumn,
     categoryColumn: row.categoryColumn,
   });
 }

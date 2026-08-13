@@ -20,6 +20,7 @@ export type CategorizationCandidate = {
   accountId: string;
   description: string;
   payee: string | null;
+  purpose?: string | null;
 };
 
 export function createCategorizationRule(input: CategorizationRuleInput): CategorizationRule {
@@ -54,6 +55,7 @@ export function findCategorizationMatch(
 ): CategorizationRule | null {
   const normalizedDescription = normalizeForMatch(candidate.description);
   const normalizedPayee = normalizeForMatch(candidate.payee ?? "");
+  const normalizedPurpose = normalizeForMatch(candidate.purpose ?? "");
 
   const matches = rules.filter((rule) => {
     if (!rule.enabled) {
@@ -65,7 +67,11 @@ export function findCategorizationMatch(
     }
 
     const searchText = normalizeForMatch(rule.searchText);
-    return normalizedDescription.includes(searchText) || normalizedPayee.includes(searchText);
+    return (
+      normalizedDescription.includes(searchText) ||
+      normalizedPayee.includes(searchText) ||
+      normalizedPurpose.includes(searchText)
+    );
   });
 
   return [...matches].sort((left, right) => left.priority - right.priority)[0] ?? null;
@@ -80,6 +86,7 @@ export function applyCategorizationRules(
       accountId: transaction.accountId,
       description: transaction.description,
       payee: transaction.payee,
+      purpose: transaction.purpose,
     });
 
     return match === null

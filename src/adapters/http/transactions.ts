@@ -147,7 +147,9 @@ async function handleUpdateTransaction(
   }
 
   try {
-    await repositories.transactions.save(createTransactionFromForm(readForm(request.body), id));
+    await repositories.transactions.save(
+      createTransactionFromForm(readForm(request.body), id, existing),
+    );
   } catch (error: unknown) {
     const [accounts, categories] = await Promise.all([
       repositories.accounts.listActive(),

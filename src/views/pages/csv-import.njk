@@ -10,11 +10,15 @@
   <form id="csv-import-form" class="grid-form" method="post" action="/imports/csv/preview" enctype="multipart/form-data">
     <label class="field">{{ text.profileName }} <input name="profileName" value="{{ profileName }}"></label>
     <label class="field">{{ text.importAccount }} <select name="accountId">{% for option in accounts %}<option value="{{ option.value }}">{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.delimiter }} <select name="delimiter">{% for option in delimiters %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
     <label class="field">{{ text.encoding }} <select name="encoding">{% for option in encodings %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.dateFormat }} <select name="dateFormat">{% for option in dateFormats %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.decimalFormat }} <select name="decimalFormat">{% for option in decimalFormats %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
     <label class="field">{{ text.dateColumn }} <input name="dateColumn" value="{{ dateColumn }}" required></label>
     <label class="field">{{ text.amountColumn }} <input name="amountColumn" value="{{ amountColumn }}" required></label>
     <label class="field">{{ text.descriptionColumn }} <input name="descriptionColumn" value="{{ descriptionColumn }}" required></label>
     <label class="field">{{ text.payeeColumn }} <input name="payeeColumn" value="{{ payeeColumn }}"></label>
+    <label class="field">{{ text.purposeColumn }} <input name="purposeColumn" value="{{ purposeColumn }}"></label>
     <label class="field">{{ text.categoryColumn }} <input name="categoryColumn" value="{{ categoryColumn }}"></label>
     <label class="field">{{ text.csvFile }} <input name="csvFile" type="file" accept=".csv,text/csv" required></label>
     <button type="submit">{{ text.previewImport }}</button>
@@ -23,7 +27,7 @@
 </section>
 {% if previewVisible %}<section class="panel" aria-labelledby="csv-import-preview-heading">
   <h2 id="csv-import-preview-heading">{{ text.previewHeading }}</h2>
-  {% if previewEmpty %}<p class="empty-state">{{ text.noRows }}</p>{% else %}<div class="table-wrap"><table><thead><tr><th>{{ text.date }}</th><th>{{ text.description }}</th><th>{{ text.payee }}</th><th>{{ text.category }}</th><th>{{ text.amount }}</th><th>{{ text.fixedCost }}</th><th>{{ text.duplicate }}</th></tr></thead><tbody>
-  {% for row in previewRows %}<tr><td>{{ row.date }}</td><td>{{ row.description }}</td><td>{{ row.payee }}</td><td>{{ row.categoryName }}</td><td>{{ row.amount }}</td><td>{{ row.fixedCostLabel }}</td><td>{{ row.duplicateLabel }}</td></tr>{% endfor %}
-  </tbody></table></div><form method="post" action="/imports/csv/confirm"><input type="hidden" name="rowsJson" value="{{ rowsJson }}"><button type="submit">{{ text.confirmImport }}</button></form>{% endif %}
+  {% if previewEmpty %}<p class="empty-state">{{ text.noRows }}</p>{% else %}<div class="table-wrap"><table><thead><tr><th>{{ text.line }}</th><th>{{ text.outcome }}</th><th>{{ text.reason }}</th><th>{{ text.date }}</th><th>{{ text.description }}</th><th>{{ text.payee }}</th><th>{{ text.purpose }}</th><th>{{ text.category }}</th><th>{{ text.amount }}</th><th>{{ text.fixedCost }}</th></tr></thead><tbody>
+  {% for row in previewRows %}<tr><td>{{ row.line }}</td><td>{{ row.outcome }}</td><td>{{ row.reason }}</td><td>{{ row.date }}</td><td>{{ row.description }}</td><td>{{ row.payee }}</td><td>{{ row.purpose }}</td><td>{{ row.categoryName }}</td><td>{{ row.amount }}</td><td>{{ row.fixedCostLabel }}</td></tr>{% endfor %}
+  </tbody></table></div><form method="post" action="/imports/csv/confirm"><input type="hidden" name="batchId" value="{{ batchId }}"><button type="submit"{% if confirmDisabled %} disabled{% endif %}>{{ text.confirmImport }}</button></form>{% endif %}
 </section>{% endif %}{% endblock %}

@@ -1,5 +1,9 @@
 import { parseOwnerContext } from "../../core/shared/owner-context.js";
-import { createManualExpense, type Transaction } from "../../core/transactions/transaction.js";
+import {
+  createManualExpense,
+  createTransaction,
+  type Transaction,
+} from "../../core/transactions/transaction.js";
 import type { TransactionFilters } from "../../ports/repositories/transaction-repository.js";
 import type { FormBody } from "./request-values.js";
 import { readOptionalQueryValue } from "./request-values.js";
@@ -41,8 +45,12 @@ export function readTransactionFilters(query: unknown): TransactionFilters {
   return filters;
 }
 
-export function createTransactionFromForm(form: FormBody, id: string): Transaction {
-  return createManualExpense({
+export function createTransactionFromForm(
+  form: FormBody,
+  id: string,
+  existing?: Transaction,
+): Transaction {
+  const manual = createManualExpense({
     id,
     accountId: requireFormValue(form, "accountId"),
     categoryId: requireFormValue(form, "categoryId"),
@@ -53,6 +61,13 @@ export function createTransactionFromForm(form: FormBody, id: string): Transacti
     status: form.status === "planned" ? "planned" : "booked",
     fixedCost: form.fixedCost === "on",
     note: form.note ?? null,
+  });
+  if (existing === undefined) return manual;
+  return createTransaction({
+    ...manual,
+    source: existing.source,
+    purpose: form.purpose ?? existing.purpose,
+    importHash: existing.importHash,
   });
 }
 

@@ -22,7 +22,30 @@ describe("csv imports", () => {
       amountCents: -123456,
       description: "Kartenzahlung SUPERMARKT",
       payee: "Supermarkt GmbH",
+      purpose: null,
     });
+  });
+
+  it("parses minor units exactly and rejects unsafe or malformed amounts", () => {
+    expect(
+      normalizeCsvTransactionRow({
+        accountId: "account",
+        date: "2026-07-15",
+        amount: "-90071992547409.91",
+        description: "Largest safe expense",
+      }).amountCents,
+    ).toBe(Number.MIN_SAFE_INTEGER);
+
+    for (const amount of ["-90071992547409.92", `-${"9".repeat(400)}.00`, "-1.2.3,45"]) {
+      expect(() =>
+        normalizeCsvTransactionRow({
+          accountId: "account",
+          date: "2026-07-15",
+          amount,
+          description: "Invalid expense",
+        }),
+      ).toThrow("CSV amount");
+    }
   });
 
   it("normalizes short German CSV dates", () => {
@@ -34,6 +57,45 @@ describe("csv imports", () => {
         description: "Card payment",
       }).date,
     ).toBe("2026-07-15");
+  });
+
+  it("UNIT-FF-CSV-005-01: creates framed v2 hashes for NFKC-equivalent import identities", () => {
+    const firstHash = createImportHash({
+      accountId: "account-shared-checking",
+      date: "2026-07-15",
+      amountCents: -4299,
+      description: "Cafe\u0301 purchase",
+      payee: "Shop",
+    });
+    const equivalentHash = createImportHash({
+      accountId: "account-shared-checking",
+      date: "2026-07-15",
+      amountCents: -4299,
+      description: "Café purchase",
+      payee: "Shop",
+    });
+
+    expect(firstHash).toMatch(/^v2:[a-f0-9]{64}$/);
+    expect(equivalentHash).toBe(firstHash);
+  });
+
+  it("UNIT-FF-CSV-005-02: frames identity fields so tuple delimiters cannot collide", () => {
+    const firstHash = createImportHash({
+      accountId: "account|shared",
+      date: "2026-07-15",
+      amountCents: -4299,
+      description: "Coffee",
+      payee: "Shop",
+    });
+    const secondHash = createImportHash({
+      accountId: "account",
+      date: "shared|2026-07-15",
+      amountCents: -4299,
+      description: "Coffee",
+      payee: "Shop",
+    });
+
+    expect(firstHash).not.toBe(secondHash);
   });
 
   it("creates stable import hashes from normalized duplicate keys", () => {
@@ -52,7 +114,20 @@ describe("csv imports", () => {
     });
 
     expect(firstHash).toBe(secondHash);
-    expect(firstHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(firstHash).toMatch(/^v2:[a-f0-9]{64}$/);
+  });
+
+  it("keeps the canonical import identity stable when only purpose changes", () => {
+    const base = {
+      accountId: "account",
+      date: "2026-07-15",
+      amountCents: -100,
+      description: "Expense",
+      payee: "Shop",
+    };
+    expect(createImportHash({ ...base, purpose: "First" })).toBe(
+      createImportHash({ ...base, purpose: "Changed" }),
+    );
   });
 
   it("creates different import hashes for different payees", () => {
