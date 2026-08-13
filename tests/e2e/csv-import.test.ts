@@ -182,6 +182,45 @@ test("CSV import marks duplicates and confirms only new transactions", async ({ 
   }
 });
 
+test("E2E-FF-CSV-012-01: imports otherwise identical rows with distinct purposes", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await openCsvImportPage(page, baseUrl);
+    await fillDefaultCsvMapping(page);
+    await page.getByLabel("Purpose column").fill("Purpose");
+    await uploadCsv(
+      page,
+      [
+        "Date;Payee;Description;Amount;Purpose",
+        "15.07.2026;Shop;Card payment;-42,99;January groceries",
+        "15.07.2026;Shop;Card payment;-42,99;February groceries",
+      ].join("\n"),
+    );
+    await page.getByRole("button", { name: "Preview import" }).click();
+
+    await expect(page.getByRole("cell", { name: "importable", exact: true })).toHaveCount(2);
+    await page.getByRole("button", { name: "Confirm import" }).click();
+
+    await expect(page).toHaveURL(`${baseUrl}/transactions`);
+    await expect(page.getByRole("cell", { name: "Card payment", exact: true })).toHaveCount(2);
+    const editUrls = await page
+      .getByRole("link", { name: "Edit", exact: true })
+      .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).href));
+    const persistedPurposes: string[] = [];
+    for (const editUrl of editUrls) {
+      await page.goto(editUrl);
+      persistedPurposes.push(await page.getByLabel("Purpose").inputValue());
+    }
+    expect(persistedPurposes.sort()).toEqual(["February groceries", "January groceries"]);
+  } finally {
+    await server.close();
+  }
+});
+
 test("CSV import profiles can be saved and reused", async ({ page }) => {
   const server = buildServer();
 

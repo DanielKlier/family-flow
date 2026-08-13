@@ -5,11 +5,17 @@ import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
 import { DrizzleImportPreviewBatchRepository } from "../../src/adapters/db/drizzle-import-preview-batch-repository.js";
 import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
+import { DrizzleTransactionRepository } from "../../src/adapters/db/drizzle-transaction-repository.js";
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { importPreviewBatches, transactions } from "../../src/adapters/db/schema.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
 import { confirmCsvImportBatch } from "../../src/core/imports/confirm-csv-import.js";
+import {
+  createImportHash,
+  createImportHashCandidates,
+  detectDuplicateImportRows,
+} from "../../src/core/imports/csv-import.js";
 import { createImportProfile } from "../../src/core/imports/import-profile.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
@@ -25,7 +31,13 @@ const profile = createImportProfile({
   descriptionColumn: "Description",
 });
 
-function outcome(id: string, hash: string, categoryId = "category-other") {
+function outcome(
+  id: string,
+  hash: string,
+  categoryId = "category-other",
+  purpose = "Purpose",
+  description = id,
+) {
   return {
     line: 2,
     outcome: "importable" as const,
@@ -36,9 +48,9 @@ function outcome(id: string, hash: string, categoryId = "category-other") {
       categoryId,
       date: "2026-07-15",
       amountCents: -100,
-      description: id,
+      description,
       payee: null,
-      purpose: "Purpose",
+      purpose,
       importHash: hash,
     },
   };
@@ -78,6 +90,155 @@ describe("PostgreSQL CSV confirmation", () => {
         await connection.db
           .delete(importPreviewBatches)
           .where(eq(importPreviewBatches.id, batchId));
+        await connection.client.end();
+      }
+    },
+  );
+
+  it.runIf(databaseUrl !== undefined)(
+    "INT-FF-CSV-012-04: persists distinct-purpose v3 identities and uses database-loaded purposes for v1/v2 compatibility",
+    async () => {
+      if (databaseUrl === undefined) throw new Error("TEST_DATABASE_URL is required");
+      await migrate(databaseUrl);
+      const connection = createPostgresConnection(databaseUrl);
+      const repository = new DrizzleImportPreviewBatchRepository(connection.db);
+      const transactionRepository = new DrizzleTransactionRepository(connection.db);
+      const batchIds: string[] = [];
+      const importHash = (purpose: string) =>
+        createImportHash({
+          accountId: "account-shared-checking",
+          date: "2026-07-15",
+          amountCents: -100,
+          description: "Same payment",
+          payee: "Shop",
+          purpose,
+        });
+      try {
+        await seedMasterData({
+          accounts: new DrizzleAccountRepository(connection.db),
+          categories: new DrizzleCategoryRepository(connection.db),
+          ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+        });
+        const januaryHash = importHash("January groceries");
+        const februaryHash = importHash("February groceries");
+        expect(januaryHash).toMatch(/^v3:[a-f0-9]{64}$/);
+        expect(februaryHash).not.toBe(januaryHash);
+        for (const [hash, purpose] of [
+          [januaryHash, "January groceries"],
+          [februaryHash, "February groceries"],
+        ] as const) {
+          const id = randomUUID();
+          batchIds.push(id);
+          await repository.save({
+            id,
+            userId: "user",
+            accountId: "account-shared-checking",
+            createdAt: now,
+            expiresAt: new Date(now.getTime() + 60_000),
+            profileSnapshot: profile,
+            outcomes: [outcome(randomUUID(), hash, "category-other", purpose, "Same payment")],
+          });
+          await confirmCsvImportBatch({
+            batchId: id,
+            userId: "user",
+            now,
+            persistence: repository,
+          });
+        }
+        await expect(
+          connection.db
+            .select()
+            .from(transactions)
+            .where(eq(transactions.description, "Same payment")),
+        ).resolves.toHaveLength(2);
+
+        const concurrentHash = importHash("Concurrent groceries");
+        const concurrentBatches = [randomUUID(), randomUUID()];
+        batchIds.push(...concurrentBatches);
+        for (const id of concurrentBatches)
+          await repository.save({
+            id,
+            userId: "user",
+            accountId: "account-shared-checking",
+            createdAt: now,
+            expiresAt: new Date(now.getTime() + 60_000),
+            profileSnapshot: profile,
+            outcomes: [
+              outcome(randomUUID(), concurrentHash, "category-other", "Concurrent groceries"),
+            ],
+          });
+        await Promise.all(
+          concurrentBatches.map((batchId) =>
+            confirmCsvImportBatch({ batchId, userId: "user", now, persistence: repository }),
+          ),
+        );
+        await expect(
+          connection.db
+            .select()
+            .from(transactions)
+            .where(eq(transactions.importHash, concurrentHash)),
+        ).resolves.toHaveLength(1);
+
+        const historicalHashes = [
+          ...createImportHashCandidates({
+            accountId: "account-shared-checking",
+            date: "2026-07-15",
+            amountCents: -100,
+            description: "Same payment",
+            payee: "Shop",
+            purpose: "January groceries",
+          }),
+        ].filter((hash) => !hash.startsWith("v3:"));
+        expect(historicalHashes).toHaveLength(2);
+        for (const hash of historicalHashes) {
+          await connection.db.insert(transactions).values({
+            id: randomUUID(),
+            accountId: "account-shared-checking",
+            categoryId: "category-other",
+            date: "2026-07-15",
+            amountCents: -100,
+            description: "Same payment",
+            payee: "Shop",
+            purpose: "January groceries",
+            source: "csv",
+            status: "booked",
+            fixedCost: false,
+            note: null,
+            importHash: hash,
+          });
+          const existing = (await transactionRepository.list({})).filter(
+            (transaction) => transaction.importHash === hash,
+          );
+          expect(
+            detectDuplicateImportRows(
+              [
+                {
+                  accountId: "account-shared-checking",
+                  date: "2026-07-15",
+                  amountCents: -100,
+                  description: "Same payment",
+                  payee: "Shop",
+                  purpose: "January groceries",
+                },
+                {
+                  accountId: "account-shared-checking",
+                  date: "2026-07-15",
+                  amountCents: -100,
+                  description: "Same payment",
+                  payee: "Shop",
+                  purpose: "February groceries",
+                },
+              ],
+              existing,
+            ).map((row) => row.duplicate),
+          ).toEqual([true, false]);
+        }
+      } finally {
+        await connection.db
+          .delete(transactions)
+          .where(eq(transactions.accountId, "account-shared-checking"));
+        for (const id of batchIds)
+          await connection.db.delete(importPreviewBatches).where(eq(importPreviewBatches.id, id));
         await connection.client.end();
       }
     },

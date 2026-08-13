@@ -43,7 +43,7 @@ type EvidenceBoundary =
 const patterns = {
   requirement: /^FF-[A-Z]+-[0-9]{3}$/,
   acceptance: /^FF-[A-Z]+-[0-9]{3}-AC[0-9]{2}$/,
-  phase: /^PH-[0-9]{2}(?:[A-Z]|-R[0-9]{2})?$/,
+  phase: /^PH-[0-9]{2}[A-Z]?(?:-R[0-9]{2})?$/,
   test: /^(?:E2E|UNIT|INT|SMOKE)-FF-[A-Z]+-[0-9]{3}-[0-9]{2}$/,
   operation: /^OPS-FF-[A-Z]+-[0-9]{3}-[0-9]{2}$/,
 };

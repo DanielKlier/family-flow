@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createImportHash,
+  createImportHashCandidates,
   detectDuplicateImportRows,
   normalizeCsvTransactionRow,
 } from "../../src/core/imports/csv-import.js";
@@ -59,7 +60,7 @@ describe("csv imports", () => {
     ).toBe("2026-07-15");
   });
 
-  it("UNIT-FF-CSV-005-01: creates framed v2 hashes for NFKC-equivalent import identities", () => {
+  it("UNIT-FF-CSV-005-01: creates framed v3 hashes for NFKC-equivalent import identities", () => {
     const firstHash = createImportHash({
       accountId: "account-shared-checking",
       date: "2026-07-15",
@@ -75,7 +76,7 @@ describe("csv imports", () => {
       payee: "Shop",
     });
 
-    expect(firstHash).toMatch(/^v2:[a-f0-9]{64}$/);
+    expect(firstHash).toMatch(/^v3:[a-f0-9]{64}$/);
     expect(equivalentHash).toBe(firstHash);
   });
 
@@ -114,10 +115,10 @@ describe("csv imports", () => {
     });
 
     expect(firstHash).toBe(secondHash);
-    expect(firstHash).toMatch(/^v2:[a-f0-9]{64}$/);
+    expect(firstHash).toMatch(/^v3:[a-f0-9]{64}$/);
   });
 
-  it("keeps the canonical import identity stable when only purpose changes", () => {
+  it("UNIT-FF-CSV-012-02: makes v3 identity purpose-sensitive and recognizes historical hashes only for matching purposes", () => {
     const base = {
       accountId: "account",
       date: "2026-07-15",
@@ -125,9 +126,47 @@ describe("csv imports", () => {
       description: "Expense",
       payee: "Shop",
     };
-    expect(createImportHash({ ...base, purpose: "First" })).toBe(
-      createImportHash({ ...base, purpose: "Changed" }),
+    const january = { ...base, purpose: " January   groceries " };
+    const januaryEquivalent = { ...base, purpose: "JANUARY groceries" };
+    const february = { ...base, purpose: "February groceries" };
+    const blankPurpose = { ...base, purpose: " " };
+    const nullPurpose = { ...base, purpose: null };
+
+    expect(createImportHash(january)).toMatch(/^v3:[a-f0-9]{64}$/);
+    expect(createImportHash(januaryEquivalent)).toBe(createImportHash(january));
+    expect(createImportHash(february)).not.toBe(createImportHash(january));
+    expect(createImportHash(blankPurpose)).toBe(createImportHash(nullPurpose));
+    expect(
+      detectDuplicateImportRows([january, february, januaryEquivalent], []).map(
+        (row) => row.duplicate,
+      ),
+    ).toEqual([false, false, true]);
+
+    const historicalHashes = [...createImportHashCandidates(january)].filter(
+      (hash) => !hash.startsWith("v3:"),
     );
+    expect(historicalHashes).toHaveLength(2);
+
+    // Existing identities must retain their persisted purpose so v1/v2 can be
+    // safely matched even though their immutable hashes omit it.
+    for (const historicalHash of historicalHashes) {
+      expect(
+        detectDuplicateImportRows(
+          [january, february, nullPurpose],
+          [{ importHash: historicalHash, purpose: "January groceries" }],
+        ),
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ duplicate: true }),
+          expect.objectContaining({ duplicate: false }),
+          expect.objectContaining({ duplicate: false }),
+        ]),
+      );
+      expect(
+        detectDuplicateImportRows([january], [{ importHash: historicalHash, purpose: null }])[0]
+          ?.duplicate,
+      ).toBe(false);
+    }
   });
 
   it("creates different import hashes for different payees", () => {
@@ -203,7 +242,7 @@ describe("csv imports", () => {
             payee: null,
           },
         ],
-        new Set([existingHash]),
+        [{ importHash: existingHash, purpose: null }],
       ).map((row) => row.duplicate),
     ).toEqual([false, true, true]);
   });
@@ -225,7 +264,7 @@ describe("csv imports", () => {
     });
 
     expect(
-      detectDuplicateImportRows([firstRow, secondRow], new Set()).map((row) => row.duplicate),
+      detectDuplicateImportRows([firstRow, secondRow], []).map((row) => row.duplicate),
     ).toEqual([false, false]);
   });
 });

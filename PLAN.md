@@ -443,14 +443,12 @@ Preview classifies each structurally readable data row as importable, ignored, i
 - **FF-CSV-004-AC01:** One mixed file displays deterministic importable, positive/zero ignored, invalid, and duplicate outcomes without persisting transactions. Persisting the server-authoritative preview batch required by `FF-CSV-008` is permitted and mandatory.
 - **FF-CSV-004-AC02:** Server-side confirmation rejects a request containing an invalid row, even if browser data is tampered with.
 
-#### FF-CSV-005 — Duplicate Identity
+#### FF-CSV-005 — Duplicate Identity (Superseded)
 
-Duplicate identity consists of account, canonical date, minor-unit amount, normalized description, and normalized payee. Import normalization applies Unicode NFKC, trims leading/trailing whitespace, collapses internal whitespace to one ASCII space, and applies `toLocaleLowerCase("de-DE")`.
+This historical requirement introduced account, canonical date, minor-unit amount, normalized description, and normalized payee as the v1/v2 duplicate identity. `FF-CSV-012` supersedes it because omitting imported purpose collapsed otherwise distinct transactions. Existing v1 and v2 values remain immutable compatibility records.
 
-New hashes use `v2:<sha256>` over unambiguous UTF-8 length-prefixed tuple fields. Historical unprefixed 64-hex hashes remain immutable `v1` values. During duplicate lookup, a new row computes both the historical v1 algorithm and v2 algorithm and compares each with its matching stored version. New persistence stores v2 only.
-
-- **FF-CSV-005-AC01:** Duplicate rows are identified across historical v1 and new v2 records and imported at most once.
-- **FF-CSV-005-AC02:** Tuple boundary changes, Unicode-equivalent text, and delimiter characters cannot create an unintended v2 identity collision.
+- **FF-CSV-005-AC01:** Duplicate rows are identified across historical v1 and new v2 records and imported at most once. Superseded by `FF-CSV-012-AC02`.
+- **FF-CSV-005-AC02:** Tuple boundary changes, Unicode-equivalent text, and delimiter characters cannot create an unintended v2 identity collision. Superseded by `FF-CSV-012-AC01`.
 
 #### FF-CSV-006 — Upload Limits
 
@@ -493,6 +491,18 @@ Import-hash uniqueness is enforced at account scope without rewriting historical
 CSV failures are user-readable and request-correlated. Logs contain profile/account/row-count identifiers and error codes but no CSV bytes, description, payee, purpose, note, or amount.
 
 - **FF-CSV-011-AC01:** Rejection includes `X-Request-Id`, produces one sanitized request log, and persists nothing.
+
+#### FF-CSV-012 — Purpose-Aware Duplicate Identity
+
+Duplicate identity consists of account, canonical date, minor-unit amount, normalized description, normalized payee, and normalized imported purpose. Text normalization applies Unicode NFKC, trims leading/trailing whitespace, collapses internal whitespace to one ASCII space, and applies `toLocaleLowerCase("de-DE")`; null and blank purpose are equivalent.
+
+New hashes use `v3:<sha256>` over all six unambiguous UTF-8 length-framed fields. Historical unprefixed v1 and prefixed v2 hashes remain byte-identical. A historical candidate suppresses a current row only when the persisted transaction purpose has the same normalized value, because v1/v2 hashes do not encode purpose. New persistence stores v3 only.
+
+Migration validates exact lowercase v1/v2/v3 grammar and account-scoped hash uniqueness before changing anything. It never rewrites transaction hashes or financial records and invalidates only unconsumed preview batches whose stored hashes were produced under the previous identity version.
+
+- **FF-CSV-012-AC01:** Purpose-distinct otherwise identical rows are independently previewed and persisted; equivalent normalized purposes and repeated rows deduplicate to one v3 identity.
+- **FF-CSV-012-AC02:** Historical v1/v2 candidates suppress only rows whose normalized purpose matches the persisted transaction purpose, while same-v3 concurrent confirmation remains account-scoped and unique.
+- **FF-CSV-012-AC03:** Migration accepts exact v1/v2/v3 hashes, aborts transactionally on malformed values or collisions with identifiers and runbook guidance, preserves all transaction hashes, and deletes only unconsumed previews after successful validation.
 
 ### Categorization Rules
 

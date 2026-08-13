@@ -28,6 +28,11 @@ export type CsvTransactionImportRow = NormalizedCsvTransactionRow & {
   duplicate: boolean;
 };
 
+export type PersistedImportIdentity = {
+  importHash: string | null;
+  purpose: string | null;
+};
+
 export function normalizeCsvTransactionRow(
   input: CsvTransactionRowInput,
 ): NormalizedCsvTransactionRow {
@@ -49,11 +54,10 @@ export function normalizeCsvTransactionRow(
 }
 
 export function createImportHash(input: ImportDuplicateKey): string {
-  const framedKey = importIdentityFields(input)
-    .map((field) => `${Buffer.byteLength(field, "utf8")}:${field}`)
-    .join("");
-
-  return `v2:${createHash("sha256").update(framedKey).digest("hex")}`;
+  return createFramedImportHash("v3", [
+    ...historicalImportIdentityFields(input),
+    purposeField(input),
+  ]);
 }
 
 export function createLegacyImportHash(input: ImportDuplicateKey): string {
@@ -68,12 +72,16 @@ export function createLegacyImportHash(input: ImportDuplicateKey): string {
 }
 
 export function createImportHashCandidates(input: ImportDuplicateKey): ReadonlySet<string> {
-  return new Set([createImportHash(input), createLegacyImportHash(input)]);
+  return new Set([
+    createImportHash(input),
+    createFramedImportHash("v2", historicalImportIdentityFields(input)),
+    createLegacyImportHash(input),
+  ]);
 }
 
 export function detectDuplicateImportRows(
   rows: NormalizedCsvTransactionRow[],
-  existingImportHashes: ReadonlySet<string>,
+  existingIdentities: readonly PersistedImportIdentity[],
 ): CsvTransactionImportRow[] {
   const seenImportHashes = new Set<string>();
 
@@ -81,7 +89,7 @@ export function detectDuplicateImportRows(
     const importHash = createImportHash(row);
     const candidates = createImportHashCandidates(row);
     const duplicate =
-      [...candidates].some((candidate) => existingImportHashes.has(candidate)) ||
+      existingIdentities.some((identity) => matchesPersistedIdentity(row, candidates, identity)) ||
       seenImportHashes.has(importHash);
     seenImportHashes.add(importHash);
 
@@ -166,7 +174,12 @@ function normalizeDisplayText(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
-function importIdentityFields(input: ImportDuplicateKey): string[] {
+function createFramedImportHash(version: "v2" | "v3", fields: string[]): string {
+  const framedKey = fields.map((field) => `${Buffer.byteLength(field, "utf8")}:${field}`).join("");
+  return `${version}:${createHash("sha256").update(framedKey).digest("hex")}`;
+}
+
+function historicalImportIdentityFields(input: ImportDuplicateKey): string[] {
   return [
     input.accountId.trim().normalize("NFKC"),
     input.date.normalize("NFKC"),
@@ -174,6 +187,20 @@ function importIdentityFields(input: ImportDuplicateKey): string[] {
     normalizeImportText(input.description),
     normalizeImportText(input.payee ?? ""),
   ];
+}
+
+function purposeField(input: ImportDuplicateKey): string {
+  return normalizeImportText(input.purpose ?? "");
+}
+
+function matchesPersistedIdentity(
+  row: ImportDuplicateKey,
+  candidates: ReadonlySet<string>,
+  identity: PersistedImportIdentity,
+): boolean {
+  if (identity.importHash === null || !candidates.has(identity.importHash)) return false;
+  if (identity.importHash.startsWith("v3:")) return true;
+  return normalizeImportText(identity.purpose ?? "") === purposeField(row);
 }
 
 function normalizeImportText(value: string): string {

@@ -199,6 +199,10 @@
       "acceptanceCriteria": ["FF-CSV-011-AC01"]
     },
     {
+      "id": "FF-CSV-012",
+      "acceptanceCriteria": ["FF-CSV-012-AC01", "FF-CSV-012-AC02", "FF-CSV-012-AC03"]
+    },
+    {
       "id": "FF-CAT-001",
       "acceptanceCriteria": ["FF-CAT-001-AC01"]
     },
@@ -468,6 +472,12 @@
       "id": "PH-10C",
       "status": "Pending",
       "summary": "Harden CSV profiles, purpose persistence, preview, upload, and confirmation.",
+      "classification": "Behavior change"
+    },
+    {
+      "id": "PH-10C-R01",
+      "status": "Pending",
+      "summary": "Include normalized purpose in v3 CSV duplicate identity while preserving guarded v1/v2 compatibility.",
       "classification": "Behavior change"
     },
     {
@@ -1161,6 +1171,30 @@
       "test": "INT-FF-CSV-011-01",
       "file": "tests/integration/request-logging.test.ts",
       "operation": "OPS-FF-CSV-011-01"
+    },
+    {
+      "id": "FF-CSV-012-AC01",
+      "status": "Planned",
+      "phase": "PH-10C-R01",
+      "test": "E2E-FF-CSV-012-01",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-012-AC02",
+      "status": "Planned",
+      "phase": "PH-10C-R01",
+      "test": "INT-FF-CSV-012-04",
+      "file": "tests/integration/drizzle-import-confirmation.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-CSV-012-AC03",
+      "status": "Planned",
+      "phase": "PH-10C-R01",
+      "test": "INT-FF-CSV-012-03",
+      "file": "tests/integration/csv-import-hash-migration.test.ts",
+      "operation": null
     },
     {
       "id": "FF-CAT-001-AC01",
@@ -3186,6 +3220,38 @@
       "phase": "PH-11",
       "file": "tests/unit/transactions.test.ts",
       "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CSV-012-01",
+      "acceptance": "FF-CSV-012-AC01",
+      "phase": "PH-10C-R01",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-CSV-012-02",
+      "acceptance": "FF-CSV-012-AC01",
+      "phase": "PH-10C-R01",
+      "file": "tests/unit/imports.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-012-03",
+      "acceptance": "FF-CSV-012-AC03",
+      "phase": "PH-10C-R01",
+      "file": "tests/integration/csv-import-hash-migration.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CSV-012-04",
+      "acceptance": "FF-CSV-012-AC02",
+      "phase": "PH-10C-R01",
+      "file": "tests/integration/drizzle-import-confirmation.test.ts",
+      "boundary": "PostgreSQL adapter",
       "classification": "Expected red before production change"
     }
   ],

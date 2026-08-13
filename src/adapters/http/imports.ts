@@ -189,7 +189,7 @@ async function prepareOutcomes(
   );
   const importRows = detectDuplicateImportRows(
     parsedRows,
-    await readExistingImportHashes(repositories),
+    await readExistingImportIdentities(repositories),
   );
   const rules = await repositories.categorizationRules.list();
   let importableIndex = 0;
@@ -265,11 +265,9 @@ function requireUserId(request: FastifyRequest): string {
   return user.id;
 }
 
-async function readExistingImportHashes(
-  repositories: CsvImportRouteRepositories,
-): Promise<Set<string>> {
+async function readExistingImportIdentities(repositories: CsvImportRouteRepositories) {
   const all = await repositories.transactions.list({});
-  return new Set(all.map((row) => row.importHash).filter((hash): hash is string => hash !== null));
+  return all.map(({ importHash, purpose }) => ({ importHash, purpose }));
 }
 
 async function readPageData(repositories: CsvImportRouteRepositories) {

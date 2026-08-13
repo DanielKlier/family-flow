@@ -431,6 +431,42 @@ The current composition registers authentication before protected routes. This d
 
 **Commit:** `fix: harden csv import confirmation`
 
+### PH-10C-R01 — Purpose-Aware CSV Duplicate Identity
+
+**Status:** Completed
+**Classification:** Behavior change
+**Implements:** `FF-CSV-012` (supersedes `FF-CSV-005` identity composition)
+**Verifies:** `FF-CSV-012`
+**Operations:** CSV import migration and duplicate troubleshooting runbook
+
+**Red:**
+
+- [x] Observe `E2E-FF-CSV-012-01` collapse two otherwise identical purpose-distinct rows into one importable row.
+- [x] Observe `UNIT-FF-CSV-012-02` produce v2 instead of purpose-aware v3 identities.
+- [x] Observe `INT-FF-CSV-012-03` fail because migration `0013_csv_import_purpose_identity.sql` is absent.
+- [x] Observe `INT-FF-CSV-012-04` produce v2 and lack purpose-aware persistence compatibility.
+
+**Tasks:**
+
+- [x] Add normalized purpose to a v3 UTF-8 length-framed identity while retaining immutable v1/v2 candidate generation.
+- [x] Compare v1/v2 candidates only when the repository-loaded persisted purpose normalizes to the current purpose.
+- [x] Persist purpose-distinct v3 rows independently while preserving account-scoped concurrent same-v3 protection.
+- [x] Validate v1/v2/v3 grammar and collisions before mutation, preserve transaction hashes, and invalidate only unconsumed pre-v3 previews.
+- [x] Update duplicate-identity and migration operations guidance.
+
+**Tests:**
+
+- [x] `E2E-FF-CSV-012-01`: purpose-distinct identical rows preview, persist, and retain their purposes.
+- [x] `UNIT-FF-CSV-012-02`: v3 purpose identity, normalization, repeated rows, null/blank behavior, and guarded v1/v2 compatibility.
+- [x] `INT-FF-CSV-012-03`: migration grammar, malformed/collision rollback, immutable hashes, and preview invalidation.
+- [x] `INT-FF-CSV-012-04`: v3 persistence, same-v3 concurrency, and repository-loaded v1/v2 purpose compatibility.
+
+**Quality gates:** the five canonical commands plus non-skippable `pnpm test:postgres` and `docker compose build` because migration/database behavior changes.
+
+**Targeted verification:** run the four `FF-CSV-012` tests, then apply all migrations to isolated PostgreSQL and verify malformed/collision rollback and active-preview invalidation.
+
+**Commit:** `fix: include purpose in csv duplicate identity`
+
 ## Historical Acceptance-Gap Remediation
 
 ### PH-00-R01 — Deployment And Reverse-Proxy Smoke Evidence
