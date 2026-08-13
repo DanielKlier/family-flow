@@ -369,7 +369,7 @@ The current composition registers authentication before protected routes. This d
 ### PH-10C — CSV Security And Atomicity
 
 **Status:** Completed
-**Evidence refs:** `2110f62 feat: strengthen csv import identities`, `a9dac26 fix: trust server csv import previews`, `b0dfbaa fix: harden csv import atomicity`, `e4a51ae fix: validate csv amount boundaries`, `4f0edd1 fix: preflight historical import profiles`, and `1717db6 fix: persist canonical csv outcomes`.
+**Evidence refs:** `8cf8702 feat: harden trusted and atomic csv imports` and `451caae fix: update loaded csv import profiles`.
 **Classification:** Behavior change
 **Implements:** `FF-TXN-001`, `FF-TXN-004`, `FF-CSV-001`, `FF-CSV-002`, `FF-CSV-003`, `FF-CSV-004`, `FF-CSV-005`, `FF-CSV-006`, `FF-CSV-007`, `FF-CSV-008`, `FF-CSV-009`, `FF-CSV-010`, `FF-CSV-011`
 **Verifies:** `FF-CSV-005`, `FF-OBS-001`, `FF-OBS-002`, `FF-OBS-003`, `FF-OBS-004`, `FF-QUA-003`
@@ -434,6 +434,7 @@ The current composition registers authentication before protected routes. This d
 ### PH-10C-R01 — Purpose-Aware CSV Duplicate Identity
 
 **Status:** Completed
+**Evidence refs:** `de928d0 fix: include purpose in csv duplicate identity`.
 **Classification:** Behavior change
 **Implements:** `FF-CSV-012` (supersedes `FF-CSV-005` identity composition)
 **Verifies:** `FF-CSV-012`

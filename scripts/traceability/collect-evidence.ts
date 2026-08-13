@@ -6,10 +6,14 @@ const evidenceId = /\b(?:E2E|UNIT|INT|SMOKE)-FF-[A-Z]+-[0-9]{3}-[0-9]{2}\b/g;
 
 export async function collectDeclaredEvidence(repositoryRoot: string): Promise<Set<string>> {
   const environment = { PATH: process.env.PATH, HOME: process.env.HOME, CI: "true" };
+  const vitestEnvironment = {
+    ...environment,
+    TEST_DATABASE_URL: "postgres://evidence-collection.invalid/family_flow",
+  };
   const [vitest, playwright] = await Promise.all([
     execFileAsync("pnpm", ["exec", "vitest", "list"], {
       cwd: repositoryRoot,
-      env: environment,
+      env: vitestEnvironment,
       maxBuffer: 16 * 1024 * 1024,
     }),
     execFileAsync("pnpm", ["exec", "playwright", "test", "--list"], {

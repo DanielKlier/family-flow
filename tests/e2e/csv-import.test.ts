@@ -50,7 +50,9 @@ test("CSV upload decodes Latin1 umlauts in the preview", async ({ page }) => {
   }
 });
 
-test("E2E-FF-CSV-008-01: confirmation accepts only an opaque server batch ID", async ({ page }) => {
+test("E2E-FF-CSV-008-01 INT-FF-CSV-008-01: confirmation accepts only an opaque server batch ID", async ({
+  page,
+}) => {
   const server = buildServer();
 
   try {
@@ -107,7 +109,7 @@ test("CSV import confirmation stores previewed transactions", async ({ page }) =
   }
 });
 
-test("CSV preview persists line-aware canonical outcomes", async ({ page }) => {
+test("E2E-FF-CSV-004-02: CSV preview persists line-aware canonical outcomes", async ({ page }) => {
   let savedBatch: ImportPreviewBatch | undefined;
   const server = buildServer({
     importPreviewBatches: {
@@ -221,7 +223,7 @@ test("E2E-FF-CSV-012-01: imports otherwise identical rows with distinct purposes
   }
 });
 
-test("CSV import profiles can be saved and reused", async ({ page }) => {
+test("E2E-FF-CSV-001-02: CSV import profiles can be saved and reused", async ({ page }) => {
   const server = buildServer();
 
   try {
@@ -331,7 +333,7 @@ test("CSV import rejects an unknown submitted profile ID without creating a prof
   }
 });
 
-test("E2E-FF-CSV-001-01: profiles persist finite format options and map purpose separately", async ({
+test("E2E-FF-CSV-001-01 E2E-FF-CSV-002-01 E2E-FF-TXN-004-01: profiles persist finite format options and map purpose separately", async ({
   page,
 }) => {
   const server = buildServer();
@@ -377,7 +379,7 @@ test("E2E-FF-CSV-001-01: profiles persist finite format options and map purpose 
   }
 });
 
-test("E2E-FF-CSV-004-01: preview displays importable, ignored, invalid, and duplicate rows", async ({
+test("E2E-FF-CSV-004-01 E2E-FF-CSV-009-01: preview displays outcomes and rejects non-atomic confirmation", async ({
   page,
 }) => {
   const server = buildServer();

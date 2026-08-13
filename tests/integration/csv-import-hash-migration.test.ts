@@ -131,7 +131,7 @@ describe("CSV import hash migration", () => {
   );
 
   it.runIf(databaseUrl !== undefined)(
-    "INT-FF-CSV-010-01/010-02: aborts without rewriting malformed hashes or collisions",
+    "INT-FF-CSV-010-01 INT-FF-CSV-010-02: aborts without rewriting malformed hashes or collisions",
     async () => {
       if (databaseUrl === undefined) throw new Error("TEST_DATABASE_URL is required");
       await migrate(databaseUrl);

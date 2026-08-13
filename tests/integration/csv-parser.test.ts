@@ -15,7 +15,7 @@ const genericProfile = createImportProfile({
   payeeColumn: "Payee",
 });
 
-describe("CSV parser", () => {
+describe("INT-FF-CSV-003-01 INT-FF-CSV-003-02 CSV parser", () => {
   it("parses CSV rows through an import profile", async () => {
     const parser = new SimpleCsvParser();
     const csv = ["Date;Payee;Description;Amount", "15.07.2026;Shop;Card payment;-42,99"].join("\n");
@@ -328,7 +328,7 @@ describe("CSV parser", () => {
     ).rejects.toThrow("CSV file exceeds 10,000 data-row limit");
   });
 
-  it("INT-FF-CSV-007-01: rejects inconsistent CSV record structure before producing row outcomes", async () => {
+  it("INT-FF-CSV-007-01 E2E-FF-CSV-007-01: rejects inconsistent CSV record structure before producing row outcomes", async () => {
     const parser = new SimpleCsvParser();
     const csv = [
       "Date;Payee;Description;Amount",
@@ -344,7 +344,7 @@ describe("CSV parser", () => {
     ).rejects.toThrow("CSV record has inconsistent column count at line 3");
   });
 
-  it("INT-FF-CSV-007-01: rejects binary, malformed UTF-8, and malformed quotes for the whole file", async () => {
+  it("INT-FF-CSV-007-01 E2E-FF-CSV-007-02: rejects binary, malformed UTF-8, and malformed quotes for the whole file", async () => {
     const parser = new SimpleCsvParser();
     const parse = (file: Buffer) =>
       parser.parse(file, { accountId: "account-shared-checking", profile: genericProfile });

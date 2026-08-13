@@ -470,13 +470,13 @@
     },
     {
       "id": "PH-10C",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Harden CSV profiles, purpose persistence, preview, upload, and confirmation.",
       "classification": "Behavior change"
     },
     {
       "id": "PH-10C-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Include normalized purpose in v3 CSV duplicate identity while preserving guarded v1/v2 compatibility.",
       "classification": "Behavior change"
     },
@@ -934,7 +934,7 @@
     },
     {
       "id": "FF-TXN-001-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "INT-FF-TXN-001-01",
       "file": "tests/integration/drizzle-transaction-repository.test.ts",
@@ -942,7 +942,7 @@
     },
     {
       "id": "FF-TXN-001-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "UNIT-FF-TXN-001-02",
       "file": "tests/unit/transactions.test.ts",
@@ -990,7 +990,7 @@
     },
     {
       "id": "FF-TXN-004-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-TXN-004-01",
       "file": "tests/e2e/transactions.test.ts",
@@ -1022,7 +1022,7 @@
     },
     {
       "id": "FF-CSV-001-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-CSV-001-01",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1030,7 +1030,7 @@
     },
     {
       "id": "FF-CSV-001-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-CSV-001-02",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1038,7 +1038,7 @@
     },
     {
       "id": "FF-CSV-002-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-CSV-002-01",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1046,7 +1046,7 @@
     },
     {
       "id": "FF-CSV-003-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "INT-FF-CSV-003-01",
       "file": "tests/integration/csv-parser.test.ts",
@@ -1054,7 +1054,7 @@
     },
     {
       "id": "FF-CSV-003-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "INT-FF-CSV-003-02",
       "file": "tests/integration/csv-parser.test.ts",
@@ -1062,7 +1062,7 @@
     },
     {
       "id": "FF-CSV-004-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-CSV-004-01",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1070,7 +1070,7 @@
     },
     {
       "id": "FF-CSV-004-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-CSV-004-02",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1078,7 +1078,7 @@
     },
     {
       "id": "FF-CSV-005-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "UNIT-FF-CSV-005-01",
       "file": "tests/unit/imports.test.ts",
@@ -1086,7 +1086,7 @@
     },
     {
       "id": "FF-CSV-005-AC02",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "UNIT-FF-CSV-005-02",
       "file": "tests/unit/imports.test.ts",
@@ -1094,7 +1094,7 @@
     },
     {
       "id": "FF-CSV-006-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-CSV-006-01",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1102,7 +1102,7 @@
     },
     {
       "id": "FF-CSV-007-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-CSV-007-01",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1110,7 +1110,7 @@
     },
     {
       "id": "FF-CSV-007-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-CSV-007-02",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1118,7 +1118,7 @@
     },
     {
       "id": "FF-CSV-008-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "E2E-FF-CSV-008-01",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1126,7 +1126,7 @@
     },
     {
       "id": "FF-CSV-008-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "UNIT-FF-CSV-008-01",
       "file": "tests/unit/imports.test.ts",
@@ -1134,7 +1134,7 @@
     },
     {
       "id": "FF-CSV-009-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "INT-FF-CSV-009-01",
       "file": "tests/integration/drizzle-import-confirmation.test.ts",
@@ -1142,7 +1142,7 @@
     },
     {
       "id": "FF-CSV-009-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "INT-FF-CSV-009-02",
       "file": "tests/integration/drizzle-import-confirmation.test.ts",
@@ -1150,7 +1150,7 @@
     },
     {
       "id": "FF-CSV-010-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "INT-FF-CSV-010-01",
       "file": "tests/integration/csv-import-hash-migration.test.ts",
@@ -1158,7 +1158,7 @@
     },
     {
       "id": "FF-CSV-010-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "INT-FF-CSV-010-02",
       "file": "tests/integration/csv-import-hash-migration.test.ts",
@@ -1166,7 +1166,7 @@
     },
     {
       "id": "FF-CSV-011-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C",
       "test": "INT-FF-CSV-011-01",
       "file": "tests/integration/request-logging.test.ts",
@@ -1174,7 +1174,7 @@
     },
     {
       "id": "FF-CSV-012-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C-R01",
       "test": "E2E-FF-CSV-012-01",
       "file": "tests/e2e/csv-import.test.ts",
@@ -1182,7 +1182,7 @@
     },
     {
       "id": "FF-CSV-012-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C-R01",
       "test": "INT-FF-CSV-012-04",
       "file": "tests/integration/drizzle-import-confirmation.test.ts",
@@ -1190,7 +1190,7 @@
     },
     {
       "id": "FF-CSV-012-AC03",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-10C-R01",
       "test": "INT-FF-CSV-012-03",
       "file": "tests/integration/csv-import-hash-migration.test.ts",

@@ -13,7 +13,7 @@ const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
 describe("Drizzle transaction repository", () => {
   it.runIf(testDatabaseUrl !== undefined)(
-    "stores, filters, updates, and deletes transactions",
+    "INT-FF-TXN-001-01 INT-FF-TXN-004-01: stores, filters, updates, and deletes transactions",
     async () => {
       if (testDatabaseUrl === undefined) {
         throw new Error("TEST_DATABASE_URL is required");

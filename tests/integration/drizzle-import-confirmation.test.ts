@@ -245,7 +245,7 @@ describe("PostgreSQL CSV confirmation", () => {
   );
 
   it.runIf(databaseUrl !== undefined)(
-    "INT-FF-CSV-008-02/009-01/009-02: consumes and inserts atomically under failure and concurrency",
+    "INT-FF-CSV-008-02 INT-FF-CSV-009-01 INT-FF-CSV-009-02: consumes and inserts atomically under failure and concurrency",
     async () => {
       if (databaseUrl === undefined) throw new Error("TEST_DATABASE_URL is required");
       await migrate(databaseUrl);

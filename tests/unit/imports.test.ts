@@ -209,7 +209,7 @@ describe("csv imports", () => {
     expect(firstHash).toBe(secondHash);
   });
 
-  it("marks existing and repeated import rows as duplicates", () => {
+  it("UNIT-FF-CSV-004-01: marks existing and repeated import rows as duplicates", () => {
     const firstRow = normalizeCsvTransactionRow({
       accountId: "account-shared-checking",
       date: "15.07.2026",
