@@ -4,6 +4,24 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.10.0] - 2026-08-14
+
+### Added
+
+- Add server-stored, user-bound, single-use CSV preview batches and atomic confirmation so accepted transactions and preview consumption commit or roll back together.
+- Add stricter CSV option, size, row, encoding, quoting, date, amount, and mapped-column validation with canonical preview outcomes.
+- Add purpose-aware v3 duplicate identities while retaining purpose-matched compatibility with historical v1 and v2 import hashes.
+
+### Fixed
+
+- Update a loaded CSV import profile in place instead of creating a duplicate, and reject stale submitted profile IDs without creating a profile.
+- Prevent browser-submitted transaction values, concurrent confirmation, and stale preview identities from bypassing canonical import and duplicate decisions.
+
+### Database migrations
+
+- Migration `0012_csv_security_atomicity.sql` validates historical import profiles and hashes, adds persisted preview batches and CSV purpose/profile fields, and enforces account-scoped import-hash uniqueness.
+- Migration `0013_csv_import_purpose_identity.sql` validates v1-v3 import hashes and account-scoped collisions without rewriting transactions. It removes unconsumed pre-v3 preview batches; users with a pending preview must upload and preview the CSV again after deployment. Consumed preview audit rows remain.
+
 ## [0.9.0] - 2026-08-12
 
 ### Added
