@@ -69,6 +69,7 @@ export function prepareCsvImportViewModel(input: CsvImportViewInput) {
     text,
     profileSaved: input.profileSaved === true,
     formError: input.formError,
+    ...(profile === undefined ? {} : { profileId: profile.id }),
     selectedProfileUrl:
       profile === undefined
         ? undefined

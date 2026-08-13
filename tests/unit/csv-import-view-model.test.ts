@@ -44,6 +44,7 @@ describe("CSV import view-model preparation", () => {
         ],
       }),
     ).toMatchObject({
+      profileId: "profile/a b",
       selectedProfileUrl: "/imports/csv?profileId=profile%2Fa%20b",
       profileSaved: true,
       formError: '<img src=x onerror="alert(1)">',
@@ -55,5 +56,13 @@ describe("CSV import view-model preparation", () => {
         }),
       ],
     });
+
+    expect(
+      prepareCsvImportViewModel({
+        accounts: [],
+        categories: [],
+        importProfiles: [profile],
+      }),
+    ).not.toHaveProperty("profileId");
   });
 });

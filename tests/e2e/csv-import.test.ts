@@ -195,6 +195,7 @@ test("CSV import profiles can be saved and reused", async ({ page }) => {
     await page.getByLabel("Description column").fill("Purpose");
     await page.getByLabel("Payee column").fill("Counterparty");
     await page.getByLabel("Category column").fill("Group");
+    await expect(page.locator('input[name="profileId"]')).toHaveCount(0);
     await page.getByRole("button", { name: "Save import profile" }).click();
 
     await expect(page.getByText("Import profile saved.")).toBeVisible();
@@ -209,6 +210,83 @@ test("CSV import profiles can be saved and reused", async ({ page }) => {
     await expect(page.getByLabel("Description column")).toHaveValue("Purpose");
     await expect(page.getByLabel("Payee column")).toHaveValue("Counterparty");
     await expect(page.getByLabel("Category column")).toHaveValue("Group");
+  } finally {
+    await server.close();
+  }
+});
+
+test("CSV import saves edits to a loaded profile in place", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await openCsvImportPage(page, baseUrl);
+    await page.getByLabel("Profile name").fill("Original grocery profile");
+    await page.getByLabel("Date column").fill("Booking date");
+    await page.getByLabel("Amount column").fill("Amount");
+    await page.getByLabel("Description column").fill("Description");
+    await page.getByRole("button", { name: "Save import profile" }).click();
+
+    const originalProfileId = new URL(page.url()).searchParams.get("profileId");
+    if (originalProfileId === null) {
+      throw new Error("Saving a new import profile must select it");
+    }
+
+    await page.goto(`${baseUrl}/imports/csv`);
+    await page.getByLabel("Import profile").selectOption(originalProfileId);
+    await page.getByRole("button", { name: "Load import profile" }).click();
+    await expect(page.locator('input[name="profileId"]')).toHaveValue(originalProfileId);
+
+    await page.getByLabel("Profile name").fill("Updated grocery profile");
+    await page.getByLabel("Date column").fill("Updated booking date");
+    await page.getByRole("button", { name: "Save import profile" }).click();
+
+    expect(new URL(page.url()).searchParams.get("profileId")).toBe(originalProfileId);
+    await expect(page.getByLabel("Profile name")).toHaveValue("Updated grocery profile");
+    await expect(page.getByLabel("Date column")).toHaveValue("Updated booking date");
+    await expect(
+      page.getByRole("option", { name: "Updated grocery profile", exact: true }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("option", { name: "Original grocery profile", exact: true }),
+    ).toHaveCount(0);
+  } finally {
+    await server.close();
+  }
+});
+
+test("CSV import rejects an unknown submitted profile ID without creating a profile", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await openCsvImportPage(page, baseUrl);
+    const response = await page.request.post(`${baseUrl}/imports/csv/profiles`, {
+      form: {
+        profileId: "missing-profile-id",
+        profileName: "Profile that must not be created",
+        delimiter: ";",
+        encoding: "utf8",
+        dateFormat: "DD.MM.YYYY",
+        decimalFormat: "comma-decimal",
+        dateColumn: "Date",
+        amountColumn: "Amount",
+        descriptionColumn: "Description",
+        payeeColumn: "Payee",
+        purposeColumn: "",
+        categoryColumn: "",
+      },
+      maxRedirects: 0,
+    });
+
+    expect(response.status()).toBe(400);
+    expect(await response.text()).toContain("Import profile");
+    await page.goto(`${baseUrl}/imports/csv`);
+    await expect(
+      page.getByRole("option", { name: "Profile that must not be created", exact: true }),
+    ).toHaveCount(0);
   } finally {
     await server.close();
   }

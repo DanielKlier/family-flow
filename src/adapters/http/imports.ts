@@ -97,7 +97,15 @@ async function handleSaveImportProfile(
 ) {
   const [accounts, categories, importProfiles] = await readPageData(repositories);
   try {
-    const profile = createImportProfileFromForm(readForm(request.body), randomUUID());
+    const form = readForm(request.body);
+    const submittedProfileId = readOptionalQueryValue(form, "profileId");
+    if (
+      submittedProfileId !== undefined &&
+      (await repositories.importProfiles.get(submittedProfileId)) === null
+    ) {
+      throw new Error("Import profile does not exist");
+    }
+    const profile = createImportProfileFromForm(form, submittedProfileId ?? randomUUID());
     await repositories.importProfiles.save(profile);
     return reply.redirect(`/imports/csv?profileId=${encodeURIComponent(profile.id)}&saved=1`);
   } catch (error: unknown) {

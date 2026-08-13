@@ -39,6 +39,26 @@ describe("Drizzle import profile repository", () => {
         await repositories.importProfiles.save(profile);
 
         await expect(repositories.importProfiles.list()).resolves.toEqual([profile]);
+
+        const replacement = createImportProfile({
+          id: "profile-generic-bank",
+          name: "Updated generic bank",
+          kind: "custom",
+          delimiter: ",",
+          encoding: "latin1",
+          dateFormat: "YYYY-MM-DD",
+          decimalFormat: "dot-decimal",
+          dateColumn: "Booked",
+          amountColumn: "Value",
+          descriptionColumn: "Purpose",
+          purposeColumn: "Purpose",
+        });
+        await repositories.importProfiles.save(replacement);
+
+        await expect(repositories.importProfiles.get("profile-generic-bank")).resolves.toEqual(
+          replacement,
+        );
+        await expect(repositories.importProfiles.list()).resolves.toEqual([replacement]);
       } finally {
         await connection.client.end();
       }

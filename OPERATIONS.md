@@ -320,7 +320,7 @@ Supported import flow:
 - Select an import account.
 - Select comma, semicolon, or tab delimiter; `UTF-8` or `Latin1` encoding; one of the three date formats; and comma- or dot-decimal amounts.
 - Map date, amount, description, and optional payee, purpose, and category columns.
-- Save reusable custom import profiles without bank-specific default data.
+- Save reusable custom import profiles without bank-specific default data. Saving a manual mapping creates a new profile; loading and saving an existing profile updates that profile in place. A submitted profile ID that no longer exists is rejected and creates no profile.
 - Preview normalized rows before writing transactions. Importable rows are kept separate from ignored non-expenses and invalid required values.
 - Confirm the preview with the opaque server-generated batch ID to store non-duplicate expenses. Browser-submitted transaction values are never used for confirmation.
 

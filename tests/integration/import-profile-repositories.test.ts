@@ -32,4 +32,39 @@ describe("import profile repositories", () => {
     await expect(importProfiles.list()).resolves.toEqual([profile]);
     await expect(importProfiles.get("profile-generic-bank")).resolves.toEqual(profile);
   });
+
+  it("replaces an import profile when saving a profile with the same ID", async () => {
+    const importProfiles = new InMemoryImportProfileRepository();
+    const id = "profile-replaced";
+    const original = createImportProfile({
+      id,
+      name: "Original profile",
+      kind: "custom",
+      delimiter: ";",
+      encoding: "utf8",
+      dateColumn: "Date",
+      amountColumn: "Amount",
+      descriptionColumn: "Description",
+      payeeColumn: "Payee",
+    });
+    const replacement = createImportProfile({
+      id,
+      name: "Replacement profile",
+      kind: "custom",
+      delimiter: ",",
+      encoding: "latin1",
+      dateFormat: "YYYY-MM-DD",
+      decimalFormat: "dot-decimal",
+      dateColumn: "Booked",
+      amountColumn: "Value",
+      descriptionColumn: "Purpose",
+      purposeColumn: "Purpose",
+    });
+
+    await importProfiles.save(original);
+    await importProfiles.save(replacement);
+
+    await expect(importProfiles.get(id)).resolves.toEqual(replacement);
+    await expect(importProfiles.list()).resolves.toEqual([replacement]);
+  });
 });

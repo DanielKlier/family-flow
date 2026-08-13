@@ -8,6 +8,7 @@
     <button type="submit">{{ text.loadProfile }}</button>
   </form>
   <form id="csv-import-form" class="grid-form" method="post" action="/imports/csv/preview" enctype="multipart/form-data">
+    {% if profileId %}<input type="hidden" name="profileId" value="{{ profileId }}">{% endif %}
     <label class="field">{{ text.profileName }} <input name="profileName" value="{{ profileName }}"></label>
     <label class="field">{{ text.importAccount }} <select name="accountId">{% for option in accounts %}<option value="{{ option.value }}">{{ option.label }}</option>{% endfor %}</select></label>
     <label class="field">{{ text.delimiter }} <select name="delimiter">{% for option in delimiters %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
