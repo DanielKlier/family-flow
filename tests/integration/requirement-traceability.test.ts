@@ -36,7 +36,7 @@ describe("INT-FF-QUA-004-01 PostgreSQL quality gate", () => {
 
   it("preserves SIGTERM semantics and still cleans up", async () => {
     const harness = await createHarness("signal");
-    const child = spawn(resolve("node_modules/.bin/tsx"), ["scripts/run-postgres-tests.ts"], {
+    const child = spawn(process.execPath, ["--import", "tsx", "scripts/run-postgres-tests.ts"], {
       cwd: repositoryRoot,
       env: harness.environment,
       stdio: "ignore",
