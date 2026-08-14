@@ -195,7 +195,8 @@ Supported maintenance actions:
 - Mark planned or booked expenses as fixed costs.
 - Edit account, category, date, description, payee, amount, status, fixed-cost flag, and note.
 - Delete incorrectly entered manual transactions.
-- Filter by month, account, owner context, category, status, and fixed-cost flag.
+- Mark or unmark manual and CSV-imported expenses as internal transfers.
+- Filter by month, account, owner context, category, status, fixed-cost flag, and transfer state.
 
 Operational notes:
 
@@ -203,6 +204,24 @@ Operational notes:
 - Owner-context filtering is derived from the selected account, not from a separate transaction field.
 - Use `/admin/master-data` to verify account and category status if transaction forms have missing options.
 - For manual correction issues, capture the visible `X-Request-Id` and inspect the matching request log entry. Do not log or paste broad financial exports when a single minimized transaction example is enough.
+
+## Internal Transfer Classification
+
+Migration `0014_internal_transfers.sql` adds a non-null transfer flag and classifies every existing transaction as unmarked. It does not infer pairs or rewrite financial values. After deployment, verify the behavior with one minimized fixture:
+
+1. Open `/transactions`, create a temporary expense, and use `Mark as transfer` in its row.
+2. Confirm that the row remains visible and shows `Internal transfer`.
+3. Select `marked` in the `Transfer state` filter and confirm that the fixture remains listed.
+4. Use `Unmark transfer`, select the `unmarked` filter, and confirm that the label is removed while the row remains listed.
+5. Delete the temporary fixture. Repeat mark/unmark on a non-sensitive imported fixture when validating CSV identity preservation; its source, purpose, and duplicate-detection hash must not change.
+
+Interpretation and correction:
+
+- Mark each transaction leg that represents movement between household-owned accounts. Classification is explicit; FamilyFlow does not automatically match transfer pairs.
+- Marking either one leg or both legs makes every marked leg contribute zero to the reusable core expense aggregate. Dashboard, historical-average, and forecast integration of this rule is delivered separately in `PH-13`; do not use the current dashboard as transfer-exclusion evidence.
+- If an expense was marked incorrectly, unmark it through its transaction row. If many historical rows need correction, take a backup first, identify rows by stable transaction ID, and apply deliberate changes rather than guessing pairs from equal amounts.
+- To troubleshoot a missing label or filter result, capture the response `X-Request-Id`, inspect the matching request log, and verify `internal_transfer` for only the affected transaction. Do not include broad financial data in logs or support material.
+- If migration `0014_internal_transfers.sql` fails, keep the previous application version stopped, inspect the migration error and `schema_migrations`, and retry after correcting the database issue. Never edit the deployed migration or infer transfer state during rollback; the additive column is safe for the updated application and older data remains unmarked by default.
 
 ## Categorization Rule Maintenance
 

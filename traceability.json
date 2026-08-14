@@ -542,7 +542,7 @@
     },
     {
       "id": "PH-11",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Explicit internal-transfer classification and transaction-list behavior.",
       "classification": "Behavior change"
     },
@@ -950,7 +950,7 @@
     },
     {
       "id": "FF-TXN-001-AC03",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-11",
       "test": "INT-FF-TXN-001-03",
       "file": "tests/integration/drizzle-transaction-repository.test.ts",
@@ -998,7 +998,7 @@
     },
     {
       "id": "FF-TXN-005-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-11",
       "test": "E2E-FF-TXN-005-01",
       "file": "tests/e2e/transactions.test.ts",
@@ -1006,7 +1006,7 @@
     },
     {
       "id": "FF-TXN-006-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-11",
       "test": "UNIT-FF-TXN-006-01",
       "file": "tests/unit/transactions.test.ts",
@@ -1510,7 +1510,7 @@
     },
     {
       "id": "FF-UI-001-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-11",
       "test": "E2E-FF-UI-001-02",
       "file": "tests/e2e/internal-transfers.test.ts",

@@ -698,7 +698,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-11 — Explicit Internal Transfers
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-TXN-005`, transaction-level foundations for `FF-TXN-006`
 **Verifies:** `FF-TXN-001`, `FF-TXN-002`, `FF-TXN-004`, `FF-ARC-006`, `FF-UI-001`
@@ -706,18 +706,18 @@ The current composition registers authentication before protected routes. This d
 
 **Red:**
 
-- [ ] Add `E2E-FF-TXN-005-01`, observe failure because transfer classification does not exist, and record the red result.
-- [ ] Then add `UNIT-FF-TXN-005-01` and `UNIT-FF-TXN-006-01` for classification and zero expense contribution.
+- [x] Add `E2E-FF-TXN-005-01`, observe failure because transfer classification does not exist, and record the red result.
+- [x] Then add `UNIT-FF-TXN-005-01` and `UNIT-FF-TXN-006-01` for classification and zero expense contribution.
 
 **Tasks:**
 
-- [ ] Add explicit internal-transfer classification to the transaction core and persistence model.
-- [ ] Support mark/unmark in manual and imported transaction maintenance.
-- [ ] Keep transfers visible and clearly labeled in lists and filters.
-- [ ] Exclude transfers from reusable expense aggregation rules.
-- [ ] Do not implement automatic pair matching.
-- [ ] Do not claim dashboard, average, or forecast UI behavior before `PH-13`.
-- [ ] Update correction and interpretation runbooks.
+- [x] Add explicit internal-transfer classification to the transaction core and persistence model.
+- [x] Support mark/unmark in manual and imported transaction maintenance.
+- [x] Keep transfers visible and clearly labeled in lists and filters.
+- [x] Exclude transfers from reusable expense aggregation rules.
+- [x] Do not implement automatic pair matching.
+- [x] Do not claim dashboard, average, or forecast UI behavior before `PH-13`.
+- [x] Update correction and interpretation runbooks.
 
 **Tests:** `E2E-FF-TXN-005-01`, `E2E-FF-TXN-005-02`, `E2E-FF-UI-001-02`, `UNIT-FF-TXN-005-01`, `UNIT-FF-TXN-006-01`, `INT-FF-TXN-001-03` and `INT-FF-TXN-005-01` (PostgreSQL), and `INT-FF-TXN-005-02` (HTTP).
 
