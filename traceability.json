@@ -208,7 +208,7 @@
     },
     {
       "id": "FF-CAT-002",
-      "acceptanceCriteria": ["FF-CAT-002-AC01"]
+      "acceptanceCriteria": ["FF-CAT-002-AC01", "FF-CAT-002-AC02"]
     },
     {
       "id": "FF-CAT-003",
@@ -543,7 +543,7 @@
     {
       "id": "PH-11",
       "status": "Completed",
-      "summary": "Explicit internal-transfer classification and transaction-list behavior.",
+      "summary": "Explicit internal-transfer classification, transaction-list behavior, and categorization-rule actions.",
       "classification": "Behavior change"
     },
     {
@@ -1213,6 +1213,14 @@
       "operation": "OPS-FF-CAT-002-01"
     },
     {
+      "id": "FF-CAT-002-AC02",
+      "status": "Verified",
+      "phase": "PH-11",
+      "test": "E2E-FF-CAT-002-02",
+      "file": "tests/e2e/csv-import.test.ts",
+      "operation": "OPS-FF-TXN-005-01"
+    },
+    {
       "id": "FF-CAT-003-AC01",
       "status": "Gap",
       "phase": "PH-07-R01",
@@ -1706,6 +1714,22 @@
       "id": "E2E-FF-CAT-001-01",
       "acceptance": "FF-CAT-001-AC01",
       "phase": "PH-07-R01",
+      "file": "tests/e2e/categorization-rules.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CAT-002-02",
+      "acceptance": "FF-CAT-002-AC02",
+      "phase": "PH-11",
+      "file": "tests/e2e/csv-import.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CAT-002-03",
+      "acceptance": "FF-CAT-002-AC02",
+      "phase": "PH-11",
       "file": "tests/e2e/categorization-rules.test.ts",
       "boundary": "End-to-end",
       "classification": "Expected red before production change"
@@ -2293,6 +2317,38 @@
       "file": "tests/integration/oidc-http.test.ts",
       "boundary": "HTTP adapter",
       "classification": "Expected green evidence"
+    },
+    {
+      "id": "INT-FF-CAT-002-01",
+      "acceptance": "FF-CAT-002-AC02",
+      "phase": "PH-11",
+      "file": "tests/integration/categorization-rule-repositories.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CAT-002-02",
+      "acceptance": "FF-CAT-002-AC02",
+      "phase": "PH-11",
+      "file": "tests/integration/drizzle-categorization-rule-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CAT-002-03",
+      "acceptance": "FF-CAT-002-AC02",
+      "phase": "PH-11",
+      "file": "tests/integration/categorization-rule-migration.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-CAT-002-04",
+      "acceptance": "FF-CAT-002-AC02",
+      "phase": "PH-11",
+      "file": "tests/integration/categorization-rules-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
     },
     {
       "id": "INT-FF-CAT-004-02",
@@ -2999,6 +3055,14 @@
       "classification": "Expected red before production change"
     },
     {
+      "id": "UNIT-FF-CAT-002-02",
+      "acceptance": "FF-CAT-002-AC02",
+      "phase": "PH-11",
+      "file": "tests/unit/categorization-rules.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
       "id": "UNIT-FF-CAT-003-01",
       "acceptance": "FF-CAT-003-AC01",
       "phase": "PH-07-R01",
@@ -3463,8 +3527,8 @@
     },
     {
       "id": "OPS-FF-TXN-005-01",
-      "procedure": "**Internal Transfers**: run the migration and atomic mark/unmark PostgreSQL fixture, then inspect transfer filters and the reusable aggregate.",
-      "outcome": "Concurrent edits survive transfer-state changes, visibility remains filtered correctly, and marked expense contribution is zero.",
+      "procedure": "**Internal Transfers**: run both additive migrations, atomic direct and rule mark/unmark PostgreSQL fixtures, authoritative CSV preview confirmation, then inspect transfer filters and the reusable aggregate.",
+      "outcome": "Concurrent edits and CSV identity survive transfer-state changes, previewed rule actions remain authoritative, visibility remains filtered correctly, and marked expense contribution is zero.",
       "rollback": "Unmark by stable transaction ID and roll back if aggregates remain wrong.",
       "verifier": "scripts/operations/registry.ts#OPS-FF-TXN-005-01"
     }

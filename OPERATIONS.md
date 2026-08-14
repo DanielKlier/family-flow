@@ -207,7 +207,7 @@ Operational notes:
 
 ## Internal Transfer Classification
 
-Migration `0014_internal_transfers.sql` adds a non-null transfer flag and classifies every existing transaction as unmarked. It does not infer pairs or rewrite financial values. Run the bounded migration, atomic mark/unmark, filter, and aggregate verifier with `pnpm ops:verify --id OPS-FF-TXN-005-01`; a passing `Operation OPS-FF-TXN-005-01 passed` result is the required PH-11 operations evidence. After deployment, verify the behavior with one minimized fixture:
+Migration `0014_internal_transfers.sql` adds a non-null transfer flag and classifies every existing transaction as unmarked. Migration `0015_categorization_rule_internal_transfer.sql` additively adds the nullable categorization-rule action and leaves existing rules unchanged. Neither infers pairs nor rewrites financial values. Run the bounded migrations, atomic mark/unmark, rule-action, filter, and aggregate verifier with `pnpm ops:verify --id OPS-FF-TXN-005-01`; a passing `Operation OPS-FF-TXN-005-01 passed` result is the required PH-11 operations evidence. After deployment, verify the behavior with one minimized fixture:
 
 1. Open `/transactions`, create a temporary expense, and use `Mark as transfer` in its row.
 2. Confirm that the row remains visible and shows `Internal transfer`.
@@ -231,17 +231,18 @@ Authenticated users can maintain automatic transaction categorization rules at `
 
 Supported maintenance actions:
 
-- Create text rules with a name, search text, target category, optional account restriction, optional fixed-cost action, and numeric priority.
+- Create text rules with a name, search text, target category, optional account restriction, optional fixed-cost action, optional internal-transfer action, and numeric priority.
 - Use a lower priority number for more specific rules when multiple rules match the same transaction.
 - Leave the account restriction as `All accounts` for household-wide rules, or select one account when the same text should only apply to a specific account.
-- Use `Apply rules to existing transactions` after creating or changing rules to re-categorize already stored transactions and apply fixed-cost actions.
+- Use `Apply rules to existing transactions` after creating or changing rules to re-categorize already stored transactions and apply fixed-cost or internal-transfer actions.
 
 Operational notes:
 
 - Rules match case-insensitively against transaction description and payee.
 - Disabled rule support is represented in the data model; the current UI creates enabled rules only.
-- CSV import preview applies exact CSV category-name matching first, then categorization rules, then the `Sonstiges` fallback. Matching rules can still set the fixed-cost flag when the category comes from the CSV file.
-- Re-applying rules can overwrite a transaction category and fixed-cost flag when a rule matches. Review broad search text, fixed-cost action, and priority before applying rules to existing data.
+- Migration `0015_categorization_rule_internal_transfer.sql` additively introduces the nullable rule action. Existing rules remain `unchanged`; no transaction is reclassified during migration. After deployment, create one minimized rule for a temporary fixture, verify mark and unmark through reapplication, then remove both fixtures.
+- CSV import preview applies exact CSV category-name matching first, then categorization rules, then the `Sonstiges` fallback. Matching rules can still set fixed-cost and internal-transfer actions when the category comes from the CSV file. The preview stores the resolved transfer state, so confirmation does not reevaluate changed rules. Legacy preview snapshots without this field confirm as unmarked; malformed non-boolean values abort confirmation atomically.
+- Re-applying rules can overwrite a transaction category, fixed-cost flag, and transfer state when a rule matches. A transfer-only change is persisted without changing CSV source, purpose, or import hash. Review broad search text, both optional actions, and priority before applying rules to existing data.
 - If rule application gives unexpected results, capture the visible `X-Request-Id`, inspect the matching request log entry, and verify the affected transaction with a minimized example instead of exporting broad financial data.
 
 ## Income Planning Maintenance

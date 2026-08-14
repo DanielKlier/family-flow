@@ -18,8 +18,9 @@ FamilyFlow is a local web application for household and family finance planning.
 6. Open `http://127.0.0.1:3000/health` to verify the app is running.
 7. Open `http://127.0.0.1:3000/auth/test-login` in `AUTH_MODE=test`, then open `http://127.0.0.1:3000/admin/master-data` to verify seeded accounts and categories.
 8. Open `http://127.0.0.1:3000/transactions` to create, edit, delete, filter, and explicitly mark or unmark expenses as internal transfers.
-9. Open `http://127.0.0.1:3000/income` to maintain recurring income, monthly overrides, and monthly planned income totals.
-10. Open `http://127.0.0.1:3000/imports/csv` to save CSV import profiles, preview CSV expenses, and confirm imports.
+9. Open `http://127.0.0.1:3000/categorization-rules` to maintain automatic category, fixed-cost, and internal-transfer actions and reapply them to existing transactions.
+10. Open `http://127.0.0.1:3000/income` to maintain recurring income, monthly overrides, and monthly planned income totals.
+11. Open `http://127.0.0.1:3000/imports/csv` to save CSV import profiles, preview CSV expenses, and confirm imports.
 
 ## Local OIDC Development
 

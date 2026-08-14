@@ -715,13 +715,14 @@ The current composition registers authentication before protected routes. This d
 - [x] Support mark/unmark in manual and imported transaction maintenance.
 - [x] Keep transfers visible and clearly labeled in lists and filters.
 - [x] Exclude transfers from reusable expense aggregation rules.
+- [x] Add nullable mark/unmark/unchanged internal-transfer actions to categorization rules, including additive persistence, transfer-only reapplication, and authoritative CSV preview snapshots with strict confirmation validation.
 - [x] Do not implement automatic pair matching.
 - [x] Do not claim dashboard, average, or forecast UI behavior before `PH-13`.
 - [x] Update correction and interpretation runbooks.
 
-**Tests:** `E2E-FF-TXN-005-01`, `E2E-FF-TXN-005-02`, `E2E-FF-TXN-005-03`, `E2E-FF-UI-001-02`, `UNIT-FF-TXN-005-01`, `UNIT-FF-TXN-006-01`, `INT-FF-TXN-001-03`, `INT-FF-TXN-005-01`, and `INT-FF-TXN-005-03` (PostgreSQL), and `INT-FF-TXN-005-02` (HTTP).
+**Tests:** `E2E-FF-TXN-005-01`, `E2E-FF-TXN-005-02`, `E2E-FF-TXN-005-03`, `E2E-FF-UI-001-02`, `UNIT-FF-TXN-005-01`, `UNIT-FF-TXN-006-01`, `INT-FF-TXN-001-03`, `INT-FF-TXN-005-01`, and `INT-FF-TXN-005-03` (PostgreSQL), `INT-FF-TXN-005-02` (HTTP), plus `E2E-FF-CAT-002-02`, `E2E-FF-CAT-002-03`, `UNIT-FF-CAT-002-02`, and `INT-FF-CAT-002-01` through `INT-FF-CAT-002-04` for rule transfer actions.
 
-**Quality gates:** the five canonical commands plus `pnpm docker:build`.
+**Quality gates:** the five canonical commands plus non-skippable `pnpm test:postgres` and `pnpm docker:build` because the additive rule migration changes database and image contents.
 
 **Targeted verification:** `pnpm ops:verify --id OPS-FF-TXN-005-01` (registered migration, atomic mark/unmark, filter, and aggregate evidence).
 

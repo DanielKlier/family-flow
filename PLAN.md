@@ -514,9 +514,10 @@ Rules use Unicode NFKC, trim and collapse whitespace to one ASCII space, and `to
 
 #### FF-CAT-002 — Rule Actions
 
-Rules assign a category and may set fixed-cost state. Import preview records category origin. Reapplication preserves categories with origin `manual`, `csv_mapped`, or `legacy_preserved` but may still apply fixed-cost actions. It recalculates category for `rule` and `fallback` origins using the current deterministic rule set.
+Rules assign a category and may set fixed-cost and internal-transfer state. Each optional action is tri-state: mark, unmark, or leave unchanged. Import preview records category origin. Reapplication preserves categories with origin `manual`, `csv_mapped`, or `legacy_preserved` but may still apply matching state actions. It recalculates category for `rule` and `fallback` origins using the current deterministic rule set.
 
 - **FF-CAT-002-AC01:** A newly imported transaction produces the same rule/fallback category and fixed-cost decision during preview and later reapplication; protected category origins retain category while accepting matching fixed-cost action.
+- **FF-CAT-002-AC02:** The selected winning rule's nullable internal-transfer action round-trips through persistence, marks or unmarks without changing unrelated transaction identity fields, and is snapshotted authoritatively during CSV preview. Confirmation accepts legacy snapshots that omit the field as unmarked and rejects non-boolean stored values.
 
 #### FF-CAT-003 — Deterministic Priority
 
