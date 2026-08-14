@@ -15,5 +15,6 @@ export type TransactionRepository = {
   list(filters: TransactionFilters): Promise<Transaction[]>;
   get(id: string): Promise<Transaction | null>;
   save(transaction: Transaction): Promise<void>;
+  setInternalTransfer(id: string, internalTransfer: boolean): Promise<boolean>;
   delete(id: string): Promise<void>;
 };

@@ -207,7 +207,7 @@ Operational notes:
 
 ## Internal Transfer Classification
 
-Migration `0014_internal_transfers.sql` adds a non-null transfer flag and classifies every existing transaction as unmarked. It does not infer pairs or rewrite financial values. After deployment, verify the behavior with one minimized fixture:
+Migration `0014_internal_transfers.sql` adds a non-null transfer flag and classifies every existing transaction as unmarked. It does not infer pairs or rewrite financial values. Run the bounded migration, atomic mark/unmark, filter, and aggregate verifier with `pnpm ops:verify --id OPS-FF-TXN-005-01`; a passing `Operation OPS-FF-TXN-005-01 passed` result is the required PH-11 operations evidence. After deployment, verify the behavior with one minimized fixture:
 
 1. Open `/transactions`, create a temporary expense, and use `Mark as transfer` in its row.
 2. Confirm that the row remains visible and shows `Internal transfer`.
@@ -220,6 +220,8 @@ Interpretation and correction:
 - Mark each transaction leg that represents movement between household-owned accounts. Classification is explicit; FamilyFlow does not automatically match transfer pairs.
 - Marking either one leg or both legs makes every marked leg contribute zero to the reusable core expense aggregate. Dashboard, historical-average, and forecast integration of this rule is delivered separately in `PH-13`; do not use the current dashboard as transfer-exclusion evidence.
 - If an expense was marked incorrectly, unmark it through its transaction row. If many historical rows need correction, take a backup first, identify rows by stable transaction ID, and apply deliberate changes rather than guessing pairs from equal amounts.
+- Transfer actions preserve active canonical transaction filters. A row that no longer matches after mark/unmark disappears from the filtered list without exposing rows from another transfer state.
+- Requests must submit exactly `internalTransfer=true` or `internalTransfer=false`. Invalid values return HTTP 400 with the response request ID and do not mutate the transaction.
 - To troubleshoot a missing label or filter result, capture the response `X-Request-Id`, inspect the matching request log, and verify `internal_transfer` for only the affected transaction. Do not include broad financial data in logs or support material.
 - If migration `0014_internal_transfers.sql` fails, keep the previous application version stopped, inspect the migration error and `schema_migrations`, and retry after correcting the database issue. Never edit the deployed migration or infer transfer state during rollback; the additive column is safe for the updated application and older data remains unmarked by default.
 

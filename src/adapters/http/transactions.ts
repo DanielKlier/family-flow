@@ -8,6 +8,7 @@ import type { OwnerContextRepository } from "../../ports/repositories/owner-cont
 import type { TransactionRepository } from "../../ports/repositories/transaction-repository.js";
 import { isHtmxRequest, readForm, readRouteId } from "./request-values.js";
 import { createTransactionFromForm, readTransactionFilters } from "./transaction-request.js";
+import { transactionFiltersQuery } from "./transaction-view-model.js";
 import { createFamilyFlowViews } from "./views.js";
 
 type TransactionRouteRepositories = {
@@ -63,7 +64,7 @@ async function handleListTransactions(
   if (isHtmxRequest(request.headers)) {
     return reply
       .type("text/html; charset=utf-8")
-      .send(await views.transactionsList({ transactions, categories }));
+      .send(await views.transactionsList({ transactions, categories, filters }));
   }
 
   return reply.type("text/html; charset=utf-8").send(
@@ -186,31 +187,44 @@ async function handleInternalTransfer(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const transaction = await repositories.transactions.get(readRouteId(request.params));
-  if (transaction === null) {
+  const form = readForm(request.body);
+  if (form.internalTransfer !== "true" && form.internalTransfer !== "false") {
+    const requestId = String(reply.getHeader("x-request-id"));
+    return reply
+      .status(400)
+      .type("text/html; charset=utf-8")
+      .send(
+        await createFamilyFlowViews(reply).badRequestPage(
+          'internalTransfer must be exactly "true" or "false".',
+          requestId,
+        ),
+      );
+  }
+
+  const updated = await repositories.transactions.setInternalTransfer(
+    readRouteId(request.params),
+    form.internalTransfer === "true",
+  );
+  if (!updated) {
     return reply
       .status(404)
       .type("text/html; charset=utf-8")
       .send(await createFamilyFlowViews(reply).missingResourcePage("transaction"));
   }
 
-  const form = readForm(request.body);
-  await repositories.transactions.save({
-    ...transaction,
-    internalTransfer: form.internalTransfer === "true",
-  });
-
+  const filters = readTransactionFilters(request.query);
   if (isHtmxRequest(request.headers)) {
     const categories = await repositories.categories.list();
     return reply.type("text/html; charset=utf-8").send(
       await createFamilyFlowViews(reply).transactionsList({
-        transactions: await repositories.transactions.list({}),
+        transactions: await repositories.transactions.list(filters),
         categories,
+        filters,
       }),
     );
   }
 
-  return reply.redirect("/transactions");
+  return reply.redirect(`/transactions${transactionFiltersQuery(filters)}`);
 }
 
 async function handleDeleteTransaction(

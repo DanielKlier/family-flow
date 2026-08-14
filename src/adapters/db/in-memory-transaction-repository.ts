@@ -35,6 +35,14 @@ export class InMemoryTransactionRepository implements TransactionRepository {
     this.#transactions.set(transaction.id, transaction);
   }
 
+  async setInternalTransfer(id: string, internalTransfer: boolean): Promise<boolean> {
+    const transaction = this.#transactions.get(id);
+    if (transaction === undefined) return false;
+
+    this.#transactions.set(id, { ...transaction, internalTransfer });
+    return true;
+  }
+
   async delete(id: string): Promise<void> {
     this.#transactions.delete(id);
   }

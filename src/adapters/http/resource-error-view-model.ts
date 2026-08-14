@@ -29,3 +29,13 @@ export function prepareMissingResourceViewModel(resource: MissingResource) {
   const text = missingResourceText[resource];
   return { title: text.heading, heading: text.heading, message: text.message };
 }
+
+export function prepareBadRequestViewModel(message: string, requestId: string) {
+  return {
+    title: "Invalid request",
+    heading: "Invalid request",
+    message,
+    requestIdLabel: "Request ID:",
+    requestId,
+  };
+}

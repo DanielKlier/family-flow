@@ -1,4 +1,5 @@
 {% extends "layouts/app.njk" %}
 {% block content %}<section class="panel">
   <p class="form-error">{{ message }}</p>
+  {% if requestId %}<p>{{ requestIdLabel }} <code>{{ requestId }}</code></p>{% endif %}
 </section>{% endblock %}

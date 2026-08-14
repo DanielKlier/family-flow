@@ -54,6 +54,23 @@ describe("transaction transfer HTTP adapter", () => {
         internalTransfer: false,
       });
 
+      await repositories.transactions.save({ ...imported, internalTransfer: true });
+      for (const payload of [{}, { internalTransfer: "TRUE" }, { internalTransfer: "invalid" }]) {
+        const requestId = `invalid-transfer-${String(payload.internalTransfer ?? "missing")}`;
+        const invalid = await server.inject({
+          method: "POST",
+          url: `/transactions/${imported.id}/internal-transfer`,
+          headers: { ...headers, "x-request-id": requestId },
+          payload,
+        });
+        expect(invalid.statusCode).toBe(400);
+        expect(invalid.headers["x-request-id"]).toBe(requestId);
+        expect(invalid.body).toContain(requestId);
+        await expect(repositories.transactions.get(imported.id)).resolves.toMatchObject({
+          internalTransfer: true,
+        });
+      }
+
       const missing = await server.inject({
         method: "POST",
         url: "/transactions/missing-transaction/internal-transfer",

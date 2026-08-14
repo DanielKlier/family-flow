@@ -13,10 +13,12 @@ type SelectOption = {
 type TransactionListInput = {
   categories: Category[];
   transactions: Transaction[];
+  filters?: TransactionFilters;
 };
 
 export function prepareTransactionListViewModel(input: TransactionListInput) {
   const categoryNames = new Map(input.categories.map((category) => [category.id, category.name]));
+  const filterQuery = transactionFiltersQuery(input.filters ?? {});
 
   return {
     text: transactionText,
@@ -30,13 +32,29 @@ export function prepareTransactionListViewModel(input: TransactionListInput) {
       fixedCostLabel: transaction.fixedCost ? "fixed" : "variable",
       internalTransfer: transaction.internalTransfer,
       internalTransferLabel: transaction.internalTransfer ? "Internal transfer" : "",
-      internalTransferUrl: `/transactions/${encodeURIComponent(transaction.id)}/internal-transfer`,
+      internalTransferUrl: `/transactions/${encodeURIComponent(transaction.id)}/internal-transfer${filterQuery}`,
       internalTransferValue: transaction.internalTransfer ? "false" : "true",
       internalTransferAction: transaction.internalTransfer ? "Unmark transfer" : "Mark as transfer",
       editUrl: `/transactions/${encodeURIComponent(transaction.id)}/edit`,
       deleteUrl: `/transactions/${encodeURIComponent(transaction.id)}/delete`,
     })),
   };
+}
+
+export function transactionFiltersQuery(filters: TransactionFilters): string {
+  const query = new URLSearchParams();
+  if (filters.month !== undefined) query.set("month", filters.month);
+  if (filters.accountId !== undefined) query.set("accountId", filters.accountId);
+  if (filters.ownerContext !== undefined) query.set("ownerContext", filters.ownerContext);
+  if (filters.categoryId !== undefined) query.set("categoryId", filters.categoryId);
+  if (filters.status !== undefined) query.set("status", filters.status);
+  if (filters.fixedCost !== undefined)
+    query.set("fixedCost", filters.fixedCost ? "fixed" : "variable");
+  if (filters.internalTransfer !== undefined) {
+    query.set("internalTransfer", filters.internalTransfer ? "marked" : "unmarked");
+  }
+  const serialized = query.toString();
+  return serialized === "" ? "" : `?${serialized}`;
 }
 
 const transactionText = {

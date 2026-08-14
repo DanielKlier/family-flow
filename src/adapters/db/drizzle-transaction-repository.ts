@@ -58,6 +58,16 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       });
   }
 
+  async setInternalTransfer(id: string, internalTransfer: boolean): Promise<boolean> {
+    const updated = await this.db
+      .update(transactions)
+      .set({ internalTransfer })
+      .where(eq(transactions.id, id))
+      .returning({ id: transactions.id });
+
+    return updated.length === 1;
+  }
+
   async delete(id: string): Promise<void> {
     await this.db.delete(transactions).where(eq(transactions.id, id));
   }

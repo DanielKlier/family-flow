@@ -14,7 +14,7 @@ const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
 describe("Drizzle transaction repository", () => {
   it.runIf(testDatabaseUrl !== undefined)(
-    "INT-FF-TXN-001-01 INT-FF-TXN-001-03 INT-FF-TXN-004-01 INT-FF-TXN-005-01: persists the transfer default and transfer-state round trips",
+    "INT-FF-TXN-001-01 INT-FF-TXN-001-03 INT-FF-TXN-004-01 INT-FF-TXN-005-01 INT-FF-TXN-005-03: persists transfer state atomically without overwriting concurrent edits",
     async () => {
       if (testDatabaseUrl === undefined) {
         throw new Error("TEST_DATABASE_URL is required");
@@ -76,14 +76,29 @@ describe("Drizzle transaction repository", () => {
           transactions.list({ month: "2026-07", ownerContext: "shared" }),
         ).resolves.toEqual([markedRent]);
 
-        await transactions.save({ ...markedRent, status: "booked", description: "Booked rent" });
+        const staleSnapshot = await transactions.get(rent.id);
+        if (staleSnapshot === null) throw new Error("Concurrency fixture must exist");
+        await transactions.save({
+          ...staleSnapshot,
+          status: "booked",
+          description: "Concurrent booked rent",
+          note: "Concurrent edit must survive",
+        });
+        const atomicRepository = transactions as unknown as {
+          setInternalTransfer(id: string, internalTransfer: boolean): Promise<boolean>;
+        };
+        await expect(atomicRepository.setInternalTransfer(rent.id, false)).resolves.toBe(true);
         await expect(transactions.get(rent.id)).resolves.toMatchObject({
-          description: "Booked rent",
+          description: "Concurrent booked rent",
           purpose: "Imported purpose",
           importHash: "v2:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          note: "Concurrent edit must survive",
           status: "booked",
-          internalTransfer: true,
+          internalTransfer: false,
         });
+        await expect(
+          atomicRepository.setInternalTransfer("missing-transaction", true),
+        ).resolves.toBe(false);
 
         await transactions.delete(rent.id);
         await expect(transactions.get(rent.id)).resolves.toBeNull();

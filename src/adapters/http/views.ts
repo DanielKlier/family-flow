@@ -34,6 +34,7 @@ import {
 } from "./master-data-view-model.js";
 import {
   type MissingResource,
+  prepareBadRequestViewModel,
   prepareMissingResourceViewModel,
 } from "./resource-error-view-model.js";
 import {
@@ -91,6 +92,12 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
       return renderer.viewAsync(
         "pages/resource-error.njk",
         page(prepareMissingResourceViewModel(resource)),
+      );
+    },
+    badRequestPage(message: string, requestId: string): Promise<string> {
+      return renderer.viewAsync(
+        "pages/resource-error.njk",
+        page(prepareBadRequestViewModel(message, requestId)),
       );
     },
     masterDataPage(input: Parameters<typeof prepareMasterDataViewModel>[0]): Promise<string> {
@@ -183,7 +190,9 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
       );
     },
     transactionsList(
-      input: Pick<TransactionsInput, "categories" | "transactions">,
+      input: Pick<TransactionsInput, "categories" | "transactions"> & {
+        filters?: TransactionFilters;
+      },
     ): Promise<string> {
       return renderer.viewAsync("partials/transactions-list.njk", {
         list: prepareTransactionListViewModel(input),
