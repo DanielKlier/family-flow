@@ -719,11 +719,11 @@ The current composition registers authentication before protected routes. This d
 - [x] Do not claim dashboard, average, or forecast UI behavior before `PH-13`.
 - [x] Update correction and interpretation runbooks.
 
-**Tests:** `E2E-FF-TXN-005-01`, `E2E-FF-TXN-005-02`, `E2E-FF-UI-001-02`, `UNIT-FF-TXN-005-01`, `UNIT-FF-TXN-006-01`, `INT-FF-TXN-001-03` and `INT-FF-TXN-005-01` (PostgreSQL), and `INT-FF-TXN-005-02` (HTTP).
+**Tests:** `E2E-FF-TXN-005-01`, `E2E-FF-TXN-005-02`, `E2E-FF-TXN-005-03`, `E2E-FF-UI-001-02`, `UNIT-FF-TXN-005-01`, `UNIT-FF-TXN-006-01`, `INT-FF-TXN-001-03`, `INT-FF-TXN-005-01`, and `INT-FF-TXN-005-03` (PostgreSQL), and `INT-FF-TXN-005-02` (HTTP).
 
 **Quality gates:** the five canonical commands plus `docker compose build`.
 
-**Targeted verification:** run the transaction migration and mark/unmark Compose procedure from `OPS-FF-TXN-005-01`.
+**Targeted verification:** `pnpm ops:verify --id OPS-FF-TXN-005-01` (registered migration, atomic mark/unmark, filter, and aggregate evidence).
 
 **Commit:** `feat: classify internal transfers`
 

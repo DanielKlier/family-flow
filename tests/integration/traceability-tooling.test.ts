@@ -86,7 +86,7 @@ describe("INT-FF-QUA-004-01 bounded quality tooling", () => {
 
   it("registers the completed bounded session operation verifiers", () => {
     expect(Object.keys(operationRegistry)).toEqual(
-      expect.arrayContaining(["OPS-FF-AUTH-006-01", "OPS-FF-AUTH-009-01"]),
+      expect.arrayContaining(["OPS-FF-AUTH-006-01", "OPS-FF-AUTH-009-01", "OPS-FF-TXN-005-01"]),
     );
   });
 

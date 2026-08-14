@@ -55,22 +55,22 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
   });
 }
 
-type SessionOperation = "OPS-FF-AUTH-006-01" | "OPS-FF-AUTH-009-01";
+type PostgresOperation = "OPS-FF-AUTH-006-01" | "OPS-FF-AUTH-009-01" | "OPS-FF-TXN-005-01";
 
-function requestedOperation(arguments_: string[]): SessionOperation | undefined {
+function requestedOperation(arguments_: string[]): PostgresOperation | undefined {
   if (arguments_.length === 0) return undefined;
   if (arguments_.length !== 2 || arguments_[0] !== "--operation") {
     throw new Error("Usage: tsx scripts/run-postgres-tests.ts [--operation <OPS-ID>]");
   }
   const id = arguments_[1];
-  if (id !== "OPS-FF-AUTH-006-01" && id !== "OPS-FF-AUTH-009-01") {
+  if (id !== "OPS-FF-AUTH-006-01" && id !== "OPS-FF-AUTH-009-01" && id !== "OPS-FF-TXN-005-01") {
     throw new Error(`Unsupported PostgreSQL operation: ${id}`);
   }
   return id;
 }
 
 async function runEvidence(
-  operation: SessionOperation | undefined,
+  operation: PostgresOperation | undefined,
   environment: NodeJS.ProcessEnv,
 ): Promise<void> {
   if (operation !== "OPS-FF-AUTH-009-01") {
@@ -82,10 +82,18 @@ async function runEvidence(
         "INT-FF-AUTH-006",
       );
     }
+    if (operation === "OPS-FF-TXN-005-01") {
+      vitestArguments.push(
+        "tests/integration/drizzle-transaction-repository.test.ts",
+        "tests/unit/transactions.test.ts",
+        "--testNamePattern",
+        "(?:INT|UNIT)-FF-TXN-00[56]",
+      );
+    }
     await run("pnpm", vitestArguments, environment);
     if (receivedSignal) return;
   }
-  if (operation !== "OPS-FF-AUTH-006-01") {
+  if (operation !== "OPS-FF-AUTH-006-01" && operation !== "OPS-FF-TXN-005-01") {
     await run(
       "pnpm",
       ["exec", "playwright", "test", "tests/e2e/restore-smoke.test.ts", "--workers=1"],

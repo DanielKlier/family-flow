@@ -2079,6 +2079,14 @@
       "classification": "Expected red before production change"
     },
     {
+      "id": "E2E-FF-TXN-005-03",
+      "acceptance": "FF-TXN-005-AC01",
+      "phase": "PH-11",
+      "file": "tests/e2e/internal-transfers.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
       "id": "E2E-FF-TXN-006-02",
       "acceptance": "FF-TXN-006-AC02",
       "phase": "PH-13",
@@ -2767,6 +2775,14 @@
       "classification": "Expected red before production change"
     },
     {
+      "id": "INT-FF-TXN-005-03",
+      "acceptance": "FF-TXN-005-AC01",
+      "phase": "PH-11",
+      "file": "tests/integration/drizzle-transaction-repository.test.ts",
+      "boundary": "PostgreSQL adapter",
+      "classification": "Expected red before production change"
+    },
+    {
       "id": "SMOKE-FF-AUTH-009-01",
       "acceptance": "FF-AUTH-009-AC01",
       "phase": "PH-10A",
@@ -3447,10 +3463,10 @@
     },
     {
       "id": "OPS-FF-TXN-005-01",
-      "procedure": "**Internal Transfers**: mark/unmark fixture and inspect list/aggregates.",
-      "outcome": "Visibility remains and marked expense contribution is zero.",
+      "procedure": "**Internal Transfers**: run the migration and atomic mark/unmark PostgreSQL fixture, then inspect transfer filters and the reusable aggregate.",
+      "outcome": "Concurrent edits survive transfer-state changes, visibility remains filtered correctly, and marked expense contribution is zero.",
       "rollback": "Unmark by stable transaction ID and roll back if aggregates remain wrong.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-TXN-005-01"
     }
   ]
 }

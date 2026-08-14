@@ -4,7 +4,7 @@ export type OperationResult = { operationId: string; status: "passed" | "failed"
 export type OperationVerifier = (environment: NodeJS.ProcessEnv) => Promise<OperationResult>;
 export type OperationRegistry = Readonly<Record<string, OperationVerifier>>;
 
-function verifyPostgresSessionOperation(id: string): OperationVerifier {
+function verifyPostgresOperation(id: string): OperationVerifier {
   return async (environment) => {
     await new Promise<void>((resolve, reject) => {
       const child = spawn(
@@ -25,8 +25,9 @@ function verifyPostgresSessionOperation(id: string): OperationVerifier {
 // Verifiers are registered here when their owning phase delivers executable operations evidence.
 // Planned operations remain in traceability.json but cannot be dispatched until registered.
 export const operationRegistry: OperationRegistry = {
-  "OPS-FF-AUTH-006-01": verifyPostgresSessionOperation("OPS-FF-AUTH-006-01"),
-  "OPS-FF-AUTH-009-01": verifyPostgresSessionOperation("OPS-FF-AUTH-009-01"),
+  "OPS-FF-AUTH-006-01": verifyPostgresOperation("OPS-FF-AUTH-006-01"),
+  "OPS-FF-AUTH-009-01": verifyPostgresOperation("OPS-FF-AUTH-009-01"),
+  "OPS-FF-TXN-005-01": verifyPostgresOperation("OPS-FF-TXN-005-01"),
 };
 
 export async function verifyOperation(
