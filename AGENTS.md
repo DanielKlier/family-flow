@@ -69,7 +69,7 @@ Waehrend Refactor gilt:
   - `pnpm test`
   - `pnpm test:e2e`
   - `pnpm build`
-- Wenn Docker betroffen ist, muss auch `docker compose build` erfolgreich sein.
+- Wenn Docker betroffen ist, muss auch `pnpm docker:build` erfolgreich sein. Der reproduzierbare Build-Gate verwendet `.env.example` und darf nicht von lokalen OIDC-Secrets abhaengen.
 - Wenn Deployment betroffen ist, muss ein Docker-Compose-Smoke-Test erfolgen.
 
 ### 5. Code Quality Metrics Und Tools

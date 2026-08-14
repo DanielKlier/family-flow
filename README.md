@@ -71,7 +71,7 @@ Pre-release versions use `0.x.y` SemVer-style versions. Each versioned state has
 
 ## Docker
 
-Build the image with `docker compose build`.
+Build the image reproducibly without depending on local OIDC secrets with `pnpm docker:build`. The command uses the non-secret placeholders from `.env.example` only for Compose configuration interpolation.
 
 Start the app and PostgreSQL with `docker compose up`.
 

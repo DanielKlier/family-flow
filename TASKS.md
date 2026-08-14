@@ -92,7 +92,7 @@ Additionally:
 
 - Run non-skippable `pnpm test:postgres`, which provisions an isolated PostgreSQL service, whenever a Drizzle adapter or migration changes. `PH-10D` adds this shared command before any later phase relies on it; `TEST_DATABASE_URL`-absent skips do not satisfy the gate.
 - Run operations evidence through the shared `pnpm ops:verify --id <OPS-ID>` dispatcher added by `PH-10D`; an unknown ID, missing fixture, or skipped procedure fails.
-- Run `docker compose build` when Docker, migrations, templates, image packaging, or deployment configuration changes.
+- Run `pnpm docker:build` when Docker, migrations, templates, image packaging, or deployment configuration changes. This reproducible gate uses `.env.example` and does not depend on local OIDC secrets.
 - Run a readiness-based Docker Compose smoke test when deployment behavior changes.
 - Run migration, backup, or restore smoke tests when the corresponding behavior changes.
 
@@ -317,7 +317,7 @@ The current composition registers authentication before protected routes. This d
 - [x] `SMOKE-FF-AUTH-009-01`: deployment rejects old signed cookies.
 - [x] `SMOKE-FF-AUTH-009-02`: restore invalidates pre-backup sessions.
 
-**Quality gates:** the five canonical commands plus `docker compose build`.
+**Quality gates:** the five canonical commands plus `pnpm docker:build`.
 
 **Targeted verification:** execute the documented migration/authentication Compose procedure plus `SMOKE-FF-AUTH-009-01` and `SMOKE-FF-AUTH-009-02`; run the cleanup command until it reports zero rows and verify active sessions remain.
 
@@ -360,7 +360,7 @@ The current composition registers authentication before protected routes. This d
 - [x] `INT-FF-DEP-001-01`: compiled application resolves packaged templates.
 - [x] `SMOKE-FF-DEP-001-01`: production image packages every template family and renders representative full pages and HTMX fragments.
 
-**Quality gates:** the five canonical commands plus `docker compose build`.
+**Quality gates:** the five canonical commands plus `pnpm docker:build`.
 
 **Targeted verification:** run `SMOKE-FF-DEP-001-01` against the production image and verify one full page and one HTMX fragment resolve packaged templates.
 
@@ -423,7 +423,7 @@ The current composition registers authentication before protected routes. This d
 - [x] `UNIT-FF-CSV-005-02`: v1 compatibility, v2 length framing, Unicode normalization, delimiter safety, and dual-version lookup.
 - [x] `INT-FF-CSV-011-01`: rejection persists nothing, returns a request ID, and emits one sanitized log.
 
-**Quality gates:** the five canonical commands plus `docker compose build`.
+**Quality gates:** the five canonical commands plus `pnpm docker:build`.
 
 **Targeted verification:** execute documented profile migration, collision-abort, rollback, concurrency, exact-limit, and production Compose CSV procedures with named deterministic fixtures.
 
@@ -462,7 +462,7 @@ The current composition registers authentication before protected routes. This d
 - [x] `INT-FF-CSV-012-03`: migration grammar, malformed/collision rollback, immutable hashes, and preview invalidation.
 - [x] `INT-FF-CSV-012-04`: v3 persistence, same-v3 concurrency, and repository-loaded v1/v2 purpose compatibility.
 
-**Quality gates:** the five canonical commands plus non-skippable `pnpm test:postgres` and `docker compose build` because migration/database behavior changes.
+**Quality gates:** the five canonical commands plus non-skippable `pnpm test:postgres` and `pnpm docker:build` because migration/database behavior changes.
 
 **Targeted verification:** run the four `FF-CSV-012` tests, then apply all migrations to isolated PostgreSQL and verify malformed/collision rollback and active-preview invalidation.
 
@@ -721,7 +721,7 @@ The current composition registers authentication before protected routes. This d
 
 **Tests:** `E2E-FF-TXN-005-01`, `E2E-FF-TXN-005-02`, `E2E-FF-TXN-005-03`, `E2E-FF-UI-001-02`, `UNIT-FF-TXN-005-01`, `UNIT-FF-TXN-006-01`, `INT-FF-TXN-001-03`, `INT-FF-TXN-005-01`, and `INT-FF-TXN-005-03` (PostgreSQL), and `INT-FF-TXN-005-02` (HTTP).
 
-**Quality gates:** the five canonical commands plus `docker compose build`.
+**Quality gates:** the five canonical commands plus `pnpm docker:build`.
 
 **Targeted verification:** `pnpm ops:verify --id OPS-FF-TXN-005-01` (registered migration, atomic mark/unmark, filter, and aggregate evidence).
 
@@ -756,7 +756,7 @@ The current composition registers authentication before protected routes. This d
 
 **Tests:** `E2E-FF-LOC-001-01`, `INT-FF-LOC-001-04` (catalog keys and allowlist), `E2E-FF-LOC-002-01`, `UNIT-FF-LOC-003-02` (locale-neutral amount/date values), `UNIT-FF-ARC-007-01` (typed domain errors), `INT-FF-ARC-007-01` (core/adapters localization boundary), `INT-FF-LOC-002-01` and `INT-FF-LOC-002-02` (valid/invalid HTTP grammar), `INT-FF-LOC-003-01` (formatting/error translation), `INT-FF-LOC-004-01` (CSV independence), `INT-FF-ARC-004-03` (template boundary), and `INT-FF-MDM-002-02` (fresh versus existing seeds).
 
-**Quality gates:** the five canonical commands plus `docker compose build` when packaged localization resources change.
+**Quality gates:** the five canonical commands plus `pnpm docker:build` when packaged localization resources change.
 
 **Targeted verification:** `pnpm ops:verify --id OPS-FF-LOC-002-01` and fresh/existing database seed verification.
 
@@ -828,7 +828,7 @@ The current composition registers authentication before protected routes. This d
 
 **Tests:** `E2E-FF-SCN-001-01`, `E2E-FF-SCN-001-02`, `UNIT-FF-SCN-001-01`, `INT-FF-SCN-001-01` (snapshot persistence), `UNIT-FF-SCN-002-01`, `UNIT-FF-SCN-002-02`, `E2E-FF-SCN-003-01`, `E2E-FF-SCN-004-01`, `UNIT-FF-SCN-004-01`, `UNIT-FF-SCN-004-02`, `UNIT-FF-SCN-005-01`, `E2E-FF-SCN-006-01`, `E2E-FF-LOC-001-03`, `E2E-FF-UI-001-03`, `INT-FF-SCN-001-02` (PostgreSQL), and `INT-FF-SCN-001-03` (HTTP).
 
-**Quality gates:** the five canonical commands plus `docker compose build`.
+**Quality gates:** the five canonical commands plus `pnpm docker:build`.
 
 **Targeted verification:** execute scenario migration and exact-fixture Compose procedure from `OPS-FF-SCN-001-01`.
 
@@ -869,7 +869,7 @@ The current composition registers authentication before protected routes. This d
 
 **Tests:** `SMOKE-FF-DEP-005-01`, `SMOKE-FF-REL-001-01`, `SMOKE-FF-REL-002-01`, and `SMOKE-FF-REL-002-02` are expected red before their production changes. `INT-FF-ARC-001-01`, `INT-FF-ARC-002-01`, `INT-FF-ARC-005-01`, `INT-FF-DEP-004-01`, `INT-FF-QUA-002-01`, `INT-FF-QUA-003-01`, `SMOKE-FF-DEV-001-01`, `SMOKE-FF-DEV-001-02`, `SMOKE-FF-OPS-001-01`, `SMOKE-FF-SCP-002-01`, and `SMOKE-FF-SCP-004-01` are expected-green evidence owned by PH-15.
 
-**Quality gates:** the five canonical commands plus `docker compose build`.
+**Quality gates:** the five canonical commands plus `pnpm docker:build`.
 
 **Targeted verification:** execute every named SMOKE and OPS procedure and the ID/traceability validator.
 

@@ -869,7 +869,7 @@ Every phase passes:
 - `pnpm test:e2e`
 - `pnpm build`
 
-When a PostgreSQL adapter or migration changes, non-skippable `pnpm test:postgres` provisions an isolated PostgreSQL service and passes. When Docker or image packaging changes, `docker compose build` also passes. When deployment behavior changes, a Docker Compose smoke test also passes.
+When a PostgreSQL adapter or migration changes, non-skippable `pnpm test:postgres` provisions an isolated PostgreSQL service and passes. When Docker or image packaging changes, `pnpm docker:build` also passes using the non-secret Compose interpolation values from `.env.example`. When deployment behavior changes, a Docker Compose smoke test also passes.
 
 - **FF-QUA-004-AC01:** No phase commit is created while a canonical or applicable conditional gate is failing or skipped.
 

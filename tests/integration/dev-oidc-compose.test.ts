@@ -2,6 +2,27 @@ import { readFile } from "node:fs/promises";
 
 import { describe, expect, it } from "vitest";
 
+describe("Docker Compose commands", () => {
+  it("provides a reproducible image build gate without local OIDC secrets", async () => {
+    const [packageJsonText, readme, operations, tasks, plan, agentGuidance] = await Promise.all([
+      readFile("package.json", "utf8"),
+      readFile("README.md", "utf8"),
+      readFile("OPERATIONS.md", "utf8"),
+      readFile("TASKS.md", "utf8"),
+      readFile("PLAN.md", "utf8"),
+      readFile("AGENTS.md", "utf8"),
+    ]);
+    const packageJson = JSON.parse(packageJsonText) as { scripts: Record<string, string> };
+
+    expect(packageJson.scripts["docker:build"]).toBe(
+      "docker compose --env-file .env.example build",
+    );
+    for (const documentation of [readme, operations, tasks, plan, agentGuidance]) {
+      expect(documentation).toContain("pnpm docker:build");
+    }
+  });
+});
+
 describe("local OIDC development compose", () => {
   it("configures Dex with the FamilyFlow development client", async () => {
     const [compose, dexConfig, devEnv] = await Promise.all([

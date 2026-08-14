@@ -50,12 +50,12 @@ Rollback:
 Image distribution alternatives:
 
 - Current production default: build locally or in CI, push a versioned image to GHCR, Docker Hub, or a LAN registry, and let the target server pull images by tag.
-- Local development default: use `compose.yaml` and `docker compose build` when you intentionally want to build the image on the development machine.
+- Local development default: use `pnpm docker:build` when you intentionally want to build the `compose.yaml` image on the development machine. The gate supplies `.env.example` for non-secret Compose interpolation and does not depend on the operator's `.env`.
 - A registry is required for production because the target server must not build images or install npm packages.
 
 ## Updates
 
-Before the final commit and again before pushing, run `pnpm install` when dependencies changed, then run `pnpm verify`. Add `pnpm test:postgres`, Docker build, migration, or deployment smoke gates when the changed boundary requires them. Push the resulting immutable image and deploy it with `compose.prod.yaml`.
+Before the final commit and again before pushing, run `pnpm install` when dependencies changed, then run `pnpm verify`. Add `pnpm test:postgres`, `pnpm docker:build`, migration, or deployment smoke gates when the changed boundary requires them. Push the resulting immutable image and deploy it with `compose.prod.yaml`.
 
 Dependabot checks the root pnpm dependencies, Dockerfile base images, and Docker Compose images weekly and opens pull requests for available Node.js, PostgreSQL, and Dex updates. Review all manifest, lockfile, Dockerfile, and Compose changes in each pull request. Require `pnpm verify` plus applicable boundary-specific gates, including `docker compose config` and Docker builds for container changes, before merging.
 
