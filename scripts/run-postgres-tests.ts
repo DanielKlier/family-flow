@@ -93,7 +93,22 @@ async function runEvidence(
     await run("pnpm", vitestArguments, environment);
     if (receivedSignal) return;
   }
-  if (operation !== "OPS-FF-AUTH-006-01" && operation !== "OPS-FF-TXN-005-01") {
+  if (operation === "OPS-FF-TXN-005-01") {
+    await run(
+      "pnpm",
+      [
+        "exec",
+        "playwright",
+        "test",
+        "tests/e2e/transactions.test.ts",
+        "tests/e2e/internal-transfers.test.ts",
+        "--grep",
+        "E2E-FF-TXN-005",
+        "--workers=1",
+      ],
+      environment,
+    );
+  } else if (operation !== "OPS-FF-AUTH-006-01") {
     await run(
       "pnpm",
       ["exec", "playwright", "test", "tests/e2e/restore-smoke.test.ts", "--workers=1"],
