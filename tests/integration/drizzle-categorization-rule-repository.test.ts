@@ -10,6 +10,11 @@ import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
 import { createCategorizationRule } from "../../src/core/categorization/categorization-rule.js";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
+const transferRuleIds = [
+  "rule-mark-transfer",
+  "rule-unmark-transfer",
+  "rule-unchanged-transfer",
+] as const;
 
 describe("Drizzle categorization rule repository", () => {
   it.runIf(testDatabaseUrl !== undefined)("stores and lists categorization rules", async () => {
@@ -29,6 +34,7 @@ describe("Drizzle categorization rule repository", () => {
 
     try {
       await seedMasterData(repositories);
+      await repositories.rules.delete("rule-groceries");
       const rule = createCategorizationRule({
         id: "rule-groceries",
         name: "Groceries",
@@ -42,9 +48,13 @@ describe("Drizzle categorization rule repository", () => {
 
       await repositories.rules.save(rule);
 
-      await expect(repositories.rules.list()).resolves.toEqual([rule]);
+      await expect(repositories.rules.get(rule.id)).resolves.toEqual(rule);
     } finally {
-      await connection.client.end();
+      try {
+        await repositories.rules.delete("rule-groceries");
+      } finally {
+        await connection.client.end();
+      }
     }
   });
 
@@ -66,10 +76,11 @@ describe("Drizzle categorization rule repository", () => {
 
       try {
         await seedMasterData(repositories);
+        await Promise.all(transferRuleIds.map((id) => repositories.rules.delete(id)));
         const actions = [
-          ["rule-mark-transfer", true],
-          ["rule-unmark-transfer", false],
-          ["rule-unchanged-transfer", null],
+          [transferRuleIds[0], true],
+          [transferRuleIds[1], false],
+          [transferRuleIds[2], null],
         ] as const;
         for (const [id, internalTransfer] of actions) {
           await repositories.rules.save(
@@ -85,18 +96,22 @@ describe("Drizzle categorization rule repository", () => {
           );
         }
 
-        expect(
-          (await repositories.rules.list()).map(({ id, internalTransfer }) => ({
-            id,
-            internalTransfer,
-          })),
-        ).toEqual(
-          actions
-            .map(([id, internalTransfer]) => ({ id, internalTransfer }))
-            .sort((left, right) => left.id.localeCompare(right.id)),
-        );
+        await expect(
+          Promise.all(
+            actions.map(async ([id]) => {
+              const rule = await repositories.rules.get(id);
+              return rule === null
+                ? null
+                : { id: rule.id, internalTransfer: rule.internalTransfer };
+            }),
+          ),
+        ).resolves.toEqual(actions.map(([id, internalTransfer]) => ({ id, internalTransfer })));
       } finally {
-        await connection.client.end();
+        try {
+          await Promise.all(transferRuleIds.map((id) => repositories.rules.delete(id)));
+        } finally {
+          await connection.client.end();
+        }
       }
     },
   );

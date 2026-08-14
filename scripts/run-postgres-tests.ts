@@ -85,9 +85,14 @@ async function runEvidence(
     if (operation === "OPS-FF-TXN-005-01") {
       vitestArguments.push(
         "tests/integration/drizzle-transaction-repository.test.ts",
+        "tests/integration/drizzle-categorization-rule-repository.test.ts",
+        "tests/integration/categorization-rule-migration.test.ts",
+        "tests/integration/categorization-rule-repositories.test.ts",
+        "tests/integration/categorization-rules-http.test.ts",
+        "tests/unit/categorization-rules.test.ts",
         "tests/unit/transactions.test.ts",
         "--testNamePattern",
-        "(?:INT|UNIT)-FF-TXN-00[56]",
+        "(?:INT|UNIT)-FF-(?:TXN-00[56]|CAT-002)",
       );
     }
     await run("pnpm", vitestArguments, environment);
@@ -102,8 +107,10 @@ async function runEvidence(
         "test",
         "tests/e2e/transactions.test.ts",
         "tests/e2e/internal-transfers.test.ts",
+        "tests/e2e/categorization-rules.test.ts",
+        "tests/e2e/csv-import.test.ts",
         "--grep",
-        "E2E-FF-TXN-005",
+        "E2E-FF-(?:TXN-005|CAT-002)",
         "--workers=1",
       ],
       environment,

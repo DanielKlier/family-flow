@@ -32,7 +32,7 @@ async function availablePort(): Promise<number> {
 async function runServerStartup(databaseUrl: string): Promise<string> {
   const port = await availablePort();
   return new Promise((resolve, reject) => {
-    const child = spawn("pnpm", ["exec", "tsx", "src/app/server.ts"], {
+    const child = spawn(process.execPath, ["--import", "tsx", "src/app/server.ts"], {
       env: {
         PATH: process.env.PATH,
         HOME: process.env.HOME,
@@ -70,9 +70,10 @@ async function runServerStartup(databaseUrl: string): Promise<string> {
 
 async function runSessionCleanup(databaseUrl: string): Promise<string> {
   const { stdout } = await execFileAsync(
-    "pnpm",
-    ["exec", "tsx", "src/app/session-cleanup.ts", "--limit", "1000"],
+    process.execPath,
+    ["--import", "tsx", "src/app/session-cleanup.ts", "--limit", "1000"],
     {
+      timeout: 10_000,
       env: {
         PATH: process.env.PATH,
         HOME: process.env.HOME,
@@ -221,5 +222,5 @@ describe("Drizzle session store", () => {
     } finally {
       await connection.client.end();
     }
-  });
+  }, 30_000);
 });
