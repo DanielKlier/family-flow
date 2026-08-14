@@ -61,6 +61,20 @@ Dependabot checks the root pnpm dependencies, Dockerfile base images, and Docker
 
 When database schema changes are included, inspect the SQL files in `drizzle/` before deployment and check `docker compose logs app` after startup for migration failures.
 
+## Pull Request Checks
+
+The GitHub Actions workflow runs on the `pull_request` event for all pull requests, including Dependabot updates. It grants only `contents: read`, uses no secrets, and disables persisted checkout credentials so untrusted pull request code receives no repository write access.
+
+One Ubuntu job runs these gates sequentially and stops at the first failure:
+
+1. `pnpm verify`
+2. `env -u TEST_DATABASE_URL pnpm test:postgres`
+3. `docker compose --env-file .env.example config`
+4. `docker compose --env-file .env.example -f compose.prod.yaml config`
+5. `pnpm docker:build`
+
+The workflow installs the locked Node and pnpm toolchain plus Chromium system dependencies before running the gates. Investigate the first failed step and do not merge a Dependabot or contributor pull request until all five gates pass.
+
 ## Quality And Operations Evidence
 
 `traceability.json` is the authoritative requirements, phases, acceptance, test-evidence, adapter-boundary, and operations inventory. Run `pnpm requirements:check` after changing it or package commands. The validator checks typed structure and references only; it deliberately does not interpret Markdown, shell prose, or TypeScript control flow. Run `pnpm evidence:check` to compare completed evidence with tests actually collected by Vitest and Playwright.
