@@ -57,7 +57,7 @@ Image distribution alternatives:
 
 Before the final commit and again before pushing, run `pnpm install` when dependencies changed, then run `pnpm verify`. Add `pnpm test:postgres`, Docker build, migration, or deployment smoke gates when the changed boundary requires them. Push the resulting immutable image and deploy it with `compose.prod.yaml`.
 
-Dependabot checks the root pnpm dependencies weekly and opens pull requests for available updates. Review all manifest and lockfile changes in each pull request, and require `pnpm verify` plus any applicable boundary-specific gates before merging.
+Dependabot checks the root pnpm dependencies, Dockerfile base images, and Docker Compose images weekly and opens pull requests for available Node.js, PostgreSQL, and Dex updates. Review all manifest, lockfile, Dockerfile, and Compose changes in each pull request. Require `pnpm verify` plus applicable boundary-specific gates, including `docker compose config` and Docker builds for container changes, before merging.
 
 When database schema changes are included, inspect the SQL files in `drizzle/` before deployment and check `docker compose logs app` after startup for migration failures.
 
