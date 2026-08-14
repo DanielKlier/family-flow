@@ -1,0 +1,47 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24"
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.5.2 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run application verification
+        run: pnpm verify
+
+      - name: Run PostgreSQL integration tests
+        run: env -u TEST_DATABASE_URL pnpm test:postgres
+
+      - name: Validate development Compose configuration
+        run: docker compose --env-file .env.example config
+
+      - name: Validate production Compose configuration
+        run: docker compose --env-file .env.example -f compose.prod.yaml config
+
+      - name: Build the application image
+        run: pnpm docker:build
