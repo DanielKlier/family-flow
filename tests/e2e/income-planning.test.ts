@@ -103,6 +103,7 @@ test("income can be filtered by owner context", async ({ page }) => {
     await updatedIncomeForm.getByLabel("Amount").fill("2500.00");
     await updatedIncomeForm.getByLabel("Start month").fill("2026-01");
     await updatedIncomeForm.getByRole("button", { name: "Add income" }).click();
+    await expect(page.getByRole("cell", { name: "Salary Person B", exact: true })).toBeVisible();
     await page.getByLabel("Filter owner context").selectOption("person_b");
     await page.getByRole("button", { name: "Apply income filters" }).click();
 
