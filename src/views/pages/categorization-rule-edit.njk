@@ -1,12 +1,14 @@
 {% extends "layouts/app.njk" %}
 {% block content %}<section class="panel" aria-labelledby="categorization-rule-form-heading">
   <h2 id="categorization-rule-form-heading">{{ heading }}</h2>
+  {% if formError %}<p class="form-error">{{ formError }}</p>{% endif %}
   <form id="categorization-rule-form" class="grid-form" method="post" action="{{ actionUrl }}">
     <label class="field">{{ text.name }} <input name="name" value="{{ name }}" required></label>
     <label class="field">{{ text.searchText }} <input name="searchText" value="{{ searchText }}" required></label>
     <label class="field">{{ text.category }} <select name="categoryId">{% for option in categories %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
     <label class="field">{{ text.account }} <select name="accountId">{% for option in accounts %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
     <label class="field">{{ text.fixedCostAction }} <select name="fixedCost">{% for option in fixedCostOptions %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+    <label class="field">{{ text.internalTransferAction }} <select name="internalTransfer">{% for option in internalTransferOptions %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
     <label class="field">{{ text.priority }} <input name="priority" type="number" min="0" step="1" value="{{ priority }}" required></label>
     <button type="submit">{{ submitLabel }}</button>
   </form>

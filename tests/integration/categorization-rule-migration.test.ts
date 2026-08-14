@@ -18,4 +18,15 @@ describe("categorization rule migration", () => {
       "ALTER TABLE categorization_rules ADD COLUMN IF NOT EXISTS fixed_cost boolean",
     );
   });
+
+  it("INT-FF-CAT-002-03: adds a nullable internal-transfer action column", async () => {
+    const migration = await readFile(
+      "drizzle/0015_categorization_rule_internal_transfer.sql",
+      "utf8",
+    );
+
+    expect(migration).toContain(
+      "ALTER TABLE categorization_rules ADD COLUMN IF NOT EXISTS internal_transfer boolean",
+    );
+  });
 });

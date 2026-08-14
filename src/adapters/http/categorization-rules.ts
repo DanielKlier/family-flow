@@ -111,7 +111,27 @@ async function handleUpdateRule(
       .send(await createFamilyFlowViews(reply).missingResourcePage("categorizationRule"));
   }
 
-  await repositories.categorizationRules.save(createRuleFromForm(readForm(request.body), id));
+  try {
+    await repositories.categorizationRules.save(createRuleFromForm(readForm(request.body), id));
+  } catch (error: unknown) {
+    const [accounts, categories] = await Promise.all([
+      repositories.accounts.list(),
+      repositories.categories.list(),
+    ]);
+    return reply
+      .status(400)
+      .type("text/html; charset=utf-8")
+      .send(
+        await createFamilyFlowViews(reply).categorizationRuleEditPage({
+          accounts,
+          categories,
+          rules: [],
+          rule: existing,
+          formError:
+            error instanceof Error ? error.message : "Categorization rule could not be saved",
+        }),
+      );
+  }
 
   return reply.redirect("/categorization-rules");
 }
@@ -131,7 +151,8 @@ async function handleApplyRules(
       .filter(
         (transaction, index) =>
           transaction.categoryId !== transactions[index]?.categoryId ||
-          transaction.fixedCost !== transactions[index]?.fixedCost,
+          transaction.fixedCost !== transactions[index]?.fixedCost ||
+          transaction.internalTransfer !== transactions[index]?.internalTransfer,
       )
       .map((transaction) => repositories.transactions.save(transaction)),
   );
@@ -168,9 +189,17 @@ function createRuleFromForm(form: FormBody, id: string = randomUUID()) {
     categoryId: form.categoryId ?? "",
     accountId: form.accountId ?? null,
     fixedCost: readFixedCostAction(form.fixedCost),
+    internalTransfer: readInternalTransferAction(form.internalTransfer),
     priority: Number(form.priority ?? ""),
     enabled: true,
   });
+}
+
+function readInternalTransferAction(value: string | undefined): boolean | null {
+  if (value === undefined || value === "unchanged") return null;
+  if (value === "mark") return true;
+  if (value === "unmark") return false;
+  throw new Error("Internal transfer action is invalid");
 }
 
 function readFixedCostAction(value: string | undefined): boolean | null {

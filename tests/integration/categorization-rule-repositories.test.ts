@@ -34,4 +34,35 @@ describe("categorization rule repositories", () => {
 
     await expect(repository.list()).resolves.toEqual([groceries]);
   });
+
+  it("INT-FF-CAT-002-01: round-trips mark, unmark, and unchanged transfer actions", async () => {
+    const repository = new InMemoryCategorizationRuleRepository();
+    const actions = [
+      ["rule-mark-transfer", true],
+      ["rule-unmark-transfer", false],
+      ["rule-unchanged-transfer", null],
+    ] as const;
+
+    for (const [id, internalTransfer] of actions) {
+      await repository.save(
+        createCategorizationRule({
+          id,
+          name: id,
+          searchText: "settlement",
+          categoryId: "category-other",
+          internalTransfer,
+          priority: 1,
+          enabled: true,
+        }),
+      );
+    }
+
+    expect(
+      (await repository.list()).map(({ id, internalTransfer }) => ({ id, internalTransfer })),
+    ).toEqual(
+      actions
+        .map(([id, internalTransfer]) => ({ id, internalTransfer }))
+        .sort((left, right) => left.id.localeCompare(right.id)),
+    );
+  });
 });

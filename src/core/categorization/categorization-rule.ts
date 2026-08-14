@@ -7,13 +7,18 @@ export type CategorizationRule = {
   categoryId: string;
   accountId: string | null;
   fixedCost: boolean | null;
+  internalTransfer: boolean | null;
   priority: number;
   enabled: boolean;
 };
 
-export type CategorizationRuleInput = Omit<CategorizationRule, "accountId" | "fixedCost"> & {
+export type CategorizationRuleInput = Omit<
+  CategorizationRule,
+  "accountId" | "fixedCost" | "internalTransfer"
+> & {
   accountId?: string | null;
   fixedCost?: boolean | null;
+  internalTransfer?: boolean | null;
 };
 
 export type CategorizationCandidate = {
@@ -44,6 +49,7 @@ export function createCategorizationRule(input: CategorizationRuleInput): Catego
     categoryId,
     accountId,
     fixedCost: input.fixedCost ?? null,
+    internalTransfer: input.internalTransfer ?? null,
     priority: input.priority,
     enabled: input.enabled,
   };
@@ -95,6 +101,7 @@ export function applyCategorizationRules(
           ...transaction,
           categoryId: match.categoryId,
           fixedCost: match.fixedCost ?? transaction.fixedCost,
+          internalTransfer: match.internalTransfer ?? transaction.internalTransfer,
         };
   });
 }

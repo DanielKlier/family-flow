@@ -113,6 +113,7 @@ export const categorizationRules = pgTable("categorization_rules", {
     .references(() => categories.id),
   accountId: text("account_id").references(() => accounts.id),
   fixedCost: boolean("fixed_cost"),
+  internalTransfer: boolean("internal_transfer"),
   priority: integer("priority").notNull(),
   enabled: boolean("enabled").notNull().default(true),
 });

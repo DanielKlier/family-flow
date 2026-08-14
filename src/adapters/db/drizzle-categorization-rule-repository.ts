@@ -1,8 +1,8 @@
 import { asc, eq } from "drizzle-orm";
 
 import {
-  createCategorizationRule,
   type CategorizationRule,
+  createCategorizationRule,
 } from "../../core/categorization/categorization-rule.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
 import type { PostgresDatabase } from "./postgres.js";
@@ -41,6 +41,7 @@ export class DrizzleCategorizationRuleRepository implements CategorizationRuleRe
           categoryId: rule.categoryId,
           accountId: rule.accountId,
           fixedCost: rule.fixedCost,
+          internalTransfer: rule.internalTransfer,
           priority: rule.priority,
           enabled: rule.enabled,
         },
@@ -62,6 +63,7 @@ function mapCategorizationRuleRow(row: CategorizationRuleRow): CategorizationRul
     categoryId: row.categoryId,
     accountId: row.accountId,
     fixedCost: row.fixedCost,
+    internalTransfer: row.internalTransfer,
     priority: row.priority,
     enabled: row.enabled,
   });

@@ -452,6 +452,52 @@ test("CSV import applies categorization rules", async ({ page }) => {
   }
 });
 
+test("E2E-FF-CAT-002-02: CSV preview snapshots a categorization rule transfer action before confirmation", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/categorization-rules`);
+    await page.getByLabel("Rule name").fill("Transfer import rule");
+    await page.getByLabel("Search text").fill("settlement");
+    await page.getByLabel("Rule category").selectOption("category-other");
+    await page.getByLabel("Internal transfer action").selectOption("mark");
+    await page.getByLabel("Priority").fill("1");
+    await page.getByRole("button", { name: "Add rule" }).click();
+
+    await page.goto(`${baseUrl}/imports/csv`);
+    await fillDefaultCsvMapping(page);
+    await uploadCsv(
+      page,
+      "Date;Payee;Description;Amount\n15.07.2026;Bank;Monthly settlement;-42,99",
+    );
+    await page.getByRole("button", { name: "Preview import" }).click();
+    const batchId = await page.locator('input[name="batchId"]').inputValue();
+
+    await page.goto(`${baseUrl}/categorization-rules`);
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Transfer import rule" })
+      .getByRole("link", { name: "Edit", exact: true })
+      .click();
+    await page.getByLabel("Internal transfer action").selectOption("unmark");
+    await page.getByRole("button", { name: "Save rule" }).click();
+
+    const confirmation = await page.request.post(`${baseUrl}/imports/csv/confirm`, {
+      form: { batchId },
+    });
+    expect(confirmation.status()).toBe(200);
+    await page.goto(`${baseUrl}/transactions`);
+    const row = page.getByRole("row").filter({ hasText: "Monthly settlement" });
+    await expect(row.getByRole("cell", { name: "Internal transfer", exact: true })).toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
 test("CSV import applies fixed-cost actions from categorization rules", async ({ page }) => {
   const server = buildServer();
 

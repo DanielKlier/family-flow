@@ -11,7 +11,7 @@ export type ConfirmableImportTransaction = Pick<
   | "payee"
   | "purpose"
   | "importHash"
-> & { fixedCost?: boolean };
+> & { fixedCost?: boolean; internalTransfer?: boolean };
 
 export type StoredImportOutcome =
   | {
@@ -77,6 +77,7 @@ export async function confirmCsvImportBatch(input: {
           source: "csv",
           status: "booked",
           fixedCost: outcome.transaction.fixedCost ?? false,
+          internalTransfer: readInternalTransfer(outcome.transaction.internalTransfer),
           note: null,
         }),
       ];
@@ -84,4 +85,10 @@ export async function confirmCsvImportBatch(input: {
     await input.persistence.saveTransactions(transactions);
     return { importedCount: transactions.length };
   });
+}
+
+function readInternalTransfer(value: unknown): boolean {
+  if (value === undefined) return false;
+  if (typeof value === "boolean") return value;
+  throw new Error("Import outcome snapshot internal-transfer state is invalid");
 }

@@ -136,7 +136,8 @@ function parseImportTransaction(value: unknown): ConfirmableImportTransaction {
     !isNullableString(value.payee) ||
     !isNullableString(value.purpose) ||
     !isNonEmptyString(value.importHash) ||
-    (value.fixedCost !== undefined && typeof value.fixedCost !== "boolean")
+    (value.fixedCost !== undefined && typeof value.fixedCost !== "boolean") ||
+    (value.internalTransfer !== undefined && typeof value.internalTransfer !== "boolean")
   ) {
     throw invalidOutcomeSnapshot();
   }
@@ -151,6 +152,7 @@ function parseImportTransaction(value: unknown): ConfirmableImportTransaction {
     purpose: value.purpose,
     importHash: value.importHash,
     ...(value.fixedCost === undefined ? {} : { fixedCost: value.fixedCost }),
+    ...(value.internalTransfer === undefined ? {} : { internalTransfer: value.internalTransfer }),
   };
 }
 

@@ -229,6 +229,7 @@ async function prepareOutcomes(
               ...row,
               categoryId: category.id,
               fixedCost: category.fixedCost,
+              internalTransfer: category.internalTransfer,
             },
           },
     );
@@ -241,18 +242,20 @@ function matchCategory(
   rules: CategorizationRule[],
   row: CsvTransactionImportRow,
   parsedRow: ParsedCsvTransactionRow,
-): { id: string; name: string; fixedCost: boolean } {
+): { id: string; name: string; fixedCost: boolean; internalTransfer: boolean } {
   const matchedRule = findCategorizationMatch(rules, row);
+  const actions = {
+    fixedCost: matchedRule?.fixedCost ?? false,
+    internalTransfer: matchedRule?.internalTransfer ?? false,
+  };
   const csvName = normalizeMatchText(parsedRow.categoryName ?? "");
   const csvCategory = categories.find((category) => normalizeMatchText(category.name) === csvName);
-  if (csvCategory !== undefined)
-    return { ...csvCategory, fixedCost: matchedRule?.fixedCost ?? false };
+  if (csvCategory !== undefined) return { ...csvCategory, ...actions };
   const ruleCategory = categories.find((category) => category.id === matchedRule?.categoryId);
-  if (ruleCategory !== undefined)
-    return { ...ruleCategory, fixedCost: matchedRule?.fixedCost ?? false };
+  if (ruleCategory !== undefined) return { ...ruleCategory, ...actions };
   const fallback = categories.find((category) => category.id === "category-other") ??
     categories[0] ?? { id: "category-other", name: "Other" };
-  return { ...fallback, fixedCost: false };
+  return { ...fallback, fixedCost: false, internalTransfer: false };
 }
 
 function normalizeMatchText(value: string): string {

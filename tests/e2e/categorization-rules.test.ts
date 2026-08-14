@@ -62,6 +62,53 @@ test("categorization rules can mark existing transactions as fixed costs", async
   }
 });
 
+test("E2E-FF-CAT-002-03: categorization rules reapply mark and unmark transfer actions to existing transactions", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/transactions`);
+    await page.getByLabel("Transaction account").selectOption("account-shared-checking");
+    await page.locator("#transaction-form").getByLabel("Category").selectOption("category-other");
+    await page.getByLabel("Date").fill("2026-07-15");
+    await page.getByLabel("Description").fill("Transfer settlement");
+    await page.getByLabel("Amount").fill("42.99");
+    await page.getByRole("button", { name: "Add transaction" }).click();
+
+    await page.goto(`${baseUrl}/categorization-rules`);
+    await page.getByLabel("Rule name").fill("Transfer reapply rule");
+    await page.getByLabel("Search text").fill("settlement");
+    await page.getByLabel("Rule category").selectOption("category-other");
+    await page.getByLabel("Internal transfer action").selectOption("mark");
+    await page.getByLabel("Priority").fill("1");
+    await page.getByRole("button", { name: "Add rule" }).click();
+    await page.getByRole("button", { name: "Apply rules to existing transactions" }).click();
+
+    await page.goto(`${baseUrl}/transactions`);
+    let row = page.getByRole("row").filter({ hasText: "Transfer settlement" });
+    await expect(row.getByRole("cell", { name: "Internal transfer", exact: true })).toBeVisible();
+
+    await page.goto(`${baseUrl}/categorization-rules`);
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Transfer reapply rule" })
+      .getByRole("link", { name: "Edit", exact: true })
+      .click();
+    await page.getByLabel("Internal transfer action").selectOption("unmark");
+    await page.getByRole("button", { name: "Save rule" }).click();
+    await page.getByRole("button", { name: "Apply rules to existing transactions" }).click();
+
+    await page.goto(`${baseUrl}/transactions`);
+    row = page.getByRole("row").filter({ hasText: "Transfer settlement" });
+    await expect(row.getByRole("cell", { name: "Internal transfer", exact: true })).toHaveCount(0);
+  } finally {
+    await server.close();
+  }
+});
+
 test("categorization rules can be restricted to an account", async ({ page }) => {
   const server = buildServer();
 

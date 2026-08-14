@@ -4,6 +4,7 @@ describe("CSV import confirmation", () => {
   it("UNIT-FF-CSV-008-01: atomically confirms only eligible rows from an unexpired server batch", async () => {
     const { confirmCsvImportBatch } = await import("../../src/core/imports/confirm-csv-import.js");
     const calls: string[] = [];
+    let savedTransactions: unknown[] = [];
     const persistence = {
       async withinTransaction<T>(work: () => Promise<T>): Promise<T> {
         calls.push("begin");
@@ -51,6 +52,7 @@ describe("CSV import confirmation", () => {
         };
       },
       async saveTransactions(transactions: unknown[]): Promise<void> {
+        savedTransactions = transactions;
         calls.push(`save:${transactions.length}`);
       },
     };
@@ -65,6 +67,53 @@ describe("CSV import confirmation", () => {
       }),
     ).resolves.toEqual({ importedCount: 1 });
     expect(calls).toEqual(["begin", "consume:batch-opaque-id", "save:1", "commit"]);
+    expect(savedTransactions).toEqual([expect.objectContaining({ internalTransfer: false })]);
+  });
+
+  it("rejects an invalid stored internal-transfer action", async () => {
+    const { confirmCsvImportBatch } = await import("../../src/core/imports/confirm-csv-import.js");
+    const persistence = {
+      async withinTransaction<T>(work: () => Promise<T>): Promise<T> {
+        return work();
+      },
+      async consumePreviewBatch() {
+        return {
+          id: "batch",
+          userId: "user",
+          accountId: "account",
+          expiresAt: new Date("2026-07-15T11:00:00Z"),
+          outcomes: [
+            {
+              line: 2,
+              outcome: "importable" as const,
+              reason: null,
+              transaction: {
+                id: "transaction",
+                accountId: "account",
+                categoryId: "category-other",
+                date: "2026-07-15",
+                amountCents: -100,
+                description: "Settlement",
+                payee: null,
+                purpose: null,
+                importHash: "v3:invalid-transfer-snapshot",
+                internalTransfer: "mark",
+              },
+            },
+          ],
+        };
+      },
+      async saveTransactions() {},
+    };
+
+    await expect(
+      confirmCsvImportBatch({
+        batchId: "batch",
+        userId: "user",
+        now: new Date("2026-07-15T10:00:00Z"),
+        persistence,
+      }),
+    ).rejects.toThrow("internal-transfer state is invalid");
   });
 
   it("rejects the complete batch when a stored row is invalid", async () => {

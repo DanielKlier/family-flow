@@ -11,6 +11,7 @@ describe("categorization-rules view-model preparation", () => {
       categoryId: "missing-category",
       accountId: null,
       fixedCost: null,
+      internalTransfer: null,
       priority: 3,
       enabled: false,
     };

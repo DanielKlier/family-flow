@@ -21,12 +21,25 @@ function fixedCostLabel(value: boolean | null): string {
   return "leave unchanged";
 }
 
+function internalTransferValue(value: boolean | null): string {
+  if (value === true) return "mark";
+  if (value === false) return "unmark";
+  return "unchanged";
+}
+
+function internalTransferLabel(value: boolean | null): string {
+  if (value === true) return "mark transfer";
+  if (value === false) return "unmark transfer";
+  return "leave unchanged";
+}
+
 const categorizationRuleText = {
   name: "Rule name",
   searchText: "Search text",
   category: "Rule category",
   account: "Rule account",
   fixedCostAction: "Fixed cost action",
+  internalTransferAction: "Internal transfer action",
   priority: "Priority",
   listHeading: "Rule list",
   apply: "Apply rules to existing transactions",
@@ -34,6 +47,7 @@ const categorizationRuleText = {
   categoryColumn: "Category",
   accountColumn: "Account",
   fixedCostColumn: "Fixed cost",
+  internalTransferColumn: "Internal transfer",
   status: "Status",
   actions: "Actions",
   edit: "Edit",
@@ -75,6 +89,14 @@ function prepareForm(
       ...option,
       selected: option.value === fixedCostValue(rule?.fixedCost ?? null),
     })),
+    internalTransferOptions: [
+      { value: "unchanged", label: "leave unchanged" },
+      { value: "mark", label: "mark transfer" },
+      { value: "unmark", label: "unmark transfer" },
+    ].map((option) => ({
+      ...option,
+      selected: option.value === internalTransferValue(rule?.internalTransfer ?? null),
+    })),
     priority: rule?.priority ?? 100,
     enabledChecked: rule?.enabled ?? true,
   };
@@ -97,6 +119,7 @@ export function prepareCategorizationRulesViewModel(input: RulesInput) {
       account:
         rule.accountId === null ? "All accounts" : (accounts.get(rule.accountId) ?? rule.accountId),
       fixedCostLabel: fixedCostLabel(rule.fixedCost),
+      internalTransferLabel: internalTransferLabel(rule.internalTransfer),
       priority: String(rule.priority),
       enabled: rule.enabled,
       statusLabel: rule.enabled ? "enabled" : "disabled",
@@ -113,5 +136,6 @@ export function prepareCategorizationRuleEditViewModel(
     title: "Edit Categorization Rule",
     ...prepareForm(input, input.rule),
     heading: "Edit Categorization Rule",
+    formError: input.formError,
   };
 }

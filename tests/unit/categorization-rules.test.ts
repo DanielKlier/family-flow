@@ -26,9 +26,23 @@ describe("categorization rules", () => {
       categoryId: "category-groceries",
       accountId: "checking",
       fixedCost: null,
+      internalTransfer: null,
       priority: 10,
       enabled: true,
     });
+  });
+
+  it("UNIT-FF-CAT-002-02: defaults an omitted internal-transfer action to leave state unchanged", () => {
+    expect(
+      createCategorizationRule({
+        id: "rule-unchanged-transfer",
+        name: "Unchanged transfer",
+        searchText: "settlement",
+        categoryId: "category-other",
+        priority: 1,
+        enabled: true,
+      }),
+    ).toMatchObject({ internalTransfer: null });
   });
 
   it("normalizes blank account restrictions to no restriction", () => {
@@ -149,6 +163,149 @@ describe("categorization rules", () => {
         [transaction],
       ),
     ).toEqual([{ ...transaction, categoryId: "category-groceries" }]);
+  });
+
+  it("applies a mark transfer action from a matching rule", () => {
+    const unmarked = createTransaction({
+      id: "transaction-unmarked-transfer",
+      accountId: "account-shared-checking",
+      categoryId: "category-other",
+      date: "2026-07-01",
+      amountCents: -4200,
+      description: "Monthly settlement",
+      payee: "Bank",
+      source: "manual",
+      status: "booked",
+      fixedCost: false,
+      internalTransfer: false,
+      note: null,
+    });
+    expect(
+      applyCategorizationRules(
+        [
+          createCategorizationRule({
+            id: "rule-mark-transfer",
+            name: "Mark transfer",
+            searchText: "settlement",
+            categoryId: "category-other",
+            internalTransfer: true,
+            priority: 1,
+            enabled: true,
+          }),
+        ],
+        [unmarked],
+      ),
+    ).toEqual([{ ...unmarked, internalTransfer: true }]);
+  });
+
+  it("applies an unmark transfer action from a matching rule", () => {
+    const marked = createTransaction({
+      id: "transaction-marked-transfer",
+      accountId: "account-shared-checking",
+      categoryId: "category-other",
+      date: "2026-07-01",
+      amountCents: -4200,
+      description: "Monthly settlement",
+      payee: "Bank",
+      source: "manual",
+      status: "booked",
+      fixedCost: false,
+      internalTransfer: true,
+      note: null,
+    });
+
+    expect(
+      applyCategorizationRules(
+        [
+          createCategorizationRule({
+            id: "rule-unmark-transfer",
+            name: "Unmark transfer",
+            searchText: "settlement",
+            categoryId: "category-other",
+            internalTransfer: false,
+            priority: 1,
+            enabled: true,
+          }),
+        ],
+        [marked],
+      ),
+    ).toEqual([{ ...marked, internalTransfer: false }]);
+  });
+
+  it("preserves transfer state when a matching rule leaves it unchanged", () => {
+    const marked = createTransaction({
+      id: "transaction-preserved-transfer",
+      accountId: "account-shared-checking",
+      categoryId: "category-other",
+      date: "2026-07-01",
+      amountCents: -4200,
+      description: "Monthly settlement",
+      payee: "Bank",
+      source: "manual",
+      status: "booked",
+      fixedCost: false,
+      internalTransfer: true,
+      note: null,
+    });
+
+    expect(
+      applyCategorizationRules(
+        [
+          createCategorizationRule({
+            id: "rule-unchanged-transfer",
+            name: "Unchanged transfer",
+            searchText: "settlement",
+            categoryId: "category-other",
+            priority: 1,
+            enabled: true,
+          }),
+        ],
+        [marked],
+      ),
+    ).toEqual([marked]);
+  });
+
+  it("uses the winning rule's transfer action", () => {
+    const transaction = createTransaction({
+      id: "transaction-winning-transfer",
+      accountId: "account-shared-checking",
+      categoryId: "category-other",
+      date: "2026-07-01",
+      amountCents: -4200,
+      description: "Monthly settlement",
+      payee: "Bank",
+      source: "manual",
+      status: "booked",
+      fixedCost: false,
+      internalTransfer: false,
+      note: null,
+    });
+
+    expect(
+      applyCategorizationRules(
+        [
+          createCategorizationRule({
+            id: "rule-lower-priority",
+            name: "Lower priority",
+            searchText: "settlement",
+            categoryId: "category-other",
+            internalTransfer: false,
+            priority: 10,
+            enabled: true,
+          }),
+          createCategorizationRule({
+            id: "rule-higher-priority",
+            name: "Higher priority",
+            searchText: "settlement",
+            categoryId: "category-other",
+            internalTransfer: true,
+            priority: 1,
+            enabled: true,
+          }),
+        ],
+        [transaction],
+      ),
+    ).toEqual([{ ...transaction, internalTransfer: true }]);
   });
 
   it("applies fixed-cost actions from matching rules", () => {
