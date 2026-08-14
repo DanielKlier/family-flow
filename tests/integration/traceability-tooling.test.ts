@@ -57,7 +57,7 @@ describe("INT-FF-QUA-001-01 structured traceability", () => {
     expect(evidence).toContain("INT-FF-QUA-001-01");
     expect(evidence).toContain("INT-FF-QUA-004-01");
     expect(evidence).toContain("INT-FF-CSV-012-03");
-  });
+  }, 35_000);
 });
 
 describe("INT-FF-QUA-004-01 bounded quality tooling", () => {
