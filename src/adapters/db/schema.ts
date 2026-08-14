@@ -64,6 +64,7 @@ export const transactions = pgTable(
     source: text("source").notNull(),
     status: text("status").notNull(),
     fixedCost: boolean("fixed_cost").notNull().default(false),
+    internalTransfer: boolean("internal_transfer").notNull().default(false),
     note: text("note"),
     importHash: text("import_hash"),
   },

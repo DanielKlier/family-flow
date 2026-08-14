@@ -40,6 +40,25 @@ describe("transaction repositories", () => {
     await expect(repository.list({})).resolves.toHaveLength(1);
   });
 
+  it("filters marked and unmarked internal transfers", async () => {
+    const repository = new InMemoryTransactionRepository(initialAccounts);
+    const unmarked = aTransaction({ id: "transaction-unmarked-transfer" });
+    const marked = {
+      ...aTransaction({ id: "transaction-marked-transfer" }),
+      internalTransfer: true,
+    };
+
+    await repository.save(unmarked);
+    await repository.save(marked);
+
+    await expect(
+      repository.list({ internalTransfer: true } as Parameters<typeof repository.list>[0]),
+    ).resolves.toEqual([marked]);
+    await expect(
+      repository.list({ internalTransfer: false } as Parameters<typeof repository.list>[0]),
+    ).resolves.toEqual([unmarked]);
+  });
+
   it("applies each transaction filter consistently", async () => {
     const repository = new InMemoryTransactionRepository(initialAccounts);
     await expectTransactionFilterContract(repository);

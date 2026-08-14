@@ -51,6 +51,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
           source: transaction.source,
           status: transaction.status,
           fixedCost: transaction.fixedCost,
+          internalTransfer: transaction.internalTransfer,
           note: transaction.note,
           importHash: transaction.importHash,
         },
@@ -83,6 +84,9 @@ function buildConditions(filters: TransactionFilters) {
   if (filters.fixedCost !== undefined) {
     conditions.push(eq(transactions.fixedCost, filters.fixedCost));
   }
+  if (filters.internalTransfer !== undefined) {
+    conditions.push(eq(transactions.internalTransfer, filters.internalTransfer));
+  }
 
   return conditions;
 }
@@ -110,6 +114,7 @@ function mapTransaction(row: typeof transactions.$inferSelect): Transaction {
     source: parseTransactionSource(row.source),
     status: parseTransactionStatus(row.status),
     fixedCost: row.fixedCost,
+    internalTransfer: row.internalTransfer,
     note: row.note,
     importHash: row.importHash,
   });

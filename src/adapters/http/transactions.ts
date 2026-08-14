@@ -37,6 +37,10 @@ export function registerTransactionRoutes(
     return handleUpdateTransaction(repositories, request, reply);
   });
 
+  server.post("/transactions/:id/internal-transfer", async (request, reply) => {
+    return handleInternalTransfer(repositories, request, reply);
+  });
+
   server.post("/transactions/:id/delete", async (request, reply) => {
     return handleDeleteTransaction(repositories, request, reply);
   });
@@ -172,6 +176,38 @@ async function handleUpdateTransaction(
     return reply
       .type("text/html; charset=utf-8")
       .send(await renderTransactionsPanelState(repositories, reply));
+  }
+
+  return reply.redirect("/transactions");
+}
+
+async function handleInternalTransfer(
+  repositories: TransactionRouteRepositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const transaction = await repositories.transactions.get(readRouteId(request.params));
+  if (transaction === null) {
+    return reply
+      .status(404)
+      .type("text/html; charset=utf-8")
+      .send(await createFamilyFlowViews(reply).missingResourcePage("transaction"));
+  }
+
+  const form = readForm(request.body);
+  await repositories.transactions.save({
+    ...transaction,
+    internalTransfer: form.internalTransfer === "true",
+  });
+
+  if (isHtmxRequest(request.headers)) {
+    const categories = await repositories.categories.list();
+    return reply.type("text/html; charset=utf-8").send(
+      await createFamilyFlowViews(reply).transactionsList({
+        transactions: await repositories.transactions.list({}),
+        categories,
+      }),
+    );
   }
 
   return reply.redirect("/transactions");

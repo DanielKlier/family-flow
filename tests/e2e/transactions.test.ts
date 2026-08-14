@@ -37,6 +37,84 @@ test("manual booked expense can be created", async ({ page }) => {
   }
 });
 
+test("E2E-FF-TXN-005-01: a manual expense can be marked, filtered, and unmarked as an internal transfer", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/transactions`);
+    await page.getByLabel("Description").fill("Transfer to savings");
+    await page.getByLabel("Amount").fill("100.00");
+    await page.getByLabel("Date").fill("2026-07-15");
+    await page.getByRole("button", { name: "Add transaction" }).click();
+
+    const row = page.getByRole("row").filter({ hasText: "Transfer to savings" });
+    const markButton = row.getByRole("button", { name: "Mark as transfer", exact: true });
+    await expect(markButton).toHaveCount(1);
+    await markButton.click();
+    await expect(row.getByText("Internal transfer", { exact: true })).toBeVisible();
+
+    await page.getByLabel("Transfer state").selectOption("marked");
+    await page.getByRole("button", { name: "Apply filters" }).click();
+    await expect(page.getByRole("row").filter({ hasText: "Transfer to savings" })).toBeVisible();
+
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Transfer to savings" })
+      .getByRole("button", { name: "Unmark transfer", exact: true })
+      .click();
+    await page.getByLabel("Transfer state").selectOption("unmarked");
+    await page.getByRole("button", { name: "Apply filters" }).click();
+    await expect(page.getByRole("row").filter({ hasText: "Transfer to savings" })).toBeVisible();
+    await expect(page.getByText("Internal transfer", { exact: true })).toHaveCount(0);
+  } finally {
+    await server.close();
+  }
+});
+
+test("E2E-FF-TXN-005-02: an imported expense remains visible when marked and unmarked as an internal transfer", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/imports/csv`);
+    await page.getByLabel("Import account").selectOption("account-shared-checking");
+    await page.getByLabel("Date column").fill("Date");
+    await page.getByLabel("Amount column").fill("Amount");
+    await page.getByLabel("Description column").fill("Description");
+    await page.getByLabel("Payee column").fill("Payee");
+    await page.getByLabel("CSV file").setInputFiles({
+      name: "internal-transfer.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(
+        "Date;Payee;Description;Amount\n15.07.2026;Bank;Imported transfer;-100,00",
+      ),
+    });
+    await page.getByRole("button", { name: "Preview import" }).click();
+    await page.getByRole("button", { name: "Confirm import" }).click();
+
+    const row = page.getByRole("row").filter({ hasText: "Imported transfer" });
+    const markButton = row.getByRole("button", { name: "Mark as transfer", exact: true });
+    await expect(markButton).toHaveCount(1);
+    await markButton.click();
+    await expect(page.getByRole("row").filter({ hasText: "Imported transfer" })).toBeVisible();
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Imported transfer" })
+      .getByRole("button", { name: "Unmark transfer", exact: true })
+      .click();
+    await expect(page.getByRole("row").filter({ hasText: "Imported transfer" })).toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
 test("planned expense can be created", async ({ page }) => {
   const server = buildServer();
 

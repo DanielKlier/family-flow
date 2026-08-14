@@ -8,6 +8,7 @@ export type TransactionFilters = {
   categoryId?: string;
   status?: TransactionStatus;
   fixedCost?: boolean;
+  internalTransfer?: boolean;
 };
 
 export type TransactionRepository = {

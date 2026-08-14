@@ -60,6 +60,12 @@ function matchesFilters(
   if (filters.fixedCost !== undefined && transaction.fixedCost !== filters.fixedCost) {
     return false;
   }
+  if (
+    filters.internalTransfer !== undefined &&
+    transaction.internalTransfer !== filters.internalTransfer
+  ) {
+    return false;
+  }
   if (filters.ownerContext !== undefined) {
     return accounts.get(transaction.accountId)?.ownerContext === filters.ownerContext;
   }

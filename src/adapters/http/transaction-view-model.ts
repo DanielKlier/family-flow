@@ -28,6 +28,11 @@ export function prepareTransactionListViewModel(input: TransactionListInput) {
       amount: formatExpenseAmount(transaction.amountCents),
       status: transaction.status,
       fixedCostLabel: transaction.fixedCost ? "fixed" : "variable",
+      internalTransfer: transaction.internalTransfer,
+      internalTransferLabel: transaction.internalTransfer ? "Internal transfer" : "",
+      internalTransferUrl: `/transactions/${encodeURIComponent(transaction.id)}/internal-transfer`,
+      internalTransferValue: transaction.internalTransfer ? "false" : "true",
+      internalTransferAction: transaction.internalTransfer ? "Unmark transfer" : "Mark as transfer",
       editUrl: `/transactions/${encodeURIComponent(transaction.id)}/edit`,
       deleteUrl: `/transactions/${encodeURIComponent(transaction.id)}/delete`,
     })),
@@ -53,6 +58,7 @@ const transactionText = {
   filterCategory: "Category",
   filterStatus: "Filter status",
   fixedCostFilter: "Fixed cost filter",
+  internalTransferFilter: "Transfer state",
   applyFilters: "Apply filters",
   listHeading: "Transaction list",
   empty: "No transactions found.",
@@ -138,6 +144,18 @@ export function prepareTransactionsViewModel(input: {
             ? "fixed"
             : "variable",
         "All costs",
+      ),
+      internalTransfers: prepareFilterOptions(
+        [
+          { id: "marked", name: "marked" },
+          { id: "unmarked", name: "unmarked" },
+        ],
+        input.filters.internalTransfer === undefined
+          ? undefined
+          : input.filters.internalTransfer
+            ? "marked"
+            : "unmarked",
+        "All transactions",
       ),
     },
     list: prepareTransactionListViewModel(input),

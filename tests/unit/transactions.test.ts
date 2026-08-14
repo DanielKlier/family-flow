@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import * as transactionCore from "../../src/core/transactions/transaction.js";
 import { createManualExpense, createTransaction } from "../../src/core/transactions/transaction.js";
 import { aTransaction } from "../support/transactions.js";
 
@@ -69,6 +70,47 @@ describe("transactions", () => {
       source: "csv",
       importHash: "v2:immutable-import-hash",
     });
+  });
+
+  it("UNIT-FF-TXN-005-01: defaults internal transfers to false and preserves explicit transfer state", () => {
+    const unmarked = aTransaction();
+    const marked = createTransaction({
+      ...unmarked,
+      id: "transaction-marked-transfer",
+      internalTransfer: true,
+    } as Parameters<typeof createTransaction>[0] & { internalTransfer: boolean });
+    const explicitlyUnmarked = createTransaction({
+      ...unmarked,
+      id: "transaction-explicitly-unmarked-transfer",
+      internalTransfer: false,
+    } as Parameters<typeof createTransaction>[0] & { internalTransfer: boolean });
+
+    expect(Reflect.get(unmarked, "internalTransfer")).toBe(false);
+    expect(Reflect.get(marked, "internalTransfer")).toBe(true);
+    expect(Reflect.get(explicitlyUnmarked, "internalTransfer")).toBe(false);
+  });
+
+  it("UNIT-FF-TXN-006-01: excludes marked transfer legs from the reusable expense total", () => {
+    const expenseTotalCents = Reflect.get(transactionCore, "expenseTotalCents");
+    expect(expenseTotalCents).toBeTypeOf("function");
+    if (typeof expenseTotalCents !== "function") {
+      throw new Error("expenseTotalCents must be exported");
+    }
+
+    const normalExpense = aTransaction({ id: "normal-expense", amountCents: -4299 });
+    const markedLeg = createTransaction({
+      ...aTransaction({ id: "marked-transfer-leg", amountCents: -10000 }),
+      internalTransfer: true,
+    } as Parameters<typeof createTransaction>[0] & { internalTransfer: boolean });
+    const secondMarkedLeg = createTransaction({
+      ...aTransaction({ id: "second-marked-transfer-leg", amountCents: -10000 }),
+      internalTransfer: true,
+    } as Parameters<typeof createTransaction>[0] & { internalTransfer: boolean });
+
+    expect(expenseTotalCents([normalExpense])).toBe(-4299);
+    expect(expenseTotalCents([markedLeg])).toBe(0);
+    expect(expenseTotalCents([markedLeg, secondMarkedLeg])).toBe(0);
+    expect(expenseTotalCents([normalExpense, markedLeg])).toBe(-4299);
   });
 
   it("UNIT-FF-TXN-001-02: rejects unsafe integer transaction amounts", () => {

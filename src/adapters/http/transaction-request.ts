@@ -41,6 +41,13 @@ export function readTransactionFilters(query: unknown): TransactionFilters {
   if (fixedCost === "variable") {
     filters.fixedCost = false;
   }
+  const internalTransfer = readOptionalQueryValue(query, "internalTransfer");
+  if (internalTransfer === "marked") {
+    filters.internalTransfer = true;
+  }
+  if (internalTransfer === "unmarked") {
+    filters.internalTransfer = false;
+  }
 
   return filters;
 }
@@ -68,6 +75,7 @@ export function createTransactionFromForm(
     source: existing.source,
     purpose: form.purpose ?? existing.purpose,
     importHash: existing.importHash,
+    internalTransfer: existing.internalTransfer,
   });
 }
 

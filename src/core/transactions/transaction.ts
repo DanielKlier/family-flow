@@ -13,12 +13,14 @@ export type Transaction = {
   source: TransactionSource;
   status: TransactionStatus;
   fixedCost: boolean;
+  internalTransfer: boolean;
   note: string | null;
   importHash: string | null;
 };
 
-export type TransactionInput = Omit<Transaction, "importHash" | "purpose"> & {
+export type TransactionInput = Omit<Transaction, "importHash" | "internalTransfer" | "purpose"> & {
   importHash?: string | null;
+  internalTransfer?: boolean;
   purpose?: string | null;
 };
 
@@ -101,9 +103,18 @@ export function createTransaction(input: TransactionInput): Transaction {
     source: input.source,
     status: input.status,
     fixedCost: input.fixedCost,
+    internalTransfer: input.internalTransfer ?? false,
     note,
     importHash,
   };
+}
+
+export function expenseTotalCents(transactions: Transaction[]): number {
+  return transactions.reduce(
+    (total, transaction) =>
+      transaction.internalTransfer ? total : total + transaction.amountCents,
+    0,
+  );
 }
 
 function normalizeOptionalText(value: string | null | undefined): string | null {
