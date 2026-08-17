@@ -732,7 +732,7 @@ The current composition registers authentication before protected routes. This d
 
 **Status:** Completed
 **Classification:** Behavior change
-**Implements:** `FF-LOC-001`, `FF-LOC-002`, `FF-LOC-003`, `FF-LOC-004`, `FF-ARC-007`, `FF-MDM-002`
+**Implements:** `FF-LOC-001`, `FF-LOC-002`, `FF-LOC-003`, `FF-LOC-004`, `FF-LOC-005`, `FF-ARC-007`, `FF-MDM-002`
 **Verifies:** `FF-ARC-004`, `FF-UI-001`, `FF-UI-003`
 **Operations:** `OPS-FF-LOC-002-01`
 
@@ -741,6 +741,7 @@ The current composition registers authentication before protected routes. This d
 - [x] Add `E2E-FF-LOC-002-01`: enter `1.234,56` and `31.12.2026` and verify canonical storage and German display.
 - [x] Add `E2E-FF-LOC-001-01`: verify German navigation, labels, help, and validation across surfaces delivered through `PH-11`.
 - [x] Observe failure because current UI and human-form parsing are not fully German-localized.
+- [x] Add `UNIT-FF-LOC-005-01` and `UNIT-FF-LOC-005-02`; observe incorrect selection when a more-specific range or wildcard must preserve an explicit `q=0` exclusion.
 
 **Tasks:**
 
@@ -754,8 +755,10 @@ The current composition registers authentication before protected routes. This d
 - [x] Add a catalog completeness check covering every key used by prepared view models.
 - [x] Use the target German fresh-database seed literals from `FF-MDM-002` without renaming existing user-maintained rows.
 - [x] Document accepted formats and troubleshooting.
+- [x] Negotiate each supported representation by its most-specific matching `Accept-Language` range, including wildcard and explicit exclusion semantics.
+- [x] Keep locale selection request-scoped, canonical persistence locale-neutral, and locale-varying HTML cache metadata explicit without varying redirects or health responses.
 
-**Tests:** `E2E-FF-LOC-001-01`, `INT-FF-LOC-001-04` (catalog keys and allowlist), `E2E-FF-LOC-002-01`, `UNIT-FF-LOC-003-02` (locale-neutral amount/date values), `UNIT-FF-ARC-007-01` (typed domain errors), `INT-FF-ARC-007-01` (core/adapters localization boundary), `INT-FF-LOC-002-01` and `INT-FF-LOC-002-02` (valid/invalid HTTP grammar), `INT-FF-LOC-003-01` (formatting/error translation), `INT-FF-LOC-004-01` (CSV independence), `INT-FF-ARC-004-03` (template boundary), and `INT-FF-MDM-002-02` (fresh versus existing seeds).
+**Tests:** `E2E-FF-LOC-001-01`, `INT-FF-LOC-001-04` (catalog keys and allowlist), `E2E-FF-LOC-002-01`, `UNIT-FF-LOC-003-02` (locale-neutral amount/date values), `UNIT-FF-ARC-007-01` (typed domain errors), `INT-FF-ARC-007-01` (core/adapters localization boundary), `INT-FF-LOC-002-01` and `INT-FF-LOC-002-02` (valid/invalid HTTP grammar), `INT-FF-LOC-003-01` (formatting/error translation), `INT-FF-LOC-004-01` (CSV independence), `UNIT-FF-LOC-005-01` and `UNIT-FF-LOC-005-02` (specificity, quality, wildcard, exclusion, and fallback negotiation), `INT-FF-LOC-005-01` through `INT-FF-LOC-005-03` (request scope, HTML metadata/cache variation, and locale-independent responses), `E2E-FF-LOC-005-01` (browser negotiation and canonical persistence), `INT-FF-ARC-004-03` (template boundary), and `INT-FF-MDM-002-02` (fresh versus existing seeds).
 
 **Quality gates:** the five canonical commands plus `pnpm docker:build` when packaged localization resources change.
 

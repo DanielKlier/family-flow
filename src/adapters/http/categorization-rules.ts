@@ -62,7 +62,7 @@ async function handleCreateRule(
     return renderRulePage(
       repositories,
       reply.status(400),
-      reply.server.localization.errorMessage(error, "rules.saveFailed"),
+      reply.request.localization.errorMessage(error, "rules.saveFailed"),
     );
   }
 
@@ -127,7 +127,7 @@ async function handleUpdateRule(
           categories,
           rules: [],
           rule: existing,
-          formError: reply.server.localization.errorMessage(error, "rules.saveFailed"),
+          formError: reply.request.localization.errorMessage(error, "rules.saveFailed"),
         }),
       );
   }

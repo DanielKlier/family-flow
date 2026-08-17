@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance, FastifyRequest } from "fastify";
-
+import type { SessionService } from "../../core/auth/session-service.js";
+import type { UserContext } from "../../ports/auth/user-context.js";
 import {
   buildAuthorizationUrl,
   buildEndSessionUrl,
@@ -10,8 +11,6 @@ import {
   type OidcProviderMetadata,
   type OidcRuntimeConfig,
 } from "../oidc/authentik-oidc.js";
-import type { SessionService } from "../../core/auth/session-service.js";
-import type { UserContext } from "../../ports/auth/user-context.js";
 import {
   getPath,
   readCallbackQuery,
@@ -43,7 +42,13 @@ const testUser: UserContext = {
   email: "test.user@example.invalid",
 };
 
-const publicPaths = new Set(["/health", "/auth/login", "/auth/callback", "/auth/test-login"]);
+const publicPaths = new Set([
+  "/health",
+  "/auth/login",
+  "/auth/callback",
+  "/auth/test-login",
+  "/auth/logout",
+]);
 const oidcStateCookieName = "ff_oidc_state";
 
 export function registerAuth(
@@ -87,7 +92,9 @@ export function registerAuth(
       return reply
         .status(500)
         .type("text/html; charset=utf-8")
-        .send(await views.authErrorPage(reply.server.localization.text("auth.missingUserContext")));
+        .send(
+          await views.authErrorPage(reply.request.localization.text("auth.missingUserContext")),
+        );
     }
 
     return reply.type("text/html; charset=utf-8").send(await views.dashboardPage(user));
@@ -107,7 +114,7 @@ export function registerAuth(
         .type("text/html; charset=utf-8")
         .send(
           await createFamilyFlowViews(reply).authErrorPage(
-            reply.server.localization.text("auth.missingOidcConfig"),
+            reply.request.localization.text("auth.missingOidcConfig"),
           ),
         );
     }
@@ -126,7 +133,7 @@ export function registerAuth(
         .type("text/html; charset=utf-8")
         .send(
           await createFamilyFlowViews(reply).authErrorPage(
-            reply.server.localization.text("auth.notFound"),
+            reply.request.localization.text("auth.notFound"),
           ),
         );
     }
@@ -148,7 +155,7 @@ export function registerAuth(
         .type("text/html; charset=utf-8")
         .send(
           await createFamilyFlowViews(reply).authErrorPage(
-            reply.server.localization.text("auth.notFound"),
+            reply.request.localization.text("auth.notFound"),
           ),
         );
     }
@@ -161,7 +168,7 @@ export function registerAuth(
         .type("text/html; charset=utf-8")
         .send(
           await createFamilyFlowViews(reply).authErrorPage(
-            reply.server.localization.text("auth.invalidCallback"),
+            reply.request.localization.text("auth.invalidCallback"),
           ),
         );
     }
@@ -194,7 +201,7 @@ export function registerAuth(
         .type("text/html; charset=utf-8")
         .send(
           await createFamilyFlowViews(reply).authErrorPage(
-            reply.server.localization.text("auth.invalidLogoutOrigin"),
+            reply.request.localization.text("auth.invalidLogoutOrigin"),
           ),
         );
     }
@@ -206,7 +213,7 @@ export function registerAuth(
         .type("text/html; charset=utf-8")
         .send(
           await createFamilyFlowViews(reply).authErrorPage(
-            reply.server.localization.text("auth.invalidSession"),
+            reply.request.localization.text("auth.invalidSession"),
           ),
         );
     }

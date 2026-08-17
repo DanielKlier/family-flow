@@ -49,7 +49,7 @@ async function handleListIncome(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const filters = readIncomeFilters(request.query, currentMonth(), reply.server.localization);
+  const filters = readIncomeFilters(request.query, currentMonth(), reply.request.localization);
   const state = await readIncomePanelState(repositories, filters);
 
   const views = createFamilyFlowViews(reply);
@@ -67,7 +67,7 @@ async function handleCreateIncome(
 ) {
   try {
     await repositories.income.savePlan(
-      createIncomePlanFromForm(readForm(request.body), randomUUID(), reply.server.localization),
+      createIncomePlanFromForm(readForm(request.body), randomUUID(), reply.request.localization),
     );
   } catch (error: unknown) {
     return handleFormError(repositories, request, reply, error, "income.saveFailed");
@@ -113,14 +113,14 @@ async function handleUpdateIncome(
 
   try {
     await repositories.income.savePlan(
-      createIncomePlanFromForm(readForm(request.body), id, reply.server.localization),
+      createIncomePlanFromForm(readForm(request.body), id, reply.request.localization),
     );
   } catch (error: unknown) {
     const ownerContexts = await repositories.ownerContexts.list();
     const input = {
       plan: existing,
       ownerContexts,
-      formError: reply.server.localization.errorMessage(error, "income.saveFailed"),
+      formError: reply.request.localization.errorMessage(error, "income.saveFailed"),
     };
     const views = createFamilyFlowViews(reply);
     const body = isHtmxRequest(request.headers)
@@ -144,8 +144,8 @@ async function handleCreateOverride(
       createMonthlyIncomeOverride({
         id: randomUUID(),
         incomePlanId: requireFormValue(form, "incomePlanId"),
-        month: reply.server.localization.parseMonth(requireFormValue(form, "month")),
-        amountCents: reply.server.localization.parseAmountCents(
+        month: reply.request.localization.parseMonth(requireFormValue(form, "month")),
+        amountCents: reply.request.localization.parseAmountCents(
           requireFormValue(form, "amount"),
           true,
         ),
@@ -187,7 +187,7 @@ async function handleFormError(
   const state = await readIncomePanelState(
     repositories,
     { month: currentMonth() },
-    reply.server.localization.errorMessage(error, fallbackKey),
+    reply.request.localization.errorMessage(error, fallbackKey),
   );
   const views = createFamilyFlowViews(reply);
   const body = isHtmxRequest(request.headers)

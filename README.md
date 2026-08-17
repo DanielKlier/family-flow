@@ -60,11 +60,13 @@ Start the app with `pnpm dev:oidc`, open `http://127.0.0.1:3000/`, and sign in t
 - `node dist/app/session-invalidate.js`: revoke all sessions after restoring a backup, before reopening traffic.
 - `pnpm dev:oidc`: run the local app with `.env.dev` for the Dex development OIDC flow.
 
-All server-rendered route families use named `@fastify/view` boundaries with globally autoescaped Nunjucks templates. Prepared HTTP view models supply German display-ready values; templates contain presentation only.
+All server-rendered route families use named `@fastify/view` boundaries with globally autoescaped Nunjucks templates. Prepared HTTP view models supply locale-specific display-ready values; templates contain presentation only.
 
-## German Input Formats
+## Browser Locale And Input Formats
 
-The user interface uses German human-form grammar. Enter transaction dates as `DD.MM.YYYY` (for example `31.12.2026`), months as `MM.YYYY`, and amounts with an optional comma fraction and optional dot grouping (for example `1234`, `1234,5`, or `1.234,56`). Signs, currency symbols, spaces, dot decimals, malformed grouping, and more than two decimal places are rejected. CSV profile date and decimal formats remain independent of these form rules.
+HTML pages, HTMX fragments, and rendered errors negotiate German (`de-DE`) or English (`en`) from each request's `Accept-Language` header. `DEFAULT_LOCALE` controls the fallback and fresh-database seed labels and defaults to `de-DE`; startup rejects other values. Changing it does not rename existing master data. Locale-varying HTML includes `Content-Language` and `Vary: Accept-Language`. Redirects and `/health` remain locale-independent.
+
+German forms accept dates as `DD.MM.YYYY`, months as `MM.YYYY`, and amounts such as `1.234,56`. English forms accept dates as `MM/DD/YYYY`, months as `MM/YYYY`, and amounts such as `1,234.56`. Both adapters convert accepted values to canonical ISO dates/months and integer cents. Signs, currency symbols, spaces, malformed grouping, and more than two decimal places are rejected. CSV profile date and decimal formats remain independent of browser locale.
 
 ## Versioning
 

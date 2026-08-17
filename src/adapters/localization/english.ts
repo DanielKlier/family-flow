@@ -3,7 +3,7 @@ import type {
   LocalizationValues,
   MasterDataSeedType,
 } from "../../ports/localization/localization.js";
-import { messages } from "./german-catalog.js";
+import { messages } from "./english-catalog.js";
 
 type FormErrorCode =
   | "required_account"
@@ -21,37 +21,28 @@ class LocalizedFormError extends Error {
   }
 }
 
-const formErrors: Record<FormErrorCode, string> = {
-  required_account: "Konto ist erforderlich.",
-  required_category: "Kategorie ist erforderlich.",
-  required_date: "Datum ist erforderlich.",
-  required_description: "Beschreibung ist erforderlich.",
-  required_amount: "Betrag ist erforderlich.",
-  invalid_amount: "Der Betrag ist ungültig.",
-  invalid_date: "Das Datum ist ungültig.",
-};
 const legacyErrors: Record<string, string> = {
-  "Account name is required": "Kontoname ist erforderlich.",
-  "Category name is required": "Kategoriename ist erforderlich.",
-  "Owner context label is required": "Eigentümername ist erforderlich.",
-  "Income name is required": "Bezeichnung ist erforderlich.",
+  "Account name is required": "Account name is required.",
+  "Category name is required": "Category name is required.",
+  "Owner context label is required": "Owner name is required.",
+  "Income name is required": "Description is required.",
   "Income end month must not be before start month":
-    "Der Endmonat darf nicht vor dem Startmonat liegen.",
+    "The end month must not precede the start month.",
   "Categorization rule priority must be a non-negative integer":
-    "Die Priorität muss eine nichtnegative ganze Zahl sein.",
-  "CSV file is required": "Eine CSV-Datei ist erforderlich.",
-  "CSV file exceeds 5 MiB limit": "Die CSV-Datei überschreitet die Grenze von 5 MiB.",
-  "Import profile does not exist": "Das Importprofil ist nicht vorhanden.",
+    "The priority must be a non-negative integer.",
+  "CSV file is required": "A CSV file is required.",
+  "CSV file exceeds 5 MiB limit": "The CSV file exceeds the 5 MiB limit.",
+  "Import profile does not exist": "The import profile does not exist.",
 };
 
-export function createGermanLocalization(): Localization {
+export function createEnglishLocalization(): Localization {
   return {
-    locale: "de-DE",
+    locale: "en",
     text(key, values) {
       return interpolate(messages[key] ?? key, values);
     },
     formatAmount(cents) {
-      return new Intl.NumberFormat("de-DE", {
+      return new Intl.NumberFormat("en-US", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
         useGrouping: true,
@@ -59,11 +50,11 @@ export function createGermanLocalization(): Localization {
     },
     formatDate(value) {
       const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-      return match === null ? value : `${match[3]}.${match[2]}.${match[1]}`;
+      return match === null ? value : `${match[2]}/${match[3]}/${match[1]}`;
     },
     formatMonth(value) {
       const match = /^(\d{4})-(\d{2})$/.exec(value);
-      return match === null ? value : `${match[2]}.${match[1]}`;
+      return match === null ? value : `${match[2]}/${match[1]}`;
     },
     parseAmountCents(value, allowZero) {
       return parseAmount(value, allowZero);
@@ -73,16 +64,19 @@ export function createGermanLocalization(): Localization {
     },
     parseDate,
     parseMonth(value) {
-      const match = /^(0[1-9]|1[0-2])\.(\d{4})$/.exec(value);
+      const match = /^(0[1-9]|1[0-2])\/(\d{4})$/.exec(value);
       if (match === null) throw new LocalizedFormError("invalid_date");
       return `${match[2]}-${match[1]}`;
     },
     errorMessage(error, fallbackKey) {
-      if (error instanceof LocalizedFormError) return formErrors[error.code];
-      if (hasCode(error, "invalid_date")) return formErrors.invalid_date;
-      if (hasCode(error, "invalid_amount") || hasCode(error, "non_expense_amount"))
-        return formErrors.invalid_amount;
-      if (hasCode(error, "required_description")) return formErrors.required_description;
+      if (
+        error instanceof LocalizedFormError ||
+        hasCode(error, "invalid_date") ||
+        hasCode(error, "invalid_amount") ||
+        hasCode(error, "non_expense_amount") ||
+        hasCode(error, "required_description")
+      )
+        return messages[fallbackKey] ?? fallbackKey;
       return error instanceof Error
         ? (legacyErrors[error.message] ?? messages[fallbackKey] ?? fallbackKey)
         : (messages[fallbackKey] ?? fallbackKey);
@@ -94,7 +88,7 @@ export function createGermanLocalization(): Localization {
       return new LocalizedFormError(`required_${field}`);
     },
     caseFold(value) {
-      return value.toLocaleLowerCase("de-DE");
+      return value.toLocaleLowerCase("en-US");
     },
     seedName(type, id) {
       return requiredMessage(seedNameKey(type, id));
@@ -115,18 +109,18 @@ function interpolate(template: string, values?: LocalizationValues): string {
   return template.replace(/\{([^}]+)\}/g, (_match, key: string) => String(values[key] ?? ""));
 }
 function parseAmount(value: string, allowZero: boolean): number {
-  const match = /^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,(\d{1,2}))?$/.exec(value);
+  const match = /^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.(\d{1,2}))?$/.exec(value);
   if (match === null) throw new LocalizedFormError("invalid_amount");
-  const integer = value.split(",", 1)[0]?.replaceAll(".", "") ?? "";
+  const integer = value.split(".", 1)[0]?.replaceAll(",", "") ?? "";
   const cents = Number(integer) * 100 + Number((match[1] ?? "").padEnd(2, "0"));
   if (!Number.isSafeInteger(cents) || (!allowZero && cents <= 0))
     throw new LocalizedFormError("invalid_amount");
   return cents;
 }
 function parseDate(value: string): string {
-  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(value);
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
   if (match === null) throw new LocalizedFormError("invalid_date");
-  const [, day, month, year] = match;
+  const [, month, day, year] = match;
   const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
   if (
     date.getUTCFullYear() !== Number(year) ||
