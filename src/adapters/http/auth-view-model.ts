@@ -1,31 +1,32 @@
 import type { UserContext } from "../../ports/auth/user-context.js";
+import type { Localization } from "../../ports/localization/localization.js";
 
-export function prepareLoginViewModel(returnTo: string) {
+export function prepareLoginViewModel(returnTo: string, localization: Localization) {
   return {
-    title: "FamilyFlow Login",
-    heading: "Login",
+    title: localization.text("auth.loginTitle"),
+    heading: localization.text("auth.loginHeading"),
     testLoginUrl: `/auth/test-login?returnTo=${encodeURIComponent(returnTo)}`,
-    signInLabel: "Sign in as Test User",
+    signInLabel: localization.text("auth.signIn"),
   };
 }
 
-export function prepareDashboardViewModel(user: UserContext) {
+export function prepareDashboardViewModel(user: UserContext, localization: Localization) {
   return {
-    title: "FamilyFlow Dashboard",
-    heading: "Dashboard",
-    signedInLabel: "Signed in as",
+    title: localization.text("auth.dashboardTitle"),
+    heading: localization.text("nav.dashboard"),
+    signedInLabel: localization.text("auth.signedIn"),
     userDisplayName: user.displayName,
     logoutAction: "/auth/logout",
-    logoutLabel: "Logout",
+    logoutLabel: localization.text("auth.logout"),
   };
 }
 
-export function prepareAuthErrorViewModel(message: string) {
+export function prepareAuthErrorViewModel(message: string, localization: Localization) {
   return {
-    title: "FamilyFlow Error",
-    heading: "Authentication Error",
+    title: localization.text("auth.errorTitle"),
+    heading: localization.text("auth.errorHeading"),
     message,
     loginUrl: "/auth/login",
-    loginLabel: "Return to login",
+    loginLabel: localization.text("auth.backToLogin"),
   };
 }

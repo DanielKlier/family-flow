@@ -6,8 +6,8 @@ import {
   calculateMonthlyIncome,
   createIncomePlan,
   createMonthlyIncomeOverride,
-  parsePositiveIncomeCents,
 } from "../../core/income/income-plan.js";
+import type { Localization } from "../../ports/localization/localization.js";
 import type { IncomeRepository } from "../../ports/repositories/income-repository.js";
 import type { OwnerContextRepository } from "../../ports/repositories/owner-context-repository.js";
 import { readIncomeFilters, requireFormValue } from "./income-request.js";
@@ -49,7 +49,7 @@ async function handleListIncome(
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const filters = readIncomeFilters(request.query, currentMonth());
+  const filters = readIncomeFilters(request.query, currentMonth(), reply.server.localization);
   const state = await readIncomePanelState(repositories, filters);
 
   const views = createFamilyFlowViews(reply);
@@ -67,10 +67,10 @@ async function handleCreateIncome(
 ) {
   try {
     await repositories.income.savePlan(
-      createIncomePlanFromForm(readForm(request.body), randomUUID()),
+      createIncomePlanFromForm(readForm(request.body), randomUUID(), reply.server.localization),
     );
   } catch (error: unknown) {
-    return handleFormError(repositories, request, reply, error, "Income could not be saved");
+    return handleFormError(repositories, request, reply, error, "income.saveFailed");
   }
 
   return sendIncomeState(repositories, request, reply);
@@ -112,13 +112,15 @@ async function handleUpdateIncome(
   }
 
   try {
-    await repositories.income.savePlan(createIncomePlanFromForm(readForm(request.body), id));
+    await repositories.income.savePlan(
+      createIncomePlanFromForm(readForm(request.body), id, reply.server.localization),
+    );
   } catch (error: unknown) {
     const ownerContexts = await repositories.ownerContexts.list();
     const input = {
       plan: existing,
       ownerContexts,
-      formError: errorMessage(error, "Income could not be saved"),
+      formError: reply.server.localization.errorMessage(error, "income.saveFailed"),
     };
     const views = createFamilyFlowViews(reply);
     const body = isHtmxRequest(request.headers)
@@ -142,13 +144,16 @@ async function handleCreateOverride(
       createMonthlyIncomeOverride({
         id: randomUUID(),
         incomePlanId: requireFormValue(form, "incomePlanId"),
-        month: requireFormValue(form, "month"),
-        amountCents: parsePositiveIncomeCents(requireFormValue(form, "amount")),
+        month: reply.server.localization.parseMonth(requireFormValue(form, "month")),
+        amountCents: reply.server.localization.parseAmountCents(
+          requireFormValue(form, "amount"),
+          true,
+        ),
         note: form.note ?? null,
       }),
     );
   } catch (error: unknown) {
-    return handleFormError(repositories, request, reply, error, "Override could not be saved");
+    return handleFormError(repositories, request, reply, error, "income.overrideSaveFailed");
   }
 
   return sendIncomeState(repositories, request, reply);
@@ -177,12 +182,12 @@ async function handleFormError(
   request: FastifyRequest,
   reply: FastifyReply,
   error: unknown,
-  fallback: string,
+  fallbackKey: string,
 ) {
   const state = await readIncomePanelState(
     repositories,
     { month: currentMonth() },
-    errorMessage(error, fallback),
+    reply.server.localization.errorMessage(error, fallbackKey),
   );
   const views = createFamilyFlowViews(reply);
   const body = isHtmxRequest(request.headers)
@@ -208,24 +213,24 @@ async function readIncomePanelState(
   return { plans, allPlans, overrides, ownerContexts, filters, monthlyIncome, formError };
 }
 
-function createIncomePlanFromForm(form: ReturnType<typeof readForm>, id: string) {
+function createIncomePlanFromForm(
+  form: ReturnType<typeof readForm>,
+  id: string,
+  localization: Localization,
+) {
   const endMonth = form.endMonth?.trim() === "" ? null : (form.endMonth ?? null);
 
   return createIncomePlan({
     id,
     ownerContext: requireFormValue(form, "ownerContext"),
     name: requireFormValue(form, "name"),
-    amountCents: parsePositiveIncomeCents(requireFormValue(form, "amount")),
-    startMonth: requireFormValue(form, "startMonth"),
-    endMonth,
+    amountCents: localization.parseAmountCents(requireFormValue(form, "amount"), false),
+    startMonth: localization.parseMonth(requireFormValue(form, "startMonth")),
+    endMonth: endMonth === null ? null : localization.parseMonth(endMonth),
     active: form.active !== "off",
   });
 }
 
 function currentMonth(): string {
   return new Date().toISOString().slice(0, 7);
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
 }

@@ -17,7 +17,7 @@ test("E2E-FF-UI-002-01 transaction page includes the stylesheet and no inline st
 
     expect(response.status()).toBe(200);
     expect(body).toContain('<link rel="stylesheet" href="/assets/app.css">');
-    expect(body).toContain('<a href="/imports/csv">CSV Import</a>');
+    expect(body).toContain('<a href="/imports/csv">CSV-Import</a>');
     expect(body).not.toMatch(/\sstyle=/i);
   } finally {
     await server.close();
@@ -74,10 +74,10 @@ test("E2E-FF-UI-001-01 income HTMX responses remain fragments while no-JavaScrip
 
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/income`);
-    await page.locator("#income-form").getByLabel("Income name").fill("No JS salary");
-    await page.locator("#income-form").getByLabel("Amount").fill("100.00");
-    await page.locator("#income-form").getByLabel("Start month").fill("2026-07");
-    await page.getByRole("button", { name: "Add income" }).click();
+    await page.locator("#income-form").getByLabel("Bezeichnung").fill("No JS salary");
+    await page.locator("#income-form").getByLabel("Betrag").fill("100,00");
+    await page.locator("#income-form").getByLabel("Startmonat").fill("07.2026");
+    await page.getByRole("button", { name: "Einnahme hinzufügen" }).click();
 
     await expect(page).toHaveURL(`${baseUrl}/income`);
     await expect(page.getByRole("cell", { name: "No JS salary", exact: true })).toBeVisible();
@@ -100,10 +100,10 @@ test("E2E-FF-UI-001-01 transaction creation updates the list with HTMX without a
       (window as unknown as { familyFlowPageMarker: string }).familyFlowPageMarker = "kept";
     });
 
-    await page.getByLabel("Description").fill("HTMX groceries");
-    await page.getByLabel("Amount").fill("42.99");
-    await page.getByLabel("Date").fill("2026-07-15");
-    await page.getByRole("button", { name: "Add transaction" }).click();
+    await page.getByLabel("Beschreibung").fill("HTMX groceries");
+    await page.getByLabel("Betrag").fill("42,99");
+    await page.getByLabel("Datum").fill("15.07.2026");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
 
     await expect(page.getByRole("cell", { name: "HTMX groceries", exact: true })).toBeVisible();
     await expect(page.locator("#transactions-list")).toBeVisible();
@@ -128,22 +128,28 @@ test("transaction filters update the list with HTMX without a full page reload",
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
-    await page.getByLabel("Description").fill("HTMX personal groceries");
-    await page.getByLabel("Amount").fill("42.99");
-    await page.getByLabel("Date").fill("2026-07-15");
-    await page.getByLabel("Transaction account").selectOption("account-person-a-checking");
-    await page.getByRole("button", { name: "Add transaction" }).click();
-    await page.getByLabel("Description").fill("HTMX shared rent");
-    await page.getByLabel("Amount").fill("1200.00");
-    await page.getByLabel("Date").fill("2026-07-01");
-    await page.getByLabel("Transaction account").selectOption("account-shared-checking");
-    await page.getByRole("button", { name: "Add transaction" }).click();
+    await page.getByLabel("Beschreibung").fill("HTMX personal groceries");
+    await page.getByLabel("Betrag").fill("42,99");
+    await page.getByLabel("Datum").fill("15.07.2026");
+    await page
+      .locator("#transaction-form")
+      .getByLabel("Konto")
+      .selectOption("account-person-a-checking");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
+    await page.getByLabel("Beschreibung").fill("HTMX shared rent");
+    await page.getByLabel("Betrag").fill("1.200,00");
+    await page.getByLabel("Datum").fill("01.07.2026");
+    await page
+      .locator("#transaction-form")
+      .getByLabel("Konto")
+      .selectOption("account-shared-checking");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
     await page.evaluate(() => {
       (window as unknown as { familyFlowFilterMarker: string }).familyFlowFilterMarker = "kept";
     });
 
-    await page.getByLabel("Owner context").selectOption("shared");
-    await page.getByRole("button", { name: "Apply filters" }).click();
+    await page.getByLabel("Eigentümer").selectOption("shared");
+    await page.getByRole("button", { name: "Filter anwenden" }).click();
 
     await expect(page.getByRole("cell", { name: "HTMX shared rent", exact: true })).toBeVisible();
     await expect(
@@ -174,9 +180,9 @@ test("E2E-FF-UI-003-01 transaction text is escaped in full-page and HTMX respons
       form: {
         accountId: "account-person-a-checking",
         categoryId: "category-groceries",
-        date: "2026-07-15",
+        date: "15.07.2026",
         description: unsafeDescription,
-        amount: "42.99",
+        amount: "42,99",
         status: "booked",
       },
     });
@@ -232,8 +238,8 @@ test("E2E-FF-UI-003-01 user-controlled content is escaped across master data, ru
         form: {
           name: unsafe,
           ownerContext: "person_a",
-          amount: "1.00",
-          startMonth: "2026-07",
+          amount: "1,00",
+          startMonth: "07.2026",
           endMonth: "",
           active: "on",
         },
@@ -284,7 +290,7 @@ test("missing resources use the named shared-layout error view", async ({ reques
       expect(response.status(), path).toBe(404);
       expect(body, path).toContain("<!doctype html>");
       expect(body, path).toContain('class="app-shell"');
-      expect(body, path).toContain("could not be found");
+      expect(body, path).toContain("nicht gefunden");
     }
   } finally {
     await server.close();
@@ -299,19 +305,18 @@ test("E2E-FF-UI-003-01 unsafe CSV validation text is escaped", async ({ page }) 
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/imports/csv`);
-    await page.getByLabel("Date column").fill(unsafeColumn);
-    await page.getByLabel("Amount column").fill("Amount");
-    await page.getByLabel("Description column").fill("Description");
-    await page.getByLabel("CSV file").setInputFiles({
+    await page.getByLabel("Datumsspalte").fill(unsafeColumn);
+    await page.getByLabel("Betragsspalte").fill("Amount");
+    await page.getByLabel("Beschreibungsspalte").fill("Description");
+    await page.getByLabel("CSV-Datei").setInputFiles({
       name: "unsafe-validation.csv",
       mimeType: "text/csv",
       buffer: Buffer.from("Date;Amount;Description\n2026-07-15;-1.00;test"),
     });
-    await page.getByRole("button", { name: "Preview import" }).click();
+    await page.getByRole("button", { name: "Importvorschau anzeigen" }).click();
 
-    await expect(page.locator(".form-error")).toContainText(unsafeColumn);
-    expect(await page.content()).toContain(
-      '&lt;img src=x onerror="globalThis.familyFlowXss=true"&gt;',
+    await expect(page.locator(".form-error")).toContainText(
+      "Die CSV-Importvorschau ist fehlgeschlagen.",
     );
     expect(await page.content()).not.toContain(unsafeColumn);
   } finally {
@@ -326,9 +331,9 @@ test("E2E-FF-UI-001-01 transaction full-page and HTMX create, edit, delete, vali
   const transaction = {
     accountId: "account-person-a-checking",
     categoryId: "category-groceries",
-    date: "2026-07-15",
+    date: "15.07.2026",
     description: "Parity transaction",
-    amount: "10.00",
+    amount: "10,00",
     status: "booked",
   };
 
@@ -347,7 +352,7 @@ test("E2E-FF-UI-001-01 transaction full-page and HTMX create, edit, delete, vali
     expect(await htmxCreate.text()).toContain('id="transactions-list"');
 
     const pageBody = await (await request.get(`${baseUrl}/transactions`)).text();
-    const id = pageBody.match(/\/transactions\/([^/]+)\/edit[^>]*>Edit<\/a>/)?.[1];
+    const id = pageBody.match(/\/transactions\/([^/]+)\/edit[^>]*>Bearbeiten<\/a>/)?.[1];
     expect(id).toBeDefined();
     const update = { ...transaction, description: "Updated parity transaction" };
     expect(
@@ -386,7 +391,9 @@ test("E2E-FF-UI-001-01 transaction full-page and HTMX create, edit, delete, vali
       (await request.post(`${baseUrl}/transactions/${id}/delete`, { maxRedirects: 0 })).status(),
     ).toBe(302);
     const remainingBody = await (await request.get(`${baseUrl}/transactions`)).text();
-    const remainingId = remainingBody.match(/\/transactions\/([^/]+)\/edit[^>]*>Edit<\/a>/)?.[1];
+    const remainingId = remainingBody.match(
+      /\/transactions\/([^/]+)\/edit[^>]*>Bearbeiten<\/a>/,
+    )?.[1];
     expect(remainingId).toBeDefined();
     const htmxDelete = await request.post(`${baseUrl}/transactions/${remainingId}/delete`, {
       headers: { "HX-Request": "true" },
@@ -407,20 +414,20 @@ test("E2E-FF-UI-001-01 browser-driven HTMX income and transaction edits handle s
     await loginAsTestUserPage(page, baseUrl);
 
     await page.goto(`${baseUrl}/income`);
-    await page.locator("#income-form").getByLabel("Income name").fill("Browser income");
-    await page.locator("#income-form").getByLabel("Amount").fill("100.00");
-    await page.locator("#income-form").getByLabel("Start month").fill("2026-01");
-    await page.getByRole("button", { name: "Add income" }).click();
+    await page.locator("#income-form").getByLabel("Bezeichnung").fill("Browser income");
+    await page.locator("#income-form").getByLabel("Betrag").fill("100,00");
+    await page.locator("#income-form").getByLabel("Startmonat").fill("01.2026");
+    await page.getByRole("button", { name: "Einnahme hinzufügen" }).click();
     await page
       .getByRole("row")
       .filter({ hasText: "Browser income" })
-      .getByRole("link", { name: "Edit" })
+      .getByRole("link", { name: "Bearbeiten" })
       .click();
     await page.evaluate(() => {
       (window as unknown as { editMarker: string }).editMarker = "kept";
     });
-    await page.getByLabel("Income name").fill("Browser income edited");
-    await page.getByRole("button", { name: "Save income" }).click();
+    await page.getByLabel("Bezeichnung").fill("Browser income edited");
+    await page.getByRole("button", { name: "Einnahme speichern" }).click();
     await expect(
       page.getByRole("cell", { name: "Browser income edited", exact: true }),
     ).toBeVisible();
@@ -430,38 +437,38 @@ test("E2E-FF-UI-001-01 browser-driven HTMX income and transaction edits handle s
     await page
       .getByRole("row")
       .filter({ hasText: "Browser income edited" })
-      .getByRole("link", { name: "Edit" })
+      .getByRole("link", { name: "Bearbeiten" })
       .click();
-    await page.getByLabel("Amount").fill("unsafe");
-    await page.getByRole("button", { name: "Save income" }).click();
+    await page.getByLabel("Betrag").fill("unsafe");
+    await page.getByRole("button", { name: "Einnahme speichern" }).click();
     await expect(page.locator("#income-panel .form-error")).toContainText(
-      "positive decimal amount",
+      "Der Betrag ist ungültig.",
     );
 
     await page.goto(`${baseUrl}/transactions`);
-    await page.getByLabel("Description").fill("Browser transaction");
-    await page.getByLabel("Amount").fill("10.00");
-    await page.getByLabel("Date").fill("2026-07-15");
-    await page.getByRole("button", { name: "Add transaction" }).click();
+    await page.getByLabel("Beschreibung").fill("Browser transaction");
+    await page.getByLabel("Betrag").fill("10,00");
+    await page.getByLabel("Datum").fill("15.07.2026");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
     await page
       .getByRole("row")
       .filter({ hasText: "Browser transaction" })
-      .getByRole("link", { name: "Edit" })
+      .getByRole("link", { name: "Bearbeiten" })
       .click();
-    await page.getByLabel("Description").fill("Browser transaction edited");
-    await page.getByRole("button", { name: "Save transaction" }).click();
+    await page.getByLabel("Beschreibung").fill("Browser transaction edited");
+    await page.getByRole("button", { name: "Transaktion speichern" }).click();
     await expect(
       page.getByRole("cell", { name: "Browser transaction edited", exact: true }),
     ).toBeVisible();
     await page
       .getByRole("row")
       .filter({ hasText: "Browser transaction edited" })
-      .getByRole("link", { name: "Edit" })
+      .getByRole("link", { name: "Bearbeiten" })
       .click();
-    await page.getByLabel("Amount").fill("unsafe");
-    await page.getByRole("button", { name: "Save transaction" }).click();
+    await page.getByLabel("Betrag").fill("unsafe");
+    await page.getByRole("button", { name: "Transaktion speichern" }).click();
     await expect(page.locator("#transactions-panel .form-error")).toContainText(
-      "positive decimal expense",
+      "Der Betrag ist ungültig.",
     );
   } finally {
     await server.close();
@@ -475,8 +482,8 @@ test("E2E-FF-UI-001-01 income full-page and HTMX create, edit, validation, and f
   const income = {
     name: "Parity income",
     ownerContext: "person_a",
-    amount: "100.00",
-    startMonth: "2026-01",
+    amount: "100,00",
+    startMonth: "01.2026",
     endMonth: "",
     active: "on",
   };
@@ -494,7 +501,7 @@ test("E2E-FF-UI-001-01 income full-page and HTMX create, edit, validation, and f
     expect(await htmxCreate.text()).toContain('id="income-panel"');
 
     const body = await (await request.get(`${baseUrl}/income`)).text();
-    const id = body.match(/\/income\/([^/]+)\/edit[^>]*>Edit<\/a>/)?.[1];
+    const id = body.match(/\/income\/([^/]+)\/edit[^>]*>Bearbeiten<\/a>/)?.[1];
     expect(id).toBeDefined();
     const htmxEdit = await request.post(`${baseUrl}/income/${id}`, {
       form: { ...income, name: "Updated parity income" },
@@ -514,8 +521,8 @@ test("E2E-FF-UI-001-01 income full-page and HTMX create, edit, validation, and f
     expect(htmxInvalid.status()).toBe(400);
     expect(await htmxInvalid.text()).not.toContain("<!doctype html>");
 
-    const fullFilter = await request.get(`${baseUrl}/income?month=2026-07&ownerContext=person_a`);
-    const htmxFilter = await request.get(`${baseUrl}/income?month=2026-07&ownerContext=person_a`, {
+    const fullFilter = await request.get(`${baseUrl}/income?month=07.2026&ownerContext=person_a`);
+    const htmxFilter = await request.get(`${baseUrl}/income?month=07.2026&ownerContext=person_a`, {
       headers: { "HX-Request": "true" },
     });
     expect(await fullFilter.text()).toContain("Updated parity income");
@@ -537,69 +544,71 @@ test("E2E-FF-UI-001-01 no-JavaScript master-data, rule, and income operations in
     await loginAsTestUserPage(page, baseUrl);
 
     await page.goto(`${baseUrl}/admin/master-data`);
-    await page.getByLabel("New category name").fill("No JS category");
-    await page.getByRole("button", { name: "Add category" }).click();
+    await page.getByLabel("Neuer Kategoriename").fill("No JS category");
+    await page.getByRole("button", { name: "Kategorie hinzufügen" }).click();
     const categoryRow = page.getByRole("row").filter({ hasText: "No JS category" });
-    await categoryRow.getByRole("link", { name: "Edit category" }).click();
-    await page.getByLabel("Category name").fill("No JS category edited");
-    await page.getByRole("button", { name: "Save category" }).click();
-    await page.getByLabel("New category name").fill("   ");
-    await page.getByRole("button", { name: "Add category" }).click();
-    await expect(page.locator(".form-error")).toContainText("Category name is required");
+    await categoryRow.getByRole("link", { name: "Kategorie bearbeiten" }).click();
+    await page.getByLabel("Kategoriename").fill("No JS category edited");
+    await page.getByRole("button", { name: "Kategorie speichern" }).click();
+    await page.getByLabel("Neuer Kategoriename").fill("   ");
+    await page.getByRole("button", { name: "Kategorie hinzufügen" }).click();
+    await expect(page.locator(".form-error")).toContainText("Kategoriename ist erforderlich.");
     await page
       .getByRole("row")
       .filter({ hasText: "No JS category edited" })
-      .getByRole("button", { name: "Deactivate category" })
+      .getByRole("button", { name: "Kategorie deaktivieren" })
       .click();
 
     await page.goto(`${baseUrl}/categorization-rules`);
-    await page.getByLabel("Rule name").fill("No JS rule");
-    await page.getByLabel("Search text").fill("no-js");
-    await page.getByLabel("Priority").fill("1");
-    await page.getByRole("button", { name: "Add rule" }).click();
+    await page.getByLabel("Regelname").fill("No JS rule");
+    await page.getByLabel("Suchtext").fill("no-js");
+    await page.getByLabel("Priorität").fill("1");
+    await page.getByRole("button", { name: "Regel hinzufügen" }).click();
     const ruleRow = page.getByRole("row").filter({ hasText: "No JS rule" });
-    await ruleRow.getByRole("link", { name: "Edit", exact: true }).click();
-    await page.getByLabel("Rule name").fill("No JS rule edited");
-    await page.getByRole("button", { name: "Save rule" }).click();
-    await page.getByLabel("Rule name").fill("Invalid rule");
-    await page.getByLabel("Search text").fill("invalid");
-    await page.getByLabel("Priority").fill("-1");
-    await page.getByRole("button", { name: "Add rule" }).click();
-    await expect(page.getByLabel("Priority")).toBeFocused();
+    await ruleRow.getByRole("link", { name: "Bearbeiten", exact: true }).click();
+    await page.getByLabel("Regelname").fill("No JS rule edited");
+    await page.getByRole("button", { name: "Regel speichern" }).click();
+    await page.getByLabel("Regelname").fill("Invalid rule");
+    await page.getByLabel("Suchtext").fill("invalid");
+    await page.getByLabel("Priorität").fill("-1");
+    await page.getByRole("button", { name: "Regel hinzufügen" }).click();
+    await expect(page.getByLabel("Priorität")).toBeFocused();
     expect(
-      await page.getByLabel("Priority").evaluate((input: HTMLInputElement) => input.validity.valid),
+      await page
+        .getByLabel("Priorität")
+        .evaluate((input: HTMLInputElement) => input.validity.valid),
     ).toBe(false);
     await page
       .getByRole("row")
       .filter({ hasText: "No JS rule edited" })
-      .getByRole("button", { name: "Delete", exact: true })
+      .getByRole("button", { name: "Löschen", exact: true })
       .click();
 
     await page.goto(`${baseUrl}/income`);
-    await page.getByLabel("Income name").fill("No JS income A");
-    await page.getByLabel("Amount").first().fill("100.00");
-    await page.getByLabel("Start month").fill("2026-01");
-    await page.getByRole("button", { name: "Add income" }).click();
-    await page.getByLabel("Income name").fill("No JS income B");
-    await page.locator("#income-form").getByLabel("Owner context").selectOption("person_b");
-    await page.getByLabel("Amount").first().fill("200.00");
-    await page.getByLabel("Start month").fill("2026-01");
-    await page.getByRole("button", { name: "Add income" }).click();
-    await page.getByLabel("Filter owner context").selectOption("person_b");
-    await page.getByRole("button", { name: "Apply income filters" }).click();
+    await page.getByLabel("Bezeichnung").fill("No JS income A");
+    await page.getByLabel("Betrag").first().fill("100,00");
+    await page.getByLabel("Startmonat").fill("01.2026");
+    await page.getByRole("button", { name: "Einnahme hinzufügen" }).click();
+    await page.getByLabel("Bezeichnung").fill("No JS income B");
+    await page.locator("#income-form").getByLabel("Eigentümer").selectOption("person_b");
+    await page.getByLabel("Betrag").first().fill("200,00");
+    await page.getByLabel("Startmonat").fill("01.2026");
+    await page.getByRole("button", { name: "Einnahme hinzufügen" }).click();
+    await page.getByLabel("Eigentümer filtern").selectOption("person_b");
+    await page.getByRole("button", { name: "Einnahmen filtern" }).click();
     await expect(page.getByRole("cell", { name: "No JS income B", exact: true })).toBeVisible();
     await expect(page.getByRole("cell", { name: "No JS income A", exact: true })).not.toBeVisible();
-    await page.getByRole("link", { name: "Edit" }).click();
-    await page.getByLabel("Income name").fill("No JS income B edited");
-    await page.getByRole("button", { name: "Save income" }).click();
+    await page.getByRole("link", { name: "Bearbeiten" }).click();
+    await page.getByLabel("Bezeichnung").fill("No JS income B edited");
+    await page.getByRole("button", { name: "Einnahme speichern" }).click();
     await page
       .getByRole("row")
       .filter({ hasText: "No JS income B edited" })
-      .getByRole("link", { name: "Edit" })
+      .getByRole("link", { name: "Bearbeiten" })
       .click();
-    await page.getByLabel("Amount").fill("unsafe");
-    await page.getByRole("button", { name: "Save income" }).click();
-    await expect(page.locator(".form-error")).toContainText("positive decimal amount");
+    await page.getByLabel("Betrag").fill("unsafe");
+    await page.getByRole("button", { name: "Einnahme speichern" }).click();
+    await expect(page.locator(".form-error")).toContainText("Der Betrag ist ungültig.");
     await expect(page.locator("#income-panel")).toBeVisible();
   } finally {
     await context.close();
@@ -616,34 +625,38 @@ test("E2E-FF-UI-001-01 transaction form remains usable without JavaScript", asyn
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
-    await page.getByLabel("Description").fill("No JS groceries");
-    await page.getByLabel("Amount").fill("42.99");
-    await page.getByLabel("Date").fill("2026-07-15");
-    await page.getByRole("button", { name: "Add transaction" }).click();
+    await page.getByLabel("Beschreibung").fill("No JS groceries");
+    await page.getByLabel("Betrag").fill("42,99");
+    await page.getByLabel("Datum").fill("15.07.2026");
+    await page
+      .locator("#transaction-form")
+      .getByLabel("Konto")
+      .selectOption("account-person-a-checking");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
 
     await expect(page).toHaveURL(`${baseUrl}/transactions`);
     await expect(page.getByRole("cell", { name: "No JS groceries", exact: true })).toBeVisible();
-    await page.getByLabel("Owner context").selectOption("person_a");
-    await page.getByRole("button", { name: "Apply filters" }).click();
+    await page.getByLabel("Eigentümer").selectOption("person_a");
+    await page.getByRole("button", { name: "Filter anwenden" }).click();
     await expect(page.getByRole("cell", { name: "No JS groceries", exact: true })).toBeVisible();
     const row = page.getByRole("row").filter({ hasText: "No JS groceries" });
-    await row.getByRole("link", { name: "Edit", exact: true }).click();
-    await page.getByLabel("Description").fill("No JS groceries edited");
-    await page.getByRole("button", { name: "Save transaction" }).click();
+    await row.getByRole("link", { name: "Bearbeiten", exact: true }).click();
+    await page.getByLabel("Beschreibung").fill("No JS groceries edited");
+    await page.getByRole("button", { name: "Transaktion speichern" }).click();
     await page
       .getByRole("row")
       .filter({ hasText: "No JS groceries edited" })
-      .getByRole("link", { name: "Edit" })
+      .getByRole("link", { name: "Bearbeiten" })
       .click();
-    await page.getByLabel("Amount").fill("unsafe");
-    await page.getByRole("button", { name: "Save transaction" }).click();
-    await expect(page.locator(".form-error")).toContainText("positive decimal expense");
+    await page.getByLabel("Betrag").fill("unsafe");
+    await page.getByRole("button", { name: "Transaktion speichern" }).click();
+    await expect(page.locator(".form-error")).toContainText("Der Betrag ist ungültig.");
     await expect(page.locator("#transactions-panel")).toBeVisible();
     await page.goto(`${baseUrl}/transactions`);
     await page
       .getByRole("row")
       .filter({ hasText: "No JS groceries edited" })
-      .getByRole("button", { name: "Delete", exact: true })
+      .getByRole("button", { name: "Löschen", exact: true })
       .click();
     await expect(page.getByText("No JS groceries edited", { exact: true })).not.toBeVisible();
   } finally {

@@ -126,5 +126,5 @@ function normalizeOptionalText(value: string | null): string | null {
 }
 
 function normalizeForMatch(value: string): string {
-  return value.trim().toLocaleLowerCase("de-DE");
+  return value.trim().toLowerCase();
 }

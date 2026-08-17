@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
+
+const localization = createGermanLocalization();
 
 describe("master-data view-model preparation", () => {
   it("prepares primitive labels, encoded edit actions, active flags, and raw error text", async () => {
@@ -8,16 +11,19 @@ describe("master-data view-model preparation", () => {
     const ownerContexts = [{ ownerContext: "person_a" as const, label: "Person <A>" }];
 
     expect(
-      prepareAccountEditViewModel({
-        account: {
-          id: "account/a b",
-          name: "<script>account</script>",
-          ownerContext: "person_a",
-          active: false,
+      prepareAccountEditViewModel(
+        {
+          account: {
+            id: "account/a b",
+            name: "<script>account</script>",
+            ownerContext: "person_a",
+            active: false,
+          },
+          ownerContexts,
+          formError: '<img src=x onerror="alert(1)">',
         },
-        ownerContexts,
-        formError: '<img src=x onerror="alert(1)">',
-      }),
+        localization,
+      ),
     ).toMatchObject({
       actionUrl: "/admin/master-data/accounts/account%2Fa%20b",
       name: "<script>account</script>",
@@ -26,7 +32,7 @@ describe("master-data view-model preparation", () => {
       ownerContexts: [{ value: "person_a", label: "Person <A>", selected: true }],
     });
     expect(
-      prepareMasterDataViewModel({ accounts: [], categories: [], ownerContexts }),
-    ).toMatchObject({ accountHeading: "Accounts", categoryHeading: "Categories" });
+      prepareMasterDataViewModel({ accounts: [], categories: [], ownerContexts }, localization),
+    ).toMatchObject({ accountHeading: "Konten", categoryHeading: "Kategorien" });
   });
 });

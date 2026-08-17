@@ -11,6 +11,7 @@ import type { IncomePlan } from "../../core/income/income-plan.js";
 import type { OwnerContextLabel } from "../../core/shared/owner-context.js";
 import type { Transaction } from "../../core/transactions/transaction.js";
 import type { UserContext } from "../../ports/auth/user-context.js";
+import type { Localization } from "../../ports/localization/localization.js";
 import type { TransactionFilters } from "../../ports/repositories/transaction-repository.js";
 import {
   prepareAuthErrorViewModel,
@@ -36,6 +37,8 @@ import {
   type MissingResource,
   prepareBadRequestViewModel,
   prepareMissingResourceViewModel,
+  prepareNotFoundViewModel,
+  prepareUnexpectedErrorViewModel,
 } from "./resource-error-view-model.js";
 import {
   prepareTransactionFormViewModel,
@@ -43,7 +46,9 @@ import {
   prepareTransactionsViewModel,
 } from "./transaction-view-model.js";
 
-type ViewRenderer = Pick<FastifyReply, "viewAsync">;
+type ViewRenderer = Pick<FastifyReply, "viewAsync"> & {
+  server?: { localization?: Localization };
+};
 
 type TransactionsInput = {
   accounts: Account[];
@@ -61,47 +66,78 @@ type RulesInput = {
   formError?: string;
 };
 
-const mainNavigation = [
-  { href: "/", label: "Dashboard" },
-  { href: "/admin/master-data", label: "Master Data" },
-  { href: "/transactions", label: "Transactions" },
-  { href: "/income", label: "Income" },
-  { href: "/imports/csv", label: "CSV Import" },
-  { href: "/categorization-rules", label: "Rules" },
-];
+function mainNavigation(localization: Localization) {
+  return [
+    { href: "/", label: localization.text("nav.dashboard") },
+    { href: "/admin/master-data", label: localization.text("nav.masterData") },
+    { href: "/transactions", label: localization.text("nav.transactions") },
+    { href: "/income", label: localization.text("nav.income") },
+    { href: "/imports/csv", label: localization.text("nav.csvImport") },
+    { href: "/categorization-rules", label: localization.text("nav.rules") },
+  ];
+}
 
-function page(model: object, navigation = mainNavigation, htmxEnabled = false) {
+function page(model: object, navigation: { href: string; label: string }[], htmxEnabled = false) {
   return { ...model, navigation, htmxEnabled };
 }
 
-export function createFamilyFlowViews(renderer: ViewRenderer) {
+export function createFamilyFlowViews(renderer: ViewRenderer, configured?: Localization) {
+  const localization = configured ?? renderer.server?.localization;
+  if (localization === undefined) throw new Error("Localization must be configured");
   return {
     dashboardPage(user: UserContext): Promise<string> {
-      return renderer.viewAsync("pages/dashboard.njk", page(prepareDashboardViewModel(user)));
+      return renderer.viewAsync(
+        "pages/dashboard.njk",
+        page(prepareDashboardViewModel(user, localization), mainNavigation(localization)),
+      );
     },
     authLoginPage(returnTo: string): Promise<string> {
-      return renderer.viewAsync("pages/login.njk", page(prepareLoginViewModel(returnTo), []));
+      return renderer.viewAsync(
+        "pages/login.njk",
+        page(prepareLoginViewModel(returnTo, localization), []),
+      );
     },
     authErrorPage(message: string): Promise<string> {
       return renderer.viewAsync(
         "pages/auth-error.njk",
-        page(prepareAuthErrorViewModel(message), []),
+        page(prepareAuthErrorViewModel(message, localization), []),
       );
     },
     missingResourcePage(resource: MissingResource): Promise<string> {
       return renderer.viewAsync(
         "pages/resource-error.njk",
-        page(prepareMissingResourceViewModel(resource)),
+        page(prepareMissingResourceViewModel(resource, localization), mainNavigation(localization)),
       );
     },
     badRequestPage(message: string, requestId: string): Promise<string> {
       return renderer.viewAsync(
         "pages/resource-error.njk",
-        page(prepareBadRequestViewModel(message, requestId)),
+        page(
+          prepareBadRequestViewModel(message, requestId, localization),
+          mainNavigation(localization),
+        ),
+      );
+    },
+    notFoundPage(requestId: string): Promise<string> {
+      return renderer.viewAsync(
+        "pages/resource-error.njk",
+        page(prepareNotFoundViewModel(requestId, localization), mainNavigation(localization)),
+      );
+    },
+    unexpectedErrorPage(requestId: string): Promise<string> {
+      return renderer.viewAsync(
+        "pages/resource-error.njk",
+        page(
+          prepareUnexpectedErrorViewModel(requestId, localization),
+          mainNavigation(localization),
+        ),
       );
     },
     masterDataPage(input: Parameters<typeof prepareMasterDataViewModel>[0]): Promise<string> {
-      return renderer.viewAsync("pages/master-data.njk", page(prepareMasterDataViewModel(input)));
+      return renderer.viewAsync(
+        "pages/master-data.njk",
+        page(prepareMasterDataViewModel(input, localization), mainNavigation(localization)),
+      );
     },
     accountEditPage(input: {
       account: Account;
@@ -110,44 +146,53 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
     }): Promise<string> {
       return renderer.viewAsync(
         "pages/account-edit.njk",
-        page(prepareAccountEditViewModel(input), [
-          { href: "/admin/master-data", label: "Master Data" },
+        page(prepareAccountEditViewModel(input, localization), [
+          { href: "/admin/master-data", label: localization.text("nav.masterData") },
         ]),
       );
     },
     categoryEditPage(input: { category: Category; formError?: string }): Promise<string> {
       return renderer.viewAsync(
         "pages/category-edit.njk",
-        page(prepareCategoryEditViewModel(input), [
-          { href: "/admin/master-data", label: "Master Data" },
+        page(prepareCategoryEditViewModel(input, localization), [
+          { href: "/admin/master-data", label: localization.text("nav.masterData") },
         ]),
       );
     },
     categorizationRulesPage(input: RulesInput): Promise<string> {
       return renderer.viewAsync(
         "pages/categorization-rules.njk",
-        page(prepareCategorizationRulesViewModel(input)),
+        page(
+          prepareCategorizationRulesViewModel(input, localization),
+          mainNavigation(localization),
+        ),
       );
     },
     categorizationRuleEditPage(input: RulesInput & { rule: CategorizationRule }): Promise<string> {
       return renderer.viewAsync(
         "pages/categorization-rule-edit.njk",
-        page(prepareCategorizationRuleEditViewModel(input), [
-          { href: "/categorization-rules", label: "Rules" },
+        page(prepareCategorizationRuleEditViewModel(input, localization), [
+          { href: "/categorization-rules", label: localization.text("nav.rules") },
         ]),
       );
     },
     csvImportPage(input: CsvImportViewInput): Promise<string> {
-      return renderer.viewAsync("pages/csv-import.njk", page(prepareCsvImportViewModel(input)));
+      return renderer.viewAsync(
+        "pages/csv-import.njk",
+        page(prepareCsvImportViewModel(input, localization), mainNavigation(localization)),
+      );
     },
     incomePage(input: IncomeViewInput): Promise<string> {
       return renderer.viewAsync(
         "pages/income.njk",
-        page(prepareIncomeViewModel(input), mainNavigation, true),
+        page(prepareIncomeViewModel(input, localization), mainNavigation(localization), true),
       );
     },
     incomePanel(input: IncomeViewInput): Promise<string> {
-      return renderer.viewAsync("partials/income-panel.njk", prepareIncomeViewModel(input));
+      return renderer.viewAsync(
+        "partials/income-panel.njk",
+        prepareIncomeViewModel(input, localization),
+      );
     },
     incomeEditPage(input: {
       plan: IncomePlan;
@@ -156,7 +201,11 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
     }): Promise<string> {
       return renderer.viewAsync(
         "pages/income-edit.njk",
-        page(prepareIncomeEditViewModel(input), [{ href: "/income", label: "Income" }], true),
+        page(
+          prepareIncomeEditViewModel(input, localization),
+          [{ href: "/income", label: localization.text("nav.income") }],
+          true,
+        ),
       );
     },
     incomeEditPanel(input: {
@@ -166,7 +215,7 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
     }): Promise<string> {
       return renderer.viewAsync(
         "partials/income-edit-panel.njk",
-        prepareIncomeEditViewModel(input),
+        prepareIncomeEditViewModel(input, localization),
       );
     },
     transactionsPage(input: TransactionsInput): Promise<string> {
@@ -174,11 +223,11 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
         "pages/transactions.njk",
         page(
           {
-            ...prepareTransactionsViewModel(input),
-            title: "FamilyFlow Transactions",
-            heading: "Transactions",
+            ...prepareTransactionsViewModel(input, localization),
+            title: localization.text("transaction.title"),
+            heading: localization.text("transaction.heading"),
           },
-          mainNavigation,
+          mainNavigation(localization),
           true,
         ),
       );
@@ -186,7 +235,7 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
     transactionsPanel(input: TransactionsInput): Promise<string> {
       return renderer.viewAsync(
         "partials/transactions-panel.njk",
-        prepareTransactionsViewModel(input),
+        prepareTransactionsViewModel(input, localization),
       );
     },
     transactionsList(
@@ -195,7 +244,7 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
       },
     ): Promise<string> {
       return renderer.viewAsync("partials/transactions-list.njk", {
-        list: prepareTransactionListViewModel(input),
+        list: prepareTransactionListViewModel(input, localization),
       });
     },
     transactionEditPage(
@@ -207,11 +256,11 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
         "pages/transactions.njk",
         page(
           {
-            title: "Edit Transaction",
-            heading: "Edit Transaction",
-            form: prepareTransactionFormViewModel(input),
+            title: localization.text("transaction.edit"),
+            heading: localization.text("transaction.edit"),
+            form: prepareTransactionFormViewModel(input, localization),
           },
-          [{ href: "/transactions", label: "Transactions" }],
+          [{ href: "/transactions", label: localization.text("nav.transactions") }],
           true,
         ),
       );
@@ -222,7 +271,7 @@ export function createFamilyFlowViews(renderer: ViewRenderer) {
       },
     ): Promise<string> {
       return renderer.viewAsync("partials/transactions-panel.njk", {
-        form: prepareTransactionFormViewModel(input),
+        form: prepareTransactionFormViewModel(input, localization),
       });
     },
   };

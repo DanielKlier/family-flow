@@ -1,17 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  createOwnerContextLabel,
-  defaultOwnerContextLabels,
-} from "../../src/core/shared/owner-context.js";
+import { createOwnerContextLabel, ownerContexts } from "../../src/core/shared/owner-context.js";
 
 describe("owner context labels", () => {
   it("keeps stable owner keys separate from editable labels", () => {
-    expect(defaultOwnerContextLabels).toEqual([
-      { ownerContext: "person_a", label: "Person A" },
-      { ownerContext: "person_b", label: "Person B" },
-      { ownerContext: "shared", label: "Shared" },
-    ]);
+    expect(ownerContexts).toEqual(["person_a", "person_b", "shared"]);
 
     expect(createOwnerContextLabel({ ownerContext: "person_a", label: " Daniel " })).toEqual({
       ownerContext: "person_a",

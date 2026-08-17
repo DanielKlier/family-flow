@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
+
+const localization = createGermanLocalization();
 
 describe("income view-model preparation", () => {
   it("prepares formatted amounts, selected filters, raw user values, and encoded edit URLs", async () => {
@@ -36,20 +39,20 @@ describe("income view-model preparation", () => {
       },
     };
 
-    expect(prepareIncomeViewModel(input)).toMatchObject({
-      monthlyIncomeLabel: "Monthly planned income: 1800.00",
+    expect(prepareIncomeViewModel(input, localization)).toMatchObject({
+      monthlyIncomeLabel: "Geplante Monatseinnahmen: 1.800,00",
       rows: [
         expect.objectContaining({
           name: "<script>salary</script>",
-          amount: "3500.00",
+          amount: "3.500,00",
           editUrl: "/income/income%2Fa%20b/edit",
         }),
       ],
       ownerContexts: expect.arrayContaining([{ value: "person_a", selected: true }]),
     });
-    expect(prepareIncomeEditViewModel({ plan, ownerContexts })).toMatchObject({
+    expect(prepareIncomeEditViewModel({ plan, ownerContexts }, localization)).toMatchObject({
       actionUrl: "/income/income%2Fa%20b",
-      amount: "3500.00",
+      amount: "3.500,00",
       activeChecked: true,
     });
   });

@@ -1,6 +1,7 @@
 import type { Account } from "../../core/accounts/account.js";
 import type { Category } from "../../core/categories/category.js";
 import type { ImportProfile } from "../../core/imports/import-profile.js";
+import type { Localization } from "../../ports/localization/localization.js";
 
 export type CsvImportPreviewRow = {
   line: number;
@@ -26,47 +27,50 @@ export type CsvImportViewInput = {
   formError?: string;
 };
 
-const text = {
-  uploadHeading: "Upload CSV",
-  profileSaved: "Import profile saved.",
-  importProfile: "Import profile",
-  loadProfile: "Load import profile",
-  profileName: "Profile name",
-  importAccount: "Import account",
-  delimiter: "CSV delimiter",
-  encoding: "CSV encoding",
-  dateFormat: "CSV date format",
-  decimalFormat: "CSV decimal format",
-  dateColumn: "Date column",
-  amountColumn: "Amount column",
-  descriptionColumn: "Description column",
-  payeeColumn: "Payee column",
-  purposeColumn: "Purpose column",
-  categoryColumn: "Category column",
-  csvFile: "CSV file",
-  previewImport: "Preview import",
-  saveProfile: "Save import profile",
-  previewHeading: "Import preview",
-  noRows: "No CSV rows found.",
-  line: "Line",
-  outcome: "Outcome",
-  reason: "Reason",
-  date: "Date",
-  description: "Description",
-  purpose: "Purpose",
-  payee: "Payee",
-  category: "Category",
-  amount: "Amount",
-  fixedCost: "Fixed cost",
-  confirmImport: "Confirm import",
-} as const;
+function csvText(localization: Localization) {
+  const text = (key: string) => localization.text(key);
+  return {
+    uploadHeading: text("csv.upload"),
+    profileSaved: text("csv.profileSaved"),
+    importProfile: text("csv.profile"),
+    loadProfile: text("csv.loadProfile"),
+    profileName: text("csv.profileName"),
+    importAccount: text("csv.account"),
+    delimiter: text("csv.delimiter"),
+    encoding: text("csv.encoding"),
+    dateFormat: text("csv.dateFormat"),
+    decimalFormat: text("csv.decimalFormat"),
+    dateColumn: text("csv.dateColumn"),
+    amountColumn: text("csv.amountColumn"),
+    descriptionColumn: text("csv.descriptionColumn"),
+    payeeColumn: text("csv.payeeColumn"),
+    purposeColumn: text("csv.purposeColumn"),
+    categoryColumn: text("csv.categoryColumn"),
+    csvFile: text("csv.file"),
+    previewImport: text("csv.preview"),
+    saveProfile: text("csv.saveProfile"),
+    previewHeading: text("csv.previewHeading"),
+    noRows: text("csv.noRows"),
+    line: text("csv.line"),
+    outcome: text("csv.outcome"),
+    reason: text("csv.reason"),
+    date: text("common.date"),
+    description: text("common.description"),
+    purpose: text("transaction.purpose"),
+    payee: text("transaction.payee"),
+    category: text("common.category"),
+    amount: text("common.amount"),
+    fixedCost: text("transaction.fixedCosts"),
+    confirmImport: text("csv.confirm"),
+  };
+}
 
-export function prepareCsvImportViewModel(input: CsvImportViewInput) {
+export function prepareCsvImportViewModel(input: CsvImportViewInput, localization: Localization) {
   const profile = input.selectedProfile;
   return {
-    title: "CSV Import",
-    heading: "CSV Import",
-    text,
+    title: localization.text("csv.title"),
+    heading: localization.text("csv.title"),
+    text: csvText(localization),
     profileSaved: input.profileSaved === true,
     formError: input.formError,
     ...(profile === undefined ? {} : { profileId: profile.id }),
@@ -75,7 +79,7 @@ export function prepareCsvImportViewModel(input: CsvImportViewInput) {
         ? undefined
         : `/imports/csv?profileId=${encodeURIComponent(profile.id)}`,
     profiles: [
-      { value: "", label: "Manual mapping", selected: profile === undefined },
+      { value: "", label: localization.text("csv.manual"), selected: profile === undefined },
       ...input.importProfiles.map(({ id, name }) => ({
         value: id,
         label: name,
@@ -84,9 +88,13 @@ export function prepareCsvImportViewModel(input: CsvImportViewInput) {
     ],
     accounts: input.accounts.map(({ id, name }) => ({ value: id, label: name })),
     delimiters: [
-      { value: ";", label: "Semicolon", selected: (profile?.delimiter ?? ";") === ";" },
-      { value: ",", label: "Comma", selected: profile?.delimiter === "," },
-      { value: "\t", label: "Tab", selected: profile?.delimiter === "\t" },
+      {
+        value: ";",
+        label: localization.text("csv.semicolon"),
+        selected: (profile?.delimiter ?? ";") === ";",
+      },
+      { value: ",", label: localization.text("csv.comma"), selected: profile?.delimiter === "," },
+      { value: "\t", label: localization.text("csv.tab"), selected: profile?.delimiter === "\t" },
     ],
     encodings: [
       { value: "utf8", label: "UTF-8", selected: profile?.encoding !== "latin1" },
@@ -100,12 +108,12 @@ export function prepareCsvImportViewModel(input: CsvImportViewInput) {
     decimalFormats: [
       {
         value: "comma-decimal",
-        label: "Comma decimal",
+        label: localization.text("csv.decimalComma"),
         selected: (profile?.decimalFormat ?? "comma-decimal") === "comma-decimal",
       },
       {
         value: "dot-decimal",
-        label: "Dot decimal",
+        label: localization.text("csv.decimalPoint"),
         selected: profile?.decimalFormat === "dot-decimal",
       },
     ],
@@ -122,19 +130,27 @@ export function prepareCsvImportViewModel(input: CsvImportViewInput) {
     confirmDisabled: input.previewRows?.some((row) => row.outcome === "invalid") ?? false,
     previewRows: input.previewRows?.map((row) => ({
       line: row.line,
-      outcome: row.outcome,
-      reason: row.reason ?? "",
-      date: row.date ?? "",
+      outcome: localization.text(`csv.${row.outcome}`),
+      reason:
+        row.reason === null
+          ? ""
+          : row.reason === "already-imported"
+            ? localization.text("csv.alreadyImported")
+            : row.reason,
+      date: row.date === undefined ? "" : localization.formatDate(row.date),
       description: row.description ?? "",
       payee: row.payee ?? "",
       purpose: row.purpose ?? "",
       categoryName: row.categoryName ?? "",
-      amount: row.amountCents === undefined ? "" : (Math.abs(row.amountCents) / 100).toFixed(2),
-      fixedCostLabel: row.fixedCost === undefined ? "" : row.fixedCost ? "fixed" : "variable",
+      amount: row.amountCents === undefined ? "" : localization.formatAmount(row.amountCents),
+      fixedCostLabel:
+        row.fixedCost === undefined
+          ? ""
+          : localization.text(row.fixedCost ? "common.fixed" : "common.variable"),
       duplicateLabel:
         row.outcome === "duplicate" || ("duplicate" in row && row.duplicate === true)
-          ? "duplicate"
-          : "new",
+          ? localization.text("csv.duplicate")
+          : localization.text("csv.new"),
     })),
   };
 }

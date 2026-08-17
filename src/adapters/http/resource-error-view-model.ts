@@ -1,3 +1,5 @@
+import type { Localization } from "../../ports/localization/localization.js";
+
 export type MissingResource =
   | "account"
   | "category"
@@ -5,37 +7,60 @@ export type MissingResource =
   | "incomePlan"
   | "transaction";
 
-const missingResourceText: Record<MissingResource, { heading: string; message: string }> = {
-  account: { heading: "Account not found", message: "The requested account could not be found." },
-  category: {
-    heading: "Category not found",
-    message: "The requested category could not be found.",
-  },
-  categorizationRule: {
-    heading: "Categorization rule not found",
-    message: "The requested categorization rule could not be found.",
-  },
-  incomePlan: {
-    heading: "Income plan not found",
-    message: "The requested income plan could not be found.",
-  },
-  transaction: {
-    heading: "Transaction not found",
-    message: "The requested transaction could not be found.",
-  },
-};
-
-export function prepareMissingResourceViewModel(resource: MissingResource) {
-  const text = missingResourceText[resource];
-  return { title: text.heading, heading: text.heading, message: text.message };
+export function prepareMissingResourceViewModel(
+  resource: MissingResource,
+  localization: Localization,
+) {
+  const heading = localization.text(`missing.${resource}.heading`);
+  return {
+    title: heading,
+    heading,
+    message: localization.text(`missing.${resource}.message`),
+  };
 }
 
-export function prepareBadRequestViewModel(message: string, requestId: string) {
-  return {
-    title: "Invalid request",
-    heading: "Invalid request",
+export function prepareBadRequestViewModel(
+  message: string,
+  requestId: string,
+  localization: Localization,
+) {
+  return requestErrorViewModel(
+    localization.text("error.badRequest"),
     message,
-    requestIdLabel: "Request ID:",
+    requestId,
+    localization,
+  );
+}
+
+export function prepareNotFoundViewModel(requestId: string, localization: Localization) {
+  return requestErrorViewModel(
+    localization.text("error.notFoundHeading"),
+    localization.text("error.notFoundMessage"),
+    requestId,
+    localization,
+  );
+}
+
+export function prepareUnexpectedErrorViewModel(requestId: string, localization: Localization) {
+  return requestErrorViewModel(
+    localization.text("error.unexpectedHeading"),
+    localization.text("error.unexpectedMessage"),
+    requestId,
+    localization,
+  );
+}
+
+function requestErrorViewModel(
+  heading: string,
+  message: string,
+  requestId: string,
+  localization: Localization,
+) {
+  return {
+    title: heading,
+    heading,
+    message,
+    requestIdLabel: localization.text("error.requestId"),
     requestId,
   };
 }

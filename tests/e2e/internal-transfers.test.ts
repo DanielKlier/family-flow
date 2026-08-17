@@ -13,28 +13,28 @@ test("E2E-FF-TXN-005-03: transfer actions preserve active canonical filters", as
     await page.goto(`${baseUrl}/transactions`);
 
     for (const description of ["Filtered transfer", "Other transaction"]) {
-      await page.getByLabel("Description").fill(description);
-      await page.getByLabel("Amount").fill("10.00");
-      await page.getByLabel("Date").fill("2026-07-15");
-      await page.getByRole("button", { name: "Add transaction" }).click();
+      await page.getByLabel("Beschreibung").fill(description);
+      await page.getByLabel("Betrag").fill("10,00");
+      await page.getByLabel("Datum").fill("15.07.2026");
+      await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
     }
 
     const otherRow = page.getByRole("row").filter({ hasText: "Other transaction" });
-    await otherRow.getByRole("button", { name: "Mark as transfer" }).click();
-    await page.getByLabel("Transfer state").selectOption("unmarked");
-    await page.getByRole("button", { name: "Apply filters" }).click();
+    await otherRow.getByRole("button", { name: "Als Umbuchung markieren" }).click();
+    await page.getByLabel("Umbuchungsstatus").selectOption("unmarked");
+    await page.getByRole("button", { name: "Filter anwenden" }).click();
 
     await expect(page.getByText("Filtered transfer")).toBeVisible();
     await expect(page.getByText("Other transaction")).toHaveCount(0);
     await page
       .getByRole("row")
       .filter({ hasText: "Filtered transfer" })
-      .getByRole("button", { name: "Mark as transfer" })
+      .getByRole("button", { name: "Als Umbuchung markieren" })
       .click();
 
-    await expect(page.getByText("No transactions found.")).toBeVisible();
+    await expect(page.getByText("Keine Transaktionen gefunden.")).toBeVisible();
     await expect(page.getByText("Other transaction")).toHaveCount(0);
-    await expect(page.getByLabel("Transfer state")).toHaveValue("unmarked");
+    await expect(page.getByLabel("Umbuchungsstatus")).toHaveValue("unmarked");
   } finally {
     await server.close();
   }
@@ -49,10 +49,10 @@ test("E2E-FF-UI-001-02: transfer actions progressively enhance the transactions 
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
-    await page.getByLabel("Description").fill("Progressive transfer");
-    await page.getByLabel("Amount").fill("10.00");
-    await page.getByLabel("Date").fill("2026-07-15");
-    await page.getByRole("button", { name: "Add transaction" }).click();
+    await page.getByLabel("Beschreibung").fill("Progressive transfer");
+    await page.getByLabel("Betrag").fill("10,00");
+    await page.getByLabel("Datum").fill("15.07.2026");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
 
     const row = page.getByRole("row").filter({ hasText: "Progressive transfer" });
     const markForm = row.locator('form[action$="/internal-transfer"]');

@@ -730,7 +730,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-12 — German Localization For Existing Surfaces
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-LOC-001`, `FF-LOC-002`, `FF-LOC-003`, `FF-LOC-004`, `FF-ARC-007`, `FF-MDM-002`
 **Verifies:** `FF-ARC-004`, `FF-UI-001`, `FF-UI-003`
@@ -738,22 +738,22 @@ The current composition registers authentication before protected routes. This d
 
 **Red:**
 
-- [ ] Add `E2E-FF-LOC-002-01`: enter `1.234,56` and `31.12.2026` and verify canonical storage and German display.
-- [ ] Add `E2E-FF-LOC-001-01`: verify German navigation, labels, help, and validation across surfaces delivered through `PH-11`.
-- [ ] Observe failure because current UI and human-form parsing are not fully German-localized.
+- [x] Add `E2E-FF-LOC-002-01`: enter `1.234,56` and `31.12.2026` and verify canonical storage and German display.
+- [x] Add `E2E-FF-LOC-001-01`: verify German navigation, labels, help, and validation across surfaces delivered through `PH-11`.
+- [x] Observe failure because current UI and human-form parsing are not fully German-localized.
 
 **Tasks:**
 
-- [ ] Move human amount/date parsing out of core modules and keep core values and typed error codes locale-neutral.
-- [ ] Replace user-facing core error strings with typed errors where needed.
-- [ ] Add adapter-owned translation catalogs, `de-DE` formatters, and human-form parsers.
-- [ ] Prepare translated and formatted Nunjucks view models.
-- [ ] Keep CSV profile parsing independent from human-form parsing.
-- [ ] Localize only the `FF-LOC-001-AC01` inventory available through `PH-11`: authentication, master data, transactions/internal transfers, CSV import, categorization rules, income, and rendered 400/401/404/500 pages. Enforce the explicit untranslated-token allowlist.
-- [ ] Leave dashboard/forecast inventory to `E2E-FF-LOC-001-02` in `PH-13` and scenario/calculator inventory to `E2E-FF-LOC-001-03` in `PH-14`.
-- [ ] Add a catalog completeness check covering every key used by prepared view models.
-- [ ] Use the target German fresh-database seed literals from `FF-MDM-002` without renaming existing user-maintained rows.
-- [ ] Document accepted formats and troubleshooting.
+- [x] Move human amount/date parsing out of core modules and keep core values and typed error codes locale-neutral.
+- [x] Replace user-facing core error strings with typed errors where needed.
+- [x] Add adapter-owned translation catalogs, `de-DE` formatters, and human-form parsers.
+- [x] Prepare translated and formatted Nunjucks view models.
+- [x] Keep CSV profile parsing independent from human-form parsing.
+- [x] Localize only the `FF-LOC-001-AC01` inventory available through `PH-11`: authentication, master data, transactions/internal transfers, CSV import, categorization rules, income, and rendered 400/401/404/500 pages. Enforce the explicit untranslated-token allowlist.
+- [x] Leave dashboard/forecast inventory to `E2E-FF-LOC-001-02` in `PH-13` and scenario/calculator inventory to `E2E-FF-LOC-001-03` in `PH-14`.
+- [x] Add a catalog completeness check covering every key used by prepared view models.
+- [x] Use the target German fresh-database seed literals from `FF-MDM-002` without renaming existing user-maintained rows.
+- [x] Document accepted formats and troubleshooting.
 
 **Tests:** `E2E-FF-LOC-001-01`, `INT-FF-LOC-001-04` (catalog keys and allowlist), `E2E-FF-LOC-002-01`, `UNIT-FF-LOC-003-02` (locale-neutral amount/date values), `UNIT-FF-ARC-007-01` (typed domain errors), `INT-FF-ARC-007-01` (core/adapters localization boundary), `INT-FF-LOC-002-01` and `INT-FF-LOC-002-02` (valid/invalid HTTP grammar), `INT-FF-LOC-003-01` (formatting/error translation), `INT-FF-LOC-004-01` (CSV independence), `INT-FF-ARC-004-03` (template boundary), and `INT-FF-MDM-002-02` (fresh versus existing seeds).
 

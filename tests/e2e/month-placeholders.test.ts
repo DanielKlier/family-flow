@@ -12,9 +12,9 @@ test("transaction month filter shows the expected month format", async ({ page }
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
 
-    await expect(page.locator("#transaction-filters").getByLabel("Month")).toHaveAttribute(
+    await expect(page.locator("#transaction-filters").getByLabel("Monat")).toHaveAttribute(
       "placeholder",
-      "YYYY-MM",
+      "MM.JJJJ",
     );
   } finally {
     await server.close();

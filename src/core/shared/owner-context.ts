@@ -7,12 +7,6 @@ export type OwnerContextLabel = {
   label: string;
 };
 
-export const defaultOwnerContextLabels: OwnerContextLabel[] = [
-  { ownerContext: "person_a", label: "Person A" },
-  { ownerContext: "person_b", label: "Person B" },
-  { ownerContext: "shared", label: "Shared" },
-];
-
 export function parseOwnerContext(value: string): OwnerContext {
   if (value === "person_a" || value === "person_b" || value === "shared") {
     return value;

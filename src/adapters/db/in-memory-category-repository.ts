@@ -1,4 +1,5 @@
 import type { Category } from "../../core/categories/category.js";
+import { compareCodePoints } from "../../core/shared/compare-code-points.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 
 export class InMemoryCategoryRepository implements CategoryRepository {
@@ -28,5 +29,5 @@ export class InMemoryCategoryRepository implements CategoryRepository {
 }
 
 function sortCategories(categories: Category[]): Category[] {
-  return categories.sort((left, right) => left.name.localeCompare(right.name));
+  return categories.sort((left, right) => compareCodePoints(left.name, right.name));
 }

@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
+
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
 import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
@@ -67,11 +69,14 @@ describe("CSV import hash migration", () => {
       ];
       const batches = ["migration-active-0013", "migration-consumed-0013"];
       try {
-        await seedMasterData({
-          accounts: new DrizzleAccountRepository(connection.db),
-          categories: new DrizzleCategoryRepository(connection.db),
-          ownerContexts: new DrizzleOwnerContextRepository(connection.db),
-        });
+        await seedMasterData(
+          {
+            accounts: new DrizzleAccountRepository(connection.db),
+            categories: new DrizzleCategoryRepository(connection.db),
+            ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+          },
+          createGermanLocalization(),
+        );
         await sql`drop index if exists transactions_account_import_hash_unique_idx`;
         await insertImported(sql, ids[0], "a".repeat(64));
         await insertImported(sql, ids[1], `v2:${"b".repeat(64)}`);
@@ -139,11 +144,14 @@ describe("CSV import hash migration", () => {
       const sql = connection.client;
       const migration = await readFile("drizzle/0012_csv_security_atomicity.sql", "utf8");
       try {
-        await seedMasterData({
-          accounts: new DrizzleAccountRepository(connection.db),
-          categories: new DrizzleCategoryRepository(connection.db),
-          ownerContexts: new DrizzleOwnerContextRepository(connection.db),
-        });
+        await seedMasterData(
+          {
+            accounts: new DrizzleAccountRepository(connection.db),
+            categories: new DrizzleCategoryRepository(connection.db),
+            ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+          },
+          createGermanLocalization(),
+        );
         await sql`drop index if exists transactions_account_import_hash_unique_idx`;
         await insertImported(sql, "migration-malformed", "V2:not-lowercase");
         await expect(sql.unsafe(migration)).rejects.toThrow(

@@ -7,12 +7,12 @@ describe("Account", () => {
     expect(
       createAccount({
         id: "account-shared-checking",
-        name: "Shared checking",
+        name: "Gemeinsames Girokonto",
         ownerContext: "shared",
       }),
     ).toEqual({
       id: "account-shared-checking",
-      name: "Shared checking",
+      name: "Gemeinsames Girokonto",
       ownerContext: "shared",
       active: true,
     });
@@ -23,7 +23,7 @@ describe("Account", () => {
       updateAccount(
         createAccount({
           id: "account-shared-checking",
-          name: "Shared checking",
+          name: "Gemeinsames Girokonto",
           ownerContext: "shared",
         }),
         {

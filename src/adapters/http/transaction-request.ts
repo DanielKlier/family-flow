@@ -4,19 +4,27 @@ import {
   createTransaction,
   type Transaction,
 } from "../../core/transactions/transaction.js";
+import type { Localization } from "../../ports/localization/localization.js";
 import type { TransactionFilters } from "../../ports/repositories/transaction-repository.js";
 import type { FormBody } from "./request-values.js";
 import { readOptionalQueryValue } from "./request-values.js";
 
-export function readTransactionFilters(query: unknown): TransactionFilters {
+export function readTransactionFilters(
+  query: unknown,
+  localization: Localization,
+): TransactionFilters {
   if (typeof query !== "object" || query === null) {
     return {};
   }
 
   const filters: TransactionFilters = {};
   const month = readOptionalQueryValue(query, "month");
-  if (month !== undefined && /^\d{4}-\d{2}$/.test(month)) {
-    filters.month = month;
+  if (month !== undefined) {
+    try {
+      filters.month = localization.parseMonth(month);
+    } catch (error) {
+      if (!localization.isInputError(error)) throw error;
+    }
   }
   const accountId = readOptionalQueryValue(query, "accountId");
   if (accountId !== undefined) {
@@ -55,15 +63,16 @@ export function readTransactionFilters(query: unknown): TransactionFilters {
 export function createTransactionFromForm(
   form: FormBody,
   id: string,
+  localization: Localization,
   existing?: Transaction,
 ): Transaction {
   const manual = createManualExpense({
     id,
-    accountId: requireFormValue(form, "accountId"),
-    categoryId: requireFormValue(form, "categoryId"),
-    date: requireFormValue(form, "date"),
-    amount: requireFormValue(form, "amount"),
-    description: requireFormValue(form, "description"),
+    accountId: requireFormValue(form, "accountId", localization),
+    categoryId: requireFormValue(form, "categoryId", localization),
+    date: localization.parseDate(requireFormValue(form, "date", localization)),
+    amountCents: localization.parseExpenseCents(requireFormValue(form, "amount", localization)),
+    description: requireFormValue(form, "description", localization),
     payee: form.payee ?? null,
     status: form.status === "planned" ? "planned" : "booked",
     fixedCost: form.fixedCost === "on",
@@ -79,11 +88,21 @@ export function createTransactionFromForm(
   });
 }
 
-function requireFormValue(form: FormBody, name: string): string {
-  const value = form[name];
-  if (value === undefined || value.trim() === "") {
-    throw new Error(`${name} is required`);
-  }
+const requiredFields = {
+  accountId: "account",
+  categoryId: "category",
+  date: "date",
+  description: "description",
+  amount: "amount",
+} as const;
 
+function requireFormValue(
+  form: FormBody,
+  name: keyof typeof requiredFields,
+  localization: Localization,
+): string {
+  const value = form[name];
+  if (value === undefined || value.trim() === "")
+    throw localization.requiredField(requiredFields[name]);
   return value;
 }

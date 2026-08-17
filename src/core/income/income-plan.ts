@@ -123,20 +123,6 @@ export function calculateMonthlyIncome(
   };
 }
 
-export function parsePositiveIncomeCents(value: string): number {
-  const normalized = value.trim().replace(",", ".");
-  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
-    throw new Error("Income amount must be a positive decimal amount");
-  }
-
-  const cents = Math.round(Number(normalized) * 100);
-  if (cents <= 0) {
-    throw new Error("Income amount must be positive cents");
-  }
-
-  return cents;
-}
-
 function isPlanActiveForMonth(plan: IncomePlan, month: string): boolean {
   if (!plan.active || plan.startMonth > month) {
     return false;

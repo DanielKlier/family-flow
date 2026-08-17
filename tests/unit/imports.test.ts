@@ -8,12 +8,12 @@ import {
 } from "../../src/core/imports/csv-import.js";
 
 describe("csv imports", () => {
-  it("normalizes German CSV transaction values", () => {
+  it("normalizes canonical CSV transaction values", () => {
     expect(
       normalizeCsvTransactionRow({
         accountId: " account-person-a-checking ",
-        date: "15.07.2026",
-        amount: "-1.234,56",
+        date: "2026-07-15",
+        amount: "-1234.56",
         description: "  Kartenzahlung   SUPERMARKT  ",
         payee: "  Supermarkt GmbH  ",
       }),
@@ -49,15 +49,15 @@ describe("csv imports", () => {
     }
   });
 
-  it("normalizes short German CSV dates", () => {
-    expect(
+  it("rejects non-canonical CSV dates", () => {
+    expect(() =>
       normalizeCsvTransactionRow({
         accountId: "account-person-a-checking",
         date: "15.07.26",
-        amount: "-42,99",
+        amount: "-42.99",
         description: "Card payment",
-      }).date,
-    ).toBe("2026-07-15");
+      }),
+    ).toThrow("canonical YYYY-MM-DD");
   });
 
   it("UNIT-FF-CSV-005-01: creates framed v3 hashes for NFKC-equivalent import identities", () => {
@@ -212,8 +212,8 @@ describe("csv imports", () => {
   it("UNIT-FF-CSV-004-01: marks existing and repeated import rows as duplicates", () => {
     const firstRow = normalizeCsvTransactionRow({
       accountId: "account-shared-checking",
-      date: "15.07.2026",
-      amount: "-42,99",
+      date: "2026-07-15",
+      amount: "-42.99",
       description: "Kartenzahlung Supermarkt",
     });
     const duplicateRow = normalizeCsvTransactionRow({
@@ -250,15 +250,15 @@ describe("csv imports", () => {
   it("does not mark repeated rows as duplicates when payees differ", () => {
     const firstRow = normalizeCsvTransactionRow({
       accountId: "account-shared-checking",
-      date: "15.07.2026",
-      amount: "-42,99",
+      date: "2026-07-15",
+      amount: "-42.99",
       description: "Card payment",
       payee: "Shop A",
     });
     const secondRow = normalizeCsvTransactionRow({
       accountId: "account-shared-checking",
-      date: "15.07.2026",
-      amount: "-42,99",
+      date: "2026-07-15",
+      amount: "-42.99",
       description: "Card payment",
       payee: "Shop B",
     });

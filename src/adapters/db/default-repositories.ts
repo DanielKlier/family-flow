@@ -1,6 +1,8 @@
+import type { MasterDataNameProvider } from "../../ports/localization/localization.js";
 import {
-  initialAccounts,
-  initialCategories,
+  createInitialAccounts,
+  createInitialCategories,
+  createInitialOwnerContexts,
   type MasterDataRepositories,
 } from "./seeds/master-data.js";
 import { InMemoryAccountRepository } from "./in-memory-account-repository.js";
@@ -12,19 +14,23 @@ import { InMemoryOwnerContextRepository } from "./in-memory-owner-context-reposi
 import { InMemoryTransactionRepository } from "./in-memory-transaction-repository.js";
 import { initialImportProfiles, type ImportProfileRepositories } from "./seeds/import-profiles.js";
 
-export function createSeededInMemoryRepositories(): MasterDataRepositories &
+export function createSeededInMemoryRepositories(
+  names: MasterDataNameProvider,
+): MasterDataRepositories &
   ImportProfileRepositories & {
     categorizationRules: InMemoryCategorizationRuleRepository;
     income: InMemoryIncomeRepository;
     transactions: InMemoryTransactionRepository;
   } {
+  const accounts = createInitialAccounts(names);
+  const categories = createInitialCategories(names);
   return {
-    accounts: new InMemoryAccountRepository(initialAccounts),
-    categories: new InMemoryCategoryRepository(initialCategories),
+    accounts: new InMemoryAccountRepository(accounts),
+    categories: new InMemoryCategoryRepository(categories),
     categorizationRules: new InMemoryCategorizationRuleRepository(),
     income: new InMemoryIncomeRepository(),
     importProfiles: new InMemoryImportProfileRepository(initialImportProfiles),
-    ownerContexts: new InMemoryOwnerContextRepository(),
-    transactions: new InMemoryTransactionRepository(initialAccounts),
+    ownerContexts: new InMemoryOwnerContextRepository(createInitialOwnerContexts(names)),
+    transactions: new InMemoryTransactionRepository(accounts),
   };
 }

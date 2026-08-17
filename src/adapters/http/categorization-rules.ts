@@ -62,7 +62,7 @@ async function handleCreateRule(
     return renderRulePage(
       repositories,
       reply.status(400),
-      error instanceof Error ? error.message : "Categorization rule could not be saved",
+      reply.server.localization.errorMessage(error, "rules.saveFailed"),
     );
   }
 
@@ -127,8 +127,7 @@ async function handleUpdateRule(
           categories,
           rules: [],
           rule: existing,
-          formError:
-            error instanceof Error ? error.message : "Categorization rule could not be saved",
+          formError: reply.server.localization.errorMessage(error, "rules.saveFailed"),
         }),
       );
   }

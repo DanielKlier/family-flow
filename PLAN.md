@@ -106,6 +106,7 @@ src/
     auth/
     logging/
     clock/
+    localization/
   adapters/
     db/
     http/
@@ -137,7 +138,7 @@ Phase 10B completed the migration of dashboard and authentication, master data, 
 
 Core values are locale-neutral. Money uses integer minor units. Dates and months use canonical domain representations. Business failures use typed error codes and structured details rather than translated text.
 
-German translations, `de-DE` display formatting, and parsing of human-entered amounts and dates belong to HTTP, template, or localization adapters. CSV encoding, delimiter, decimal, date, and bank-profile interpretation belong to the CSV adapter. Adapters convert accepted input to canonical values before calling the core.
+The locale-neutral `Localization` port defines message lookup, human-form parsing, display formatting, case folding, and localized seed display values. German catalogs and `de-DE` behavior live only in `src/adapters/localization/`; `src/app/server.ts` selects the implementation and HTTP adapters consume only the injected port. CSV encoding, delimiter, decimal, date, and bank-profile interpretation remain in the CSV adapter. Adapters convert accepted input to canonical values before calling the core.
 
 ### Persistence And Transaction Boundaries
 

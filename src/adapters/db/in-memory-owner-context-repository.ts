@@ -1,6 +1,5 @@
 import {
   createOwnerContextLabel,
-  defaultOwnerContextLabels,
   type OwnerContext,
   type OwnerContextLabel,
   ownerContexts,
@@ -10,7 +9,7 @@ import type { OwnerContextRepository } from "../../ports/repositories/owner-cont
 export class InMemoryOwnerContextRepository implements OwnerContextRepository {
   readonly #labels = new Map<OwnerContext, OwnerContextLabel>();
 
-  constructor(labels: OwnerContextLabel[] = defaultOwnerContextLabels) {
+  constructor(labels: OwnerContextLabel[] = []) {
     for (const label of labels) {
       this.#labels.set(label.ownerContext, label);
     }
