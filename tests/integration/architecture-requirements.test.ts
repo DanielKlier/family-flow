@@ -328,6 +328,25 @@ describe("INT-FF-ARC-007-01 localization boundary", () => {
     expect(germanAdapter).not.toMatch(/(?:accounts|categories)\s*:\s*\[/);
   });
 
+  it("keeps localization request-scoped rather than decorating the Fastify server", async () => {
+    const localizationHttp = await readFile(
+      join(import.meta.dirname, "../../src/adapters/http/localization.ts"),
+      "utf8",
+    );
+    const server = await readFile(join(import.meta.dirname, "../../src/app/server.ts"), "utf8");
+    const httpDirectory = join(import.meta.dirname, "../../src/adapters/http");
+
+    expect(localizationHttp).not.toMatch(/interface\s+FastifyInstance\s*{\s*localization\s*:/s);
+    expect(localizationHttp).not.toContain('server.decorate("localization"');
+    for (const filePath of await listTypeScriptFiles(httpDirectory)) {
+      await expect(
+        readFile(filePath, "utf8"),
+        relative(httpDirectory, filePath),
+      ).resolves.not.toContain("reply.server.localization");
+    }
+    expect(server).not.toContain("registerLocalization(server, localization)");
+  });
+
   it("keeps user-facing validation messages out of the transaction core", async () => {
     const source = await readFile(
       join(import.meta.dirname, "../../src/core/transactions/transaction.ts"),

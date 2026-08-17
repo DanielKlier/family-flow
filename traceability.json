@@ -315,6 +315,10 @@
       "acceptanceCriteria": ["FF-LOC-004-AC01"]
     },
     {
+      "id": "FF-LOC-005",
+      "acceptanceCriteria": ["FF-LOC-005-AC01", "FF-LOC-005-AC02", "FF-LOC-005-AC03"]
+    },
+    {
       "id": "FF-UI-001",
       "acceptanceCriteria": ["FF-UI-001-AC01", "FF-UI-001-AC02", "FF-UI-001-AC03"]
     },
@@ -1509,6 +1513,30 @@
       "operation": null
     },
     {
+      "id": "FF-LOC-005-AC01",
+      "status": "Verified",
+      "phase": "PH-12",
+      "test": "UNIT-FF-LOC-005-01",
+      "file": "tests/unit/accept-language-negotiation.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-LOC-005-AC02",
+      "status": "Verified",
+      "phase": "PH-12",
+      "test": "INT-FF-LOC-005-02",
+      "file": "tests/integration/locale-negotiation.test.ts",
+      "operation": null
+    },
+    {
+      "id": "FF-LOC-005-AC03",
+      "status": "Verified",
+      "phase": "PH-12",
+      "test": "E2E-FF-LOC-005-01",
+      "file": "tests/e2e/locale-negotiation.test.ts",
+      "operation": null
+    },
+    {
       "id": "FF-UI-001-AC01",
       "status": "Verified",
       "phase": "PH-10B",
@@ -1947,6 +1975,14 @@
       "acceptance": "FF-LOC-002-AC01",
       "phase": "PH-12",
       "file": "tests/e2e/german-localization.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-LOC-005-01",
+      "acceptance": "FF-LOC-005-AC03",
+      "phase": "PH-12",
+      "file": "tests/e2e/locale-negotiation.test.ts",
       "boundary": "End-to-end",
       "classification": "Expected red before production change"
     },
@@ -2591,6 +2627,30 @@
       "classification": "Expected red before production change"
     },
     {
+      "id": "INT-FF-LOC-005-01",
+      "acceptance": "FF-LOC-005-AC03",
+      "phase": "PH-12",
+      "file": "tests/integration/locale-negotiation.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-LOC-005-02",
+      "acceptance": "FF-LOC-005-AC02",
+      "phase": "PH-12",
+      "file": "tests/integration/locale-negotiation.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "INT-FF-LOC-005-03",
+      "acceptance": "FF-LOC-005-AC02",
+      "phase": "PH-12",
+      "file": "tests/integration/locale-negotiation.test.ts",
+      "boundary": "Integration",
+      "classification": "Expected red before production change"
+    },
+    {
       "id": "INT-FF-MDM-001-01",
       "acceptance": "FF-MDM-001-AC01",
       "phase": "PH-10-R01",
@@ -3219,6 +3279,22 @@
       "acceptance": "FF-LOC-003-AC01",
       "phase": "PH-12",
       "file": "tests/unit/localized-domain-boundaries.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-LOC-005-01",
+      "acceptance": "FF-LOC-005-AC01",
+      "phase": "PH-12",
+      "file": "tests/unit/accept-language-negotiation.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "UNIT-FF-LOC-005-02",
+      "acceptance": "FF-LOC-005-AC01",
+      "phase": "PH-12",
+      "file": "tests/unit/accept-language-negotiation.test.ts",
       "boundary": "Core",
       "classification": "Expected red before production change"
     },

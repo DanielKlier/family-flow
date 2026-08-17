@@ -113,23 +113,27 @@ Migration troubleshooting:
 - If a migration file was partially applied outside the normal transaction flow, inspect `schema_migrations` and the affected tables before retrying.
 - Never edit an already deployed migration file. Add a new migration instead.
 
-## German Input And Localization
+## Browser Locale And Localized Input
 
-The server-rendered interface uses the German localization adapter for labels, errors, seed display values, and `de-DE` amount/date display. Human forms accept amounts such as `1234`, `1234,5`, and `1.234,56`, dates in `DD.MM.YYYY`, and months in `MM.YYYY`. Stored values remain canonical minor units, ISO dates, and ISO months. CSV imports continue to use the date and decimal grammar selected in each import profile. If localized text is missing or incorrect, inspect `src/adapters/localization/german.ts`; HTTP and core modules must not contain fallback translations or locale APIs.
+The server negotiates German (`de-DE`) and English (`en`) independently for every request from `Accept-Language`. Each representation takes its quality from the most-specific matching range, so an exact or language-level `q=0` exclusion is not overridden by a less-specific positive range or `*`. Set `DEFAULT_LOCALE=de-DE` or `DEFAULT_LOCALE=en` to choose the fallback for missing, malformed, wildcard-only, or unsupported language ranges; if that locale is explicitly excluded, the server selects a non-excluded supported locale. If all supported locales are excluded, the configured locale is the terminal fallback instead of a `406` response. The process refuses to start with any other value. Docker Compose forwards this setting and defaults it to German.
 
-If a German form submission fails:
+HTML pages, HTMX fragments, and rendered HTML errors carry `Content-Language` and `Vary: Accept-Language`; redirects and `/health` intentionally do not. Preserve these headers in reverse-proxy and cache configuration so one user's representation is not served to another locale. No locale preference is stored in the session, so concurrent browsers and requests remain isolated.
 
-1. Confirm that amounts contain no sign, spaces, currency symbol, exponent, dot decimal, malformed grouping, or more than two decimal places.
-2. Confirm that dates and months are valid Gregorian values in the documented German order.
+German forms accept amounts such as `1234`, `1234,5`, and `1.234,56`, dates in `DD.MM.YYYY`, and months in `MM.YYYY`. English forms accept amounts such as `1234`, `1234.5`, and `1,234.56`, dates in `MM/DD/YYYY`, and months in `MM/YYYY`. Stored values remain canonical minor units, ISO dates, and ISO months. CSV imports continue to use the date and decimal grammar selected in each import profile. If localized text is missing or incorrect, inspect the corresponding catalog and adapter under `src/adapters/localization/`; HTTP and core modules must not contain fallback translations or locale APIs.
+
+If a localized form submission fails:
+
+1. Confirm that the browser sends the expected `Accept-Language` value and inspect the response `Content-Language`.
+2. Confirm that amount, date, and month values use the grammar for that response locale and represent valid Gregorian values.
 3. Reproduce through the same form rather than changing canonical database values.
-4. Use the response `X-Request-Id` to find the single request log entry. Validation logs do not contain the submitted financial value.
+4. Use the response `X-Request-Id` (also displayed on rendered transaction validation errors) to find the single request log entry. Validation logs do not contain the submitted financial value.
 5. For CSV failures, inspect the selected import profile and preview outcome instead; do not apply human-form grammar to the uploaded file.
 
-German fresh-database seed names are inserted only when their stable IDs are absent. The database seed adapter owns the stable owner keys, account/category IDs, and account-owner assignments; localization supplies display names for those keys only. Startup and upgrades never rename an existing account, category, or owner label. If a custom name appears after an update, retain it unless an operator explicitly chooses to edit it.
+Fresh-database seed names use `DEFAULT_LOCALE` only when their stable IDs are first inserted. The database seed adapter owns the stable owner keys, account/category IDs, and account-owner assignments; localization supplies display names for those keys only. Changing `DEFAULT_LOCALE`, startup, and upgrades never rename an existing account, category, or owner label. If an existing name differs from the active locale, retain it unless an operator explicitly chooses to edit it.
 
 ## Authentication And Sessions
 
-All non-health application routes are protected. `/health` remains public for local health checks. Login uses `/auth/login` and `/auth/callback`. Logout is authenticated `POST /auth/logout` and requires an `Origin` matching the normalized `BASE_URL` origin; failed origin checks do not revoke.
+All non-health application routes are protected. `/health` remains public for local health checks. Login uses `/auth/login` and `/auth/callback`. Logout uses `POST /auth/logout` and requires an `Origin` matching the normalized `BASE_URL` origin; failed origin checks do not revoke. A missing, unknown, expired, or revoked logout session receives a localized `401` response instead of the protected-route login redirect.
 
 Production uses Authentik through `AUTH_MODE=oidc` and requires these environment variables:
 

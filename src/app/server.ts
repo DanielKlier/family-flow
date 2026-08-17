@@ -33,18 +33,21 @@ import { registerCategorizationRuleRoutes } from "../adapters/http/categorizatio
 import { registerFormParser } from "../adapters/http/form-parser.js";
 import { registerCsvImportRoutes } from "../adapters/http/imports.js";
 import { registerIncomeRoutes } from "../adapters/http/income.js";
-import { registerLocalization } from "../adapters/http/localization.js";
+import { registerRequestLocalization } from "../adapters/http/localization.js";
 import { registerMasterDataRoutes } from "../adapters/http/master-data.js";
 import { registerRequestLifecycle } from "../adapters/http/request-lifecycle.js";
 import { registerTransactionRoutes } from "../adapters/http/transactions.js";
 import { createFamilyFlowViews, registerTemplateRenderer } from "../adapters/http/views.js";
-import { createGermanLocalization as createLocalization } from "../adapters/localization/german.js";
+import {
+  createLocalizationRegistry,
+  type SupportedLocale,
+  supportedLocales,
+} from "../adapters/localization/registry.js";
 import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-logger.js";
 import { SessionService } from "../core/auth/session-service.js";
 import type { Clock } from "../ports/clock/clock.js";
 import type { CsvParser } from "../ports/csv/csv-parser.js";
 import type { RequestLogger } from "../ports/logging/logger.js";
-import type { Localization } from "../ports/localization/localization.js";
 import type { CategorizationRuleRepository } from "../ports/repositories/categorization-rule-repository.js";
 import type { ImportPreviewBatchRepository } from "../ports/repositories/import-preview-batch-repository.js";
 import type { IncomeRepository } from "../ports/repositories/income-repository.js";
@@ -66,7 +69,7 @@ type ServerOptions = {
   sessions?: SessionService;
   importPreviewBatches?: ImportPreviewBatchRepository;
   clock?: Clock;
-  localization?: Localization;
+  defaultLocale?: SupportedLocale;
 };
 
 export function buildServer(options: ServerOptions = {}) {
@@ -75,8 +78,10 @@ export function buildServer(options: ServerOptions = {}) {
     bodyLimit: 6 * 1024 * 1024,
   });
   const logger = options.logger ?? new HumanReadableRequestLogger();
-  const localization = options.localization ?? createLocalization();
-  const repositories = options.repositories ?? createSeededInMemoryRepositories(localization);
+  const localizations = createLocalizationRegistry();
+  const defaultLocale = options.defaultLocale ?? supportedLocales[0];
+  const repositories =
+    options.repositories ?? createSeededInMemoryRepositories(localizations[defaultLocale]);
   const csvParser = options.csvParser ?? new SimpleCsvParser();
   const clock = options.clock ?? new SystemClock();
   const importPreviewBatches =
@@ -98,7 +103,7 @@ export function buildServer(options: ServerOptions = {}) {
       new Sha256SessionTokenHasher(),
     );
 
-  registerLocalization(server, localization);
+  registerRequestLocalization(server, localizations, defaultLocale);
   registerFormParser(server);
   registerRequestLifecycle(server, logger);
   registerTemplateRenderer(server);
@@ -129,7 +134,10 @@ export function buildServer(options: ServerOptions = {}) {
     const body =
       clientErrorStatus === null
         ? await views.unexpectedErrorPage(requestId)
-        : await views.badRequestPage(localization.text("error.requestFailed"), requestId);
+        : await views.badRequestPage(
+            reply.request.localization.text("error.requestFailed"),
+            requestId,
+          );
     return reply
       .status(clientErrorStatus ?? 500)
       .type("text/html; charset=utf-8")
@@ -154,7 +162,7 @@ async function main() {
     transactions: new DrizzleTransactionRepository(connection.db),
   };
 
-  const localization = createLocalization();
+  const localization = createLocalizationRegistry()[config.defaultLocale];
   await seedMasterData(repositories, localization);
   await seedImportProfiles(repositories);
 
@@ -169,7 +177,7 @@ async function main() {
 
   const server = buildServer({
     repositories,
-    localization,
+    defaultLocale: config.defaultLocale,
     auth: {
       ...config.auth,
       baseUrl: config.baseUrl,

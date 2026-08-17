@@ -138,7 +138,7 @@ Phase 10B completed the migration of dashboard and authentication, master data, 
 
 Core values are locale-neutral. Money uses integer minor units. Dates and months use canonical domain representations. Business failures use typed error codes and structured details rather than translated text.
 
-The locale-neutral `Localization` port defines message lookup, human-form parsing, display formatting, case folding, and localized seed display values. German catalogs and `de-DE` behavior live only in `src/adapters/localization/`; `src/app/server.ts` selects the implementation and HTTP adapters consume only the injected port. CSV encoding, delimiter, decimal, date, and bank-profile interpretation remain in the CSV adapter. Adapters convert accepted input to canonical values before calling the core.
+The locale-neutral `Localization` port defines message lookup, human-form parsing, display formatting, case folding, and localized seed display values. German and English catalogs, locale identifiers, and locale-specific grammar live only in `src/adapters/localization/`. The HTTP adapter negotiates a localization from `Accept-Language` for each request without decorating global server state; `src/app/server.ts` supplies the immutable registry and configured fallback. Locale-varying HTML is identified with `Content-Language` and `Vary: Accept-Language`, while redirects and health responses remain independent. CSV encoding, delimiter, decimal, date, and bank-profile interpretation remain in the CSV adapter. Adapters convert accepted input to canonical values before calling the core.
 
 ### Persistence And Transaction Boundaries
 
@@ -739,6 +739,14 @@ Money and dates are formatted by localization adapters into prepared view models
 CSV profile parsing remains independent from human-form localization.
 
 - **FF-LOC-004-AC01:** Changing human-form parsing cannot change a CSV profile result.
+
+#### FF-LOC-005 — Request Locale Negotiation
+
+Each request negotiates a supported representation from `Accept-Language`. For each supported locale, the most specific matching language range controls its quality; an exact locale range outranks a language-only range, which outranks `*`. A controlling `q=0` excludes that representation even when a less-specific range has a positive quality. The acceptable representation with the highest quality wins, with header order and then the configured fallback resolving ties. An absent, malformed, or non-matching header uses the configured fallback. If that fallback is explicitly excluded, the first non-excluded supported locale is used; if every supported locale is explicitly excluded, the configured fallback remains the terminal application policy rather than returning a non-HTML `406` response.
+
+- **FF-LOC-005-AC01:** Negotiation covers regional ranges, quality ordering, wildcard selection, exact-over-language specificity, explicit `q=0` exclusion, configured fallback, and the all-excluded terminal fallback.
+- **FF-LOC-005-AC02:** Locale-varying full-page, HTMX, and rendered error HTML carries the selected `Content-Language` and `Vary: Accept-Language`; redirects and health responses carry neither locale metadata nor that cache variation.
+- **FF-LOC-005-AC03:** Locale selection is request-scoped and is not persisted in sessions or domain records; consecutive German and English requests on one server parse through their selected adapters while storing canonical locale-neutral values.
 
 #### FF-UI-001 — Progressive Enhancement
 

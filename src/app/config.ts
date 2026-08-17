@@ -1,3 +1,5 @@
+import { readDefaultLocale, type SupportedLocale } from "../adapters/localization/registry.js";
+
 export type NodeEnv = "development" | "test" | "production";
 
 export type AppConfig = {
@@ -6,6 +8,7 @@ export type AppConfig = {
   port: number;
   baseUrl: string;
   databaseUrl: string;
+  defaultLocale: SupportedLocale;
   auth: AuthConfig;
 };
 
@@ -28,6 +31,7 @@ export function loadConfig(environment: Environment = process.env): AppConfig {
   const port = readPort(environment.PORT);
   const baseUrl = readUrl(environment.BASE_URL, "BASE_URL");
   const databaseUrl = readRequiredString(environment.DATABASE_URL, "DATABASE_URL");
+  const defaultLocale = readDefaultLocale(environment.DEFAULT_LOCALE);
   const auth = readAuthConfig(environment, nodeEnv);
 
   return {
@@ -36,6 +40,7 @@ export function loadConfig(environment: Environment = process.env): AppConfig {
     port,
     baseUrl,
     databaseUrl,
+    defaultLocale,
     auth,
   };
 }

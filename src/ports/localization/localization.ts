@@ -7,6 +7,7 @@ export interface MasterDataNameProvider {
 }
 
 export interface Localization extends MasterDataNameProvider {
+  readonly locale: string;
   text(key: string, values?: LocalizationValues): string;
   formatAmount(cents: number): string;
   formatDate(value: string): string;

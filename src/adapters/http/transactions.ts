@@ -57,7 +57,7 @@ async function handleListTransactions(
     repositories.categories.listActive(),
     repositories.ownerContexts.list(),
   ]);
-  const filters = readTransactionFilters(request.query, reply.server.localization);
+  const filters = readTransactionFilters(request.query, reply.request.localization);
   const transactions = await repositories.transactions.list(filters);
 
   const views = createFamilyFlowViews(reply);
@@ -85,10 +85,10 @@ async function handleCreateTransaction(
 ) {
   try {
     await repositories.transactions.save(
-      createTransactionFromForm(readForm(request.body), randomUUID(), reply.server.localization),
+      createTransactionFromForm(readForm(request.body), randomUUID(), reply.request.localization),
     );
   } catch (error: unknown) {
-    const formError = reply.server.localization.errorMessage(error, "transaction.saveFailed");
+    const formError = localizedRequestError(reply, error, "transaction.saveFailed");
     const state = await readTransactionsState(repositories, formError);
     const views = createFamilyFlowViews(reply);
     const body = isHtmxRequest(request.headers)
@@ -153,7 +153,7 @@ async function handleUpdateTransaction(
 
   try {
     await repositories.transactions.save(
-      createTransactionFromForm(readForm(request.body), id, reply.server.localization, existing),
+      createTransactionFromForm(readForm(request.body), id, reply.request.localization, existing),
     );
   } catch (error: unknown) {
     const [accounts, categories] = await Promise.all([
@@ -164,7 +164,7 @@ async function handleUpdateTransaction(
       accounts,
       categories,
       transaction: existing,
-      formError: reply.server.localization.errorMessage(error, "transaction.saveFailed"),
+      formError: localizedRequestError(reply, error, "transaction.saveFailed"),
     };
     const views = createFamilyFlowViews(reply);
     const body = isHtmxRequest(request.headers)
@@ -195,7 +195,7 @@ async function handleInternalTransfer(
       .type("text/html; charset=utf-8")
       .send(
         await createFamilyFlowViews(reply).badRequestPage(
-          reply.server.localization.text("transaction.invalidTransferStatus"),
+          reply.request.localization.text("transaction.invalidTransferStatus"),
           requestId,
         ),
       );
@@ -212,7 +212,7 @@ async function handleInternalTransfer(
       .send(await createFamilyFlowViews(reply).missingResourcePage("transaction"));
   }
 
-  const filters = readTransactionFilters(request.query, reply.server.localization);
+  const filters = readTransactionFilters(request.query, reply.request.localization);
   if (isHtmxRequest(request.headers)) {
     const categories = await repositories.categories.list();
     return reply.type("text/html; charset=utf-8").send(
@@ -225,7 +225,7 @@ async function handleInternalTransfer(
   }
 
   return reply.redirect(
-    `/transactions${transactionFiltersQuery(filters, reply.server.localization)}`,
+    `/transactions${transactionFiltersQuery(filters, reply.request.localization)}`,
   );
 }
 
@@ -248,6 +248,12 @@ async function handleDeleteTransaction(
   }
 
   return reply.redirect("/transactions");
+}
+
+function localizedRequestError(reply: FastifyReply, error: unknown, fallbackKey: string): string {
+  const localization = reply.request.localization;
+  const requestId = String(reply.getHeader("x-request-id"));
+  return `${localization.errorMessage(error, fallbackKey)} ${localization.text("error.requestId")} ${requestId}`;
 }
 
 async function renderTransactionsPanelState(

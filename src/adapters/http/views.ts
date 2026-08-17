@@ -47,7 +47,7 @@ import {
 } from "./transaction-view-model.js";
 
 type ViewRenderer = Pick<FastifyReply, "viewAsync"> & {
-  server?: { localization?: Localization };
+  request?: { localization?: Localization };
 };
 
 type TransactionsInput = {
@@ -77,13 +77,23 @@ function mainNavigation(localization: Localization) {
   ];
 }
 
-function page(model: object, navigation: { href: string; label: string }[], htmxEnabled = false) {
-  return { ...model, navigation, htmxEnabled };
+function preparePage(
+  model: object,
+  navigation: { href: string; label: string }[],
+  htmxEnabled: boolean,
+  locale: string,
+) {
+  return { ...model, navigation, htmxEnabled, locale };
 }
 
 export function createFamilyFlowViews(renderer: ViewRenderer, configured?: Localization) {
-  const localization = configured ?? renderer.server?.localization;
+  const localization = configured ?? renderer.request?.localization;
   if (localization === undefined) throw new Error("Localization must be configured");
+  const page = (
+    model: object,
+    navigation: { href: string; label: string }[],
+    htmxEnabled = false,
+  ) => preparePage(model, navigation, htmxEnabled, localization.locale);
   return {
     dashboardPage(user: UserContext): Promise<string> {
       return renderer.viewAsync(

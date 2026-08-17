@@ -228,7 +228,7 @@ async function renderMissingResource(reply: FastifyReply, resource: "account" | 
 }
 
 function errorMessage(error: unknown, reply: FastifyReply): string {
-  return reply.server.localization.errorMessage(error, "master.saveFailed");
+  return reply.request.localization.errorMessage(error, "master.saveFailed");
 }
 
 function readRouteOwnerContext(params: unknown): ReturnType<typeof parseOwnerContext> {

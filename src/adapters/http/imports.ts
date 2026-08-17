@@ -16,12 +16,12 @@ import {
 } from "../../core/imports/csv-import.js";
 import type { UserContext } from "../../ports/auth/user-context.js";
 import type { Clock } from "../../ports/clock/clock.js";
-import type { Localization } from "../../ports/localization/localization.js";
 import type {
   CsvParser,
   CsvRowOutcome,
   ParsedCsvTransactionRow,
 } from "../../ports/csv/csv-parser.js";
+import type { Localization } from "../../ports/localization/localization.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
@@ -118,7 +118,7 @@ async function handleSaveImportProfile(
           accounts,
           categories,
           importProfiles,
-          formError: reply.server.localization.errorMessage(error, "csv.profileSaveFailed"),
+          formError: reply.request.localization.errorMessage(error, "csv.profileSaveFailed"),
         }),
       );
   }
@@ -144,7 +144,7 @@ async function handleCsvImportPreview(
       parsedOutcomes,
       categories,
       repositories,
-      reply.server.localization,
+      reply.request.localization,
     );
     const createdAt = clock.now();
     const batchId = randomUUID();
@@ -175,7 +175,7 @@ async function handleCsvImportPreview(
           accounts,
           categories,
           importProfiles,
-          formError: reply.server.localization.errorMessage(error, "csv.previewFailed"),
+          formError: reply.request.localization.errorMessage(error, "csv.previewFailed"),
         }),
       );
   }
