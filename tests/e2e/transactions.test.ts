@@ -115,6 +115,40 @@ test("E2E-FF-TXN-005-02: an imported expense remains visible when marked and unm
   }
 });
 
+test("purpose is visible in the transaction list after CSV import", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/imports/csv`);
+    await page.getByLabel("Importkonto").selectOption("account-shared-checking");
+    await page.getByLabel("Datumsspalte").fill("Date");
+    await page.getByLabel("Betragsspalte").fill("Amount");
+    await page.getByLabel("Beschreibungsspalte").fill("Description");
+    await page.getByLabel("Zahlungsempfängerspalte").fill("Payee");
+    await page.getByLabel("Verwendungszweckspalte").fill("Purpose");
+    await page.getByLabel("CSV-Datei").setInputFiles({
+      name: "purpose.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(
+        "Date;Payee;Description;Purpose;Amount\n15.07.2026;Supermarket;Card payment;Monthly groceries;-42,99",
+      ),
+    });
+    await page.getByRole("button", { name: "Importvorschau anzeigen" }).click();
+    await page.getByRole("button", { name: "Import bestätigen" }).click();
+
+    await expect(
+      page.getByRole("columnheader", { name: "Verwendungszweck", exact: true }),
+    ).toBeVisible();
+    const row = page.getByRole("row").filter({ hasText: "Card payment" });
+    await expect(row.getByRole("cell", { name: "Card payment", exact: true })).toBeVisible();
+    await expect(row.getByRole("cell", { name: "Monthly groceries", exact: true })).toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
 test("planned expense can be created", async ({ page }) => {
   const server = buildServer();
 

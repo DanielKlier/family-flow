@@ -30,6 +30,7 @@ export function prepareTransactionListViewModel(
     rows: input.transactions.map((transaction) => ({
       date: localization.formatDate(transaction.date),
       description: transaction.description,
+      purpose: transaction.purpose ?? "",
       category: categoryNames.get(transaction.categoryId) ?? transaction.categoryId,
       amount: localization.formatAmount(transaction.amountCents),
       status: localization.text(`transaction.${transaction.status}`),
