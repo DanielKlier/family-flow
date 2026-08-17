@@ -20,6 +20,7 @@ describe("transaction view-model preparation", () => {
             amountCents: -4299,
             description: "<script>globalThis.xssExecuted = true</script>",
             payee: '<img src=x onerror="globalThis.xssExecuted=true">',
+            purpose: '<img src=x onerror="globalThis.xssExecuted=true">',
             source: "manual",
             status: "planned",
             fixedCost: true,
@@ -36,6 +37,7 @@ describe("transaction view-model preparation", () => {
       {
         date: "15.07.2026",
         description: "<script>globalThis.xssExecuted = true</script>",
+        purpose: '<img src=x onerror="globalThis.xssExecuted=true">',
         category: "missing-category",
         amount: "42,99",
         status: "geplant",
@@ -49,6 +51,54 @@ describe("transaction view-model preparation", () => {
         deleteUrl: "/transactions/transaction%2Fwith%20spaces/delete",
       },
     ]);
+  });
+
+  it("exposes persisted purposes and renders missing purposes as empty strings", async () => {
+    const { prepareTransactionListViewModel } = await import(
+      "../../src/adapters/http/transaction-view-model.js"
+    );
+    const model = prepareTransactionListViewModel(
+      {
+        categories: [],
+        transactions: [
+          {
+            id: "transaction-with-purpose",
+            accountId: "account-a",
+            categoryId: "category-a",
+            date: "2026-07-15",
+            amountCents: -4299,
+            description: "Card payment",
+            payee: null,
+            purpose: "Monthly groceries",
+            source: "csv",
+            status: "booked",
+            fixedCost: false,
+            internalTransfer: false,
+            note: null,
+            importHash: "hash-with-purpose",
+          },
+          {
+            id: "transaction-without-purpose",
+            accountId: "account-a",
+            categoryId: "category-a",
+            date: "2026-07-16",
+            amountCents: -1000,
+            description: "Cash withdrawal",
+            payee: null,
+            purpose: null,
+            source: "csv",
+            status: "booked",
+            fixedCost: false,
+            internalTransfer: false,
+            note: null,
+            importHash: "hash-without-purpose",
+          },
+        ],
+      },
+      localization,
+    );
+
+    expect(model.rows.map((row) => row.purpose)).toEqual(["Monthly groceries", ""]);
   });
 
   it("prepares selected options and fixed-cost labels for form models", async () => {
@@ -67,6 +117,7 @@ describe("transaction view-model preparation", () => {
           amountCents: -1000,
           description: "Rent",
           payee: null,
+          purpose: null,
           source: "manual",
           status: "booked",
           fixedCost: false,
