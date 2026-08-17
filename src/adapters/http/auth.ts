@@ -87,7 +87,7 @@ export function registerAuth(
       return reply
         .status(500)
         .type("text/html; charset=utf-8")
-        .send(await views.authErrorPage("Missing authenticated user context"));
+        .send(await views.authErrorPage(reply.server.localization.text("auth.missingUserContext")));
     }
 
     return reply.type("text/html; charset=utf-8").send(await views.dashboardPage(user));
@@ -105,7 +105,11 @@ export function registerAuth(
       return reply
         .status(500)
         .type("text/html; charset=utf-8")
-        .send(await createFamilyFlowViews(reply).authErrorPage("OIDC configuration is missing"));
+        .send(
+          await createFamilyFlowViews(reply).authErrorPage(
+            reply.server.localization.text("auth.missingOidcConfig"),
+          ),
+        );
     }
 
     const state = randomUUID();
@@ -120,7 +124,11 @@ export function registerAuth(
       return reply
         .status(404)
         .type("text/html; charset=utf-8")
-        .send(await createFamilyFlowViews(reply).authErrorPage("Not Found"));
+        .send(
+          await createFamilyFlowViews(reply).authErrorPage(
+            reply.server.localization.text("auth.notFound"),
+          ),
+        );
     }
 
     const returnTo = readSafeReturnTo(request.query);
@@ -138,7 +146,11 @@ export function registerAuth(
       return reply
         .status(404)
         .type("text/html; charset=utf-8")
-        .send(await createFamilyFlowViews(reply).authErrorPage("Not Found"));
+        .send(
+          await createFamilyFlowViews(reply).authErrorPage(
+            reply.server.localization.text("auth.notFound"),
+          ),
+        );
     }
 
     const query = readCallbackQuery(request.query);
@@ -147,7 +159,11 @@ export function registerAuth(
       return reply
         .status(400)
         .type("text/html; charset=utf-8")
-        .send(await createFamilyFlowViews(reply).authErrorPage("Invalid OIDC callback state"));
+        .send(
+          await createFamilyFlowViews(reply).authErrorPage(
+            reply.server.localization.text("auth.invalidCallback"),
+          ),
+        );
     }
 
     const provider = await getOidcProviderMetadata(config.oidc);
@@ -176,7 +192,11 @@ export function registerAuth(
       return reply
         .status(403)
         .type("text/html; charset=utf-8")
-        .send(await createFamilyFlowViews(reply).authErrorPage("Invalid logout origin"));
+        .send(
+          await createFamilyFlowViews(reply).authErrorPage(
+            reply.server.localization.text("auth.invalidLogoutOrigin"),
+          ),
+        );
     }
 
     const token = readCookie(request.headers.cookie, sessionCookieName);
@@ -184,7 +204,11 @@ export function registerAuth(
       return reply
         .status(401)
         .type("text/html; charset=utf-8")
-        .send(await createFamilyFlowViews(reply).authErrorPage("Invalid session"));
+        .send(
+          await createFamilyFlowViews(reply).authErrorPage(
+            reply.server.localization.text("auth.invalidSession"),
+          ),
+        );
     }
     reply.header("Set-Cookie", serializeExpiredSessionCookie(secureCookie));
 

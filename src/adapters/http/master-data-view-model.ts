@@ -1,6 +1,7 @@
 import type { Account } from "../../core/accounts/account.js";
 import type { Category } from "../../core/categories/category.js";
 import type { OwnerContextLabel } from "../../core/shared/owner-context.js";
+import type { Localization } from "../../ports/localization/localization.js";
 
 type MasterDataInput = {
   accounts: Account[];
@@ -11,43 +12,46 @@ type MasterDataInput = {
   ownerContextError?: string;
 };
 
-const masterDataText = {
-  newAccountName: "New account name",
-  newAccountOwner: "New account owner",
-  addAccount: "Add account",
-  name: "Name",
-  owner: "Owner",
-  status: "Status",
-  actions: "Actions",
-  editAccount: "Edit account",
-  deactivateAccount: "Deactivate account",
-  ownerContextsHeading: "Account owners",
-  ownerKey: "Owner key",
-  displayName: "Display name",
-  newCategoryName: "New category name",
-  addCategory: "Add category",
-  editCategory: "Edit category",
-  deactivateCategory: "Deactivate category",
-  accountEditHeading: "Edit account",
-  accountName: "Account name",
-  accountOwner: "Account owner",
-  active: "Active",
-  saveAccount: "Save account",
-  categoryEditHeading: "Edit category",
-  categoryName: "Category name",
-  saveCategory: "Save category",
-} as const;
+function masterDataText(localization: Localization) {
+  const text = (key: string) => localization.text(key);
+  return {
+    newAccountName: text("master.newAccountName"),
+    newAccountOwner: text("master.accountOwner"),
+    addAccount: text("master.addAccount"),
+    name: text("common.name"),
+    owner: text("common.owner"),
+    status: text("common.status"),
+    actions: text("common.actions"),
+    editAccount: text("master.editAccount"),
+    deactivateAccount: text("master.deactivateAccount"),
+    ownerContextsHeading: text("master.ownerContexts"),
+    ownerKey: text("master.ownerKey"),
+    displayName: text("master.displayName"),
+    newCategoryName: text("master.newCategoryName"),
+    addCategory: text("master.addCategory"),
+    editCategory: text("master.editCategory"),
+    deactivateCategory: text("master.deactivateCategory"),
+    accountEditHeading: text("master.editAccount"),
+    accountName: text("master.accountName"),
+    accountOwner: text("master.accountOwner"),
+    active: text("common.active"),
+    saveAccount: text("master.saveAccount"),
+    categoryEditHeading: text("master.editCategory"),
+    categoryName: text("master.categoryName"),
+    saveCategory: text("master.saveCategory"),
+  };
+}
 
-export function prepareMasterDataViewModel(input: MasterDataInput) {
+export function prepareMasterDataViewModel(input: MasterDataInput, localization: Localization) {
   const ownerLabels = new Map(
     input.ownerContexts.map(({ ownerContext, label }) => [ownerContext, label]),
   );
   return {
-    title: "FamilyFlow Master Data",
-    heading: "Master Data",
-    accountHeading: "Accounts",
-    categoryHeading: "Categories",
-    text: masterDataText,
+    title: localization.text("master.title"),
+    heading: localization.text("nav.masterData"),
+    accountHeading: localization.text("master.accounts"),
+    categoryHeading: localization.text("master.categories"),
+    text: masterDataText(localization),
     accountError: input.accountError,
     categoryError: input.categoryError,
     ownerContextError: input.ownerContextError,
@@ -56,20 +60,20 @@ export function prepareMasterDataViewModel(input: MasterDataInput) {
       label,
       formId: `owner-context-${ownerContext}-form`,
       actionUrl: `/admin/master-data/owner-contexts/${encodeURIComponent(ownerContext)}`,
-      inputLabel: `Owner name for ${ownerContext}`,
-      submitLabel: `Save owner name for ${ownerContext}`,
+      inputLabel: localization.text("master.ownerInput", { owner: ownerContext }),
+      submitLabel: localization.text("master.ownerSave", { owner: ownerContext }),
     })),
     accounts: input.accounts.map((account) => ({
       name: account.name,
       ownerLabel: ownerLabels.get(account.ownerContext) ?? account.ownerContext,
-      statusLabel: account.active ? "active" : "inactive",
+      statusLabel: localization.text(account.active ? "common.enabled" : "common.disabled"),
       active: account.active,
       editUrl: `/admin/master-data/accounts/${encodeURIComponent(account.id)}/edit`,
       deactivateUrl: `/admin/master-data/accounts/${encodeURIComponent(account.id)}/deactivate`,
     })),
     categories: input.categories.map((category) => ({
       name: category.name,
-      statusLabel: category.active ? "active" : "inactive",
+      statusLabel: localization.text(category.active ? "common.enabled" : "common.disabled"),
       active: category.active,
       editUrl: `/admin/master-data/categories/${encodeURIComponent(category.id)}/edit`,
       deactivateUrl: `/admin/master-data/categories/${encodeURIComponent(category.id)}/deactivate`,
@@ -77,15 +81,14 @@ export function prepareMasterDataViewModel(input: MasterDataInput) {
   };
 }
 
-export function prepareAccountEditViewModel(input: {
-  account: Account;
-  ownerContexts: OwnerContextLabel[];
-  formError?: string;
-}) {
+export function prepareAccountEditViewModel(
+  input: { account: Account; ownerContexts: OwnerContextLabel[]; formError?: string },
+  localization: Localization,
+) {
   return {
-    title: "Edit Account",
-    heading: "Edit Account",
-    text: masterDataText,
+    title: localization.text("master.editAccount"),
+    heading: localization.text("master.editAccount"),
+    text: masterDataText(localization),
     actionUrl: `/admin/master-data/accounts/${encodeURIComponent(input.account.id)}`,
     name: input.account.name,
     activeChecked: input.account.active,
@@ -98,11 +101,14 @@ export function prepareAccountEditViewModel(input: {
   };
 }
 
-export function prepareCategoryEditViewModel(input: { category: Category; formError?: string }) {
+export function prepareCategoryEditViewModel(
+  input: { category: Category; formError?: string },
+  localization: Localization,
+) {
   return {
-    title: "Edit Category",
-    heading: "Edit Category",
-    text: masterDataText,
+    title: localization.text("master.editCategory"),
+    heading: localization.text("master.editCategory"),
+    text: masterDataText(localization),
     actionUrl: `/admin/master-data/categories/${encodeURIComponent(input.category.id)}`,
     name: input.category.name,
     activeChecked: input.category.active,

@@ -1,10 +1,11 @@
 import { mkdir, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 import Fastify from "fastify";
 import { describe, expect, it, vi } from "vitest";
 
+import { messages } from "../../src/adapters/localization/german-catalog.js";
 import { aTransaction } from "../support/transactions.js";
 
 const transactionInput = {
@@ -22,6 +23,9 @@ describe("INT-FF-ARC-003-01 Nunjucks rendering", () => {
     const { createFamilyFlowViews, registerTemplateRenderer } = await import(
       "../../src/adapters/http/views.js"
     );
+    const { createGermanLocalization: createLocalization } = await import(
+      "../../src/adapters/localization/german.js"
+    );
     const templateDirectory = await mkdtemp(join(tmpdir(), "family-flow-views-"));
     await Promise.all([
       mkdir(join(templateDirectory, "pages")),
@@ -35,10 +39,10 @@ describe("INT-FF-ARC-003-01 Nunjucks rendering", () => {
     const server = Fastify();
     registerTemplateRenderer(server, templateDirectory);
     server.get("/page", async (_request, reply) =>
-      createFamilyFlowViews(reply).transactionsPage(transactionInput),
+      createFamilyFlowViews(reply, createLocalization()).transactionsPage(transactionInput),
     );
     server.get("/fragment", async (_request, reply) =>
-      createFamilyFlowViews(reply).transactionsList(transactionInput),
+      createFamilyFlowViews(reply, createLocalization()).transactionsList(transactionInput),
     );
 
     const expected = "&lt;img src=x onerror=&quot;globalThis.xssExecuted=true&quot;&gt;";
@@ -179,8 +183,11 @@ describe("INT-FF-ARC-004-01 template presentation boundary", () => {
 describe("INT-FF-ARC-004-02 typed rendering contract", () => {
   it("exposes named page and fragment methods instead of arbitrary template/context rendering", async () => {
     const { createFamilyFlowViews } = await import("../../src/adapters/http/views.js");
+    const { createGermanLocalization: createLocalization } = await import(
+      "../../src/adapters/localization/german.js"
+    );
     const viewAsync = vi.fn();
-    const views = createFamilyFlowViews({ viewAsync });
+    const views = createFamilyFlowViews({ viewAsync }, createLocalization());
 
     const namedViews: Record<string, unknown> = views;
     const requiredMethods = [
@@ -230,7 +237,7 @@ describe("INT-FF-ARC-004-02 typed rendering contract", () => {
     expect(viewsSource).not.toMatch(/return\s+[`'"]/);
   });
 
-  it("keeps the complete prepared-view template inventory free of user-facing display literals", async () => {
+  it("INT-FF-ARC-004-03 keeps the complete prepared-view template inventory free of user-facing display literals", async () => {
     const { checkTemplateArchitecture } = await import(
       "../../scripts/check-template-architecture.js"
     );
@@ -270,3 +277,77 @@ describe("INT-FF-ARC-004-02 typed rendering contract", () => {
     }
   });
 });
+
+describe("INT-FF-ARC-007-01 localization boundary", () => {
+  it("INT-FF-ARC-007-02 confines locale identifiers, format APIs, and German presentation catalogs to the localization adapter", async () => {
+    const sourceDirectory = join(import.meta.dirname, "../../src");
+    const localizationDirectory = join(sourceDirectory, "adapters/localization");
+    const violations: string[] = [];
+    const localeSensitiveApi =
+      /\b(?:Intl\.[A-Za-z]+|localeCompare|toLocale(?:String|DateString|TimeString|LowerCase|UpperCase))\s*\(/;
+    const localeIdentifier = /\b(?:[Gg]erman[A-Za-z0-9_]*|de-DE)\b/;
+    const forbiddenFallbackLiterals = ["Other", "Person A", "Person B", "Shared"];
+    const knownLocalizedLiterals = Object.values(messages).map((message) =>
+      JSON.stringify(message),
+    );
+
+    for (const filePath of await listTypeScriptFiles(sourceDirectory)) {
+      if (filePath.startsWith(localizationDirectory)) continue;
+
+      const source = await readFile(filePath, "utf8");
+      const relativePath = relative(join(sourceDirectory, ".."), filePath);
+      const sourceWithoutCompositionWiring =
+        relativePath === "src/app/server.ts"
+          ? source.replace(
+              /import\s+[\s\S]*?from\s+["']\.\.\/adapters\/localization\/[^"']+["'];?/g,
+              (wiring) => wiring.replace(/[^\n]/g, " "),
+            )
+          : source;
+      for (const [lineNumber, line] of sourceWithoutCompositionWiring.split("\n").entries()) {
+        const hasCatalogLiteral = knownLocalizedLiterals.some((literal) => line.includes(literal));
+        const hasFallbackLiteral = forbiddenFallbackLiterals.some((literal) =>
+          [`"${literal}"`, `'${literal}'`, `\`${literal}\``].some((quoted) =>
+            line.includes(quoted),
+          ),
+        );
+        if (
+          localeIdentifier.test(line) ||
+          localeSensitiveApi.test(line) ||
+          hasCatalogLiteral ||
+          hasFallbackLiteral
+        ) {
+          violations.push(`${relativePath}:${lineNumber + 1}`);
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+
+    const germanAdapter = await readFile(join(localizationDirectory, "german.ts"), "utf8");
+    expect(germanAdapter).not.toMatch(/ownerContext\s*:/);
+    expect(germanAdapter).not.toMatch(/(?:accounts|categories)\s*:\s*\[/);
+  });
+
+  it("keeps user-facing validation messages out of the transaction core", async () => {
+    const source = await readFile(
+      join(import.meta.dirname, "../../src/core/transactions/transaction.ts"),
+      "utf8",
+    );
+
+    expect(source).not.toMatch(/throw new Error\(["'][A-Z]/);
+    expect(source).not.toContain("parsePositiveDecimalCents");
+  });
+});
+
+async function listTypeScriptFiles(directory: string): Promise<string[]> {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = join(directory, entry.name);
+      if (entry.isDirectory()) return listTypeScriptFiles(entryPath);
+      return entry.isFile() && entry.name.endsWith(".ts") ? [entryPath] : [];
+    }),
+  );
+
+  return files.flat();
+}

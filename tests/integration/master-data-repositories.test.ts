@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
+
 import { InMemoryAccountRepository } from "../../src/adapters/db/in-memory-account-repository.js";
 import { InMemoryCategoryRepository } from "../../src/adapters/db/in-memory-category-repository.js";
 import { InMemoryOwnerContextRepository } from "../../src/adapters/db/in-memory-owner-context-repository.js";
@@ -11,11 +13,37 @@ describe("master data repositories", () => {
     const categories = new InMemoryCategoryRepository();
     const ownerContexts = new InMemoryOwnerContextRepository([]);
 
-    await seedMasterData({ accounts, categories, ownerContexts });
+    await seedMasterData({ accounts, categories, ownerContexts }, createGermanLocalization());
 
-    await expect(ownerContexts.list()).resolves.toHaveLength(3);
+    await expect(ownerContexts.list()).resolves.toEqual([
+      { ownerContext: "person_a", label: "Person A" },
+      { ownerContext: "person_b", label: "Person B" },
+      { ownerContext: "shared", label: "Gemeinsam" },
+    ]);
     await expect(accounts.list()).resolves.toHaveLength(3);
     await expect(categories.list()).resolves.toHaveLength(12);
+  });
+
+  it("does not rename existing records when seeds run again", async () => {
+    const localization = createGermanLocalization();
+    const accounts = new InMemoryAccountRepository();
+    const categories = new InMemoryCategoryRepository();
+    const ownerContexts = new InMemoryOwnerContextRepository();
+    const repositories = { accounts, categories, ownerContexts };
+    await seedMasterData(repositories, localization);
+
+    const account = await accounts.get("account-person-a-checking");
+    const category = await categories.get("category-other");
+    if (account === null || category === null) throw new Error("Master data seed must exist");
+    await accounts.save({ ...account, name: "Custom account" });
+    await categories.save({ ...category, name: "Custom category" });
+    await ownerContexts.save({ ownerContext: "shared", label: "Custom owner" });
+
+    await seedMasterData(repositories, localization);
+
+    await expect(accounts.get(account.id)).resolves.toMatchObject({ name: "Custom account" });
+    await expect(categories.get(category.id)).resolves.toMatchObject({ name: "Custom category" });
+    await expect(ownerContexts.get("shared")).resolves.toMatchObject({ label: "Custom owner" });
   });
 
   it("updates and filters account active status", async () => {

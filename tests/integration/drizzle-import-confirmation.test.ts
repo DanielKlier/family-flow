@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
+
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
 import { DrizzleImportPreviewBatchRepository } from "../../src/adapters/db/drizzle-import-preview-batch-repository.js";
@@ -66,11 +68,14 @@ describe("PostgreSQL CSV confirmation", () => {
       const repository = new DrizzleImportPreviewBatchRepository(connection.db);
       const batchId = randomUUID();
       try {
-        await seedMasterData({
-          accounts: new DrizzleAccountRepository(connection.db),
-          categories: new DrizzleCategoryRepository(connection.db),
-          ownerContexts: new DrizzleOwnerContextRepository(connection.db),
-        });
+        await seedMasterData(
+          {
+            accounts: new DrizzleAccountRepository(connection.db),
+            categories: new DrizzleCategoryRepository(connection.db),
+            ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+          },
+          createGermanLocalization(),
+        );
         await connection.db.insert(importPreviewBatches).values({
           id: batchId,
           userId: "user",
@@ -114,11 +119,14 @@ describe("PostgreSQL CSV confirmation", () => {
           purpose,
         });
       try {
-        await seedMasterData({
-          accounts: new DrizzleAccountRepository(connection.db),
-          categories: new DrizzleCategoryRepository(connection.db),
-          ownerContexts: new DrizzleOwnerContextRepository(connection.db),
-        });
+        await seedMasterData(
+          {
+            accounts: new DrizzleAccountRepository(connection.db),
+            categories: new DrizzleCategoryRepository(connection.db),
+            ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+          },
+          createGermanLocalization(),
+        );
         const januaryHash = importHash("January groceries");
         const februaryHash = importHash("February groceries");
         expect(januaryHash).toMatch(/^v3:[a-f0-9]{64}$/);
@@ -253,11 +261,14 @@ describe("PostgreSQL CSV confirmation", () => {
       const repository = new DrizzleImportPreviewBatchRepository(connection.db);
       const ids: string[] = [];
       try {
-        await seedMasterData({
-          accounts: new DrizzleAccountRepository(connection.db),
-          categories: new DrizzleCategoryRepository(connection.db),
-          ownerContexts: new DrizzleOwnerContextRepository(connection.db),
-        });
+        await seedMasterData(
+          {
+            accounts: new DrizzleAccountRepository(connection.db),
+            categories: new DrizzleCategoryRepository(connection.db),
+            ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+          },
+          createGermanLocalization(),
+        );
         const failedBatch = randomUUID();
         ids.push(failedBatch);
         await repository.save({

@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { createSeededInMemoryRepositories } from "../../src/adapters/db/default-repositories.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { buildServer } from "../../src/app/server.js";
 import { aTransaction } from "../support/transactions.js";
 
 describe("categorization rules HTTP adapter", () => {
   it("INT-FF-CAT-002-04: persists a transfer-only reapplication without changing imported transaction identity", async () => {
-    const repositories = createSeededInMemoryRepositories();
+    const repositories = createSeededInMemoryRepositories(createGermanLocalization());
     const imported = aTransaction({
       id: "transaction-imported-rule-transfer",
       accountId: "account-shared-checking",

@@ -548,7 +548,7 @@
     },
     {
       "id": "PH-12",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "German localization for all surfaces delivered through `PH-11`.",
       "classification": "Behavior change"
     },
@@ -870,7 +870,7 @@
     },
     {
       "id": "FF-ARC-007-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-12",
       "test": "INT-FF-ARC-007-01",
       "file": "tests/integration/architecture-requirements.test.ts",
@@ -902,7 +902,7 @@
     },
     {
       "id": "FF-MDM-002-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-12",
       "test": "INT-FF-MDM-002-02",
       "file": "tests/integration/drizzle-master-data-repositories.test.ts",
@@ -1454,7 +1454,7 @@
     },
     {
       "id": "FF-LOC-001-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-12",
       "test": "E2E-FF-LOC-001-01",
       "file": "tests/e2e/german-localization.test.ts",
@@ -1478,7 +1478,7 @@
     },
     {
       "id": "FF-LOC-002-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-12",
       "test": "E2E-FF-LOC-002-01",
       "file": "tests/e2e/german-localization.test.ts",
@@ -1486,7 +1486,7 @@
     },
     {
       "id": "FF-LOC-002-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-12",
       "test": "INT-FF-LOC-002-02",
       "file": "tests/integration/localization.test.ts",
@@ -1494,7 +1494,7 @@
     },
     {
       "id": "FF-LOC-003-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-12",
       "test": "INT-FF-LOC-003-01",
       "file": "tests/integration/localization.test.ts",
@@ -1502,7 +1502,7 @@
     },
     {
       "id": "FF-LOC-004-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-12",
       "test": "INT-FF-LOC-004-01",
       "file": "tests/integration/csv-parser.test.ts",
@@ -3460,7 +3460,7 @@
       "procedure": "**German Input Formats**: submit documented valid/invalid amount/date fixtures.",
       "outcome": "Valid inputs canonicalize once; invalid inputs make no change.",
       "rollback": "Roll back parser image and use canonical maintenance input.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-LOC-002-01"
     },
     {
       "id": "OPS-FF-MDM-001-01",

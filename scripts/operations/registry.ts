@@ -22,12 +22,33 @@ function verifyPostgresOperation(id: string): OperationVerifier {
   };
 }
 
+function verifyVitestOperation(id: string, file: string): OperationVerifier {
+  return async (environment) => {
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn("pnpm", ["exec", "vitest", "run", file], {
+        env: environment,
+        stdio: "inherit",
+      });
+      child.on("error", reject);
+      child.on("close", (code, signal) => {
+        if (code === 0) resolve();
+        else reject(new Error(`Operation ${id} verifier exited with ${code ?? signal}`));
+      });
+    });
+    return { operationId: id, status: "passed" };
+  };
+}
+
 // Verifiers are registered here when their owning phase delivers executable operations evidence.
 // Planned operations remain in traceability.json but cannot be dispatched until registered.
 export const operationRegistry: OperationRegistry = {
   "OPS-FF-AUTH-006-01": verifyPostgresOperation("OPS-FF-AUTH-006-01"),
   "OPS-FF-AUTH-009-01": verifyPostgresOperation("OPS-FF-AUTH-009-01"),
   "OPS-FF-TXN-005-01": verifyPostgresOperation("OPS-FF-TXN-005-01"),
+  "OPS-FF-LOC-002-01": verifyVitestOperation(
+    "OPS-FF-LOC-002-01",
+    "tests/integration/localization.test.ts",
+  ),
 };
 
 export async function verifyOperation(

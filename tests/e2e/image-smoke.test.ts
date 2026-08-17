@@ -164,9 +164,9 @@ test("SMOKE-FF-DEP-001-01 production image packages every template family and se
       body: new URLSearchParams({
         accountId: "account-person-a-checking",
         categoryId: "category-groceries",
-        date: "2026-07-15",
+        date: "15.07.2026",
         description: "<script>globalThis.familyFlowXss=true</script>",
-        amount: "42.99",
+        amount: "42,99",
         status: "booked",
       }),
     });

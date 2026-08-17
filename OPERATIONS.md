@@ -113,6 +113,20 @@ Migration troubleshooting:
 - If a migration file was partially applied outside the normal transaction flow, inspect `schema_migrations` and the affected tables before retrying.
 - Never edit an already deployed migration file. Add a new migration instead.
 
+## German Input And Localization
+
+The server-rendered interface uses the German localization adapter for labels, errors, seed display values, and `de-DE` amount/date display. Human forms accept amounts such as `1234`, `1234,5`, and `1.234,56`, dates in `DD.MM.YYYY`, and months in `MM.YYYY`. Stored values remain canonical minor units, ISO dates, and ISO months. CSV imports continue to use the date and decimal grammar selected in each import profile. If localized text is missing or incorrect, inspect `src/adapters/localization/german.ts`; HTTP and core modules must not contain fallback translations or locale APIs.
+
+If a German form submission fails:
+
+1. Confirm that amounts contain no sign, spaces, currency symbol, exponent, dot decimal, malformed grouping, or more than two decimal places.
+2. Confirm that dates and months are valid Gregorian values in the documented German order.
+3. Reproduce through the same form rather than changing canonical database values.
+4. Use the response `X-Request-Id` to find the single request log entry. Validation logs do not contain the submitted financial value.
+5. For CSV failures, inspect the selected import profile and preview outcome instead; do not apply human-form grammar to the uploaded file.
+
+German fresh-database seed names are inserted only when their stable IDs are absent. The database seed adapter owns the stable owner keys, account/category IDs, and account-owner assignments; localization supplies display names for those keys only. Startup and upgrades never rename an existing account, category, or owner label. If a custom name appears after an update, retain it unless an operator explicitly chooses to edit it.
+
 ## Authentication And Sessions
 
 All non-health application routes are protected. `/health` remains public for local health checks. Login uses `/auth/login` and `/auth/callback`. Logout is authenticated `POST /auth/logout` and requires an `Origin` matching the normalized `BASE_URL` origin; failed origin checks do not revoke.
@@ -165,15 +179,15 @@ Initial account owner labels:
 
 - `person_a`: `Person A`.
 - `person_b`: `Person B`.
-- `shared`: `Shared`.
+- `shared`: `Gemeinsam`.
 
 Initial accounts:
 
-- `Person A checking` with owner context `person_a`.
-- `Person B checking` with owner context `person_b`.
-- `Shared checking` with owner context `shared`.
+- `Girokonto Person A` with owner context `person_a`.
+- `Girokonto Person B` with owner context `person_b`.
+- `Gemeinsames Girokonto` with owner context `shared`.
 
-Initial categories include `Wohnen/Miete`, `Lebensmittel`, `Drogerie`, `Versicherungen`, `Mobilitaet`, `Gesundheit`, `Kind/Baby`, `Abos`, `Freizeit`, `Urlaub`, `Kleidung`, and `Sonstiges`.
+Initial categories include `Wohnen/Miete`, `Lebensmittel`, `Drogerie`, `Versicherungen`, `Mobilität`, `Gesundheit`, `Kind/Baby`, `Abos`, `Freizeit`, `Urlaub`, `Kleidung`, and `Sonstiges`.
 
 ## Master Data Maintenance
 

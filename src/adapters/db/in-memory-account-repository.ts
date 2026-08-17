@@ -1,4 +1,5 @@
 import type { Account } from "../../core/accounts/account.js";
+import { compareCodePoints } from "../../core/shared/compare-code-points.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 
 export class InMemoryAccountRepository implements AccountRepository {
@@ -28,5 +29,5 @@ export class InMemoryAccountRepository implements AccountRepository {
 }
 
 function sortAccounts(accounts: Account[]): Account[] {
-  return accounts.sort((left, right) => left.name.localeCompare(right.name));
+  return accounts.sort((left, right) => compareCodePoints(left.name, right.name));
 }

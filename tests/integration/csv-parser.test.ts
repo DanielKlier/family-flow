@@ -16,7 +16,7 @@ const genericProfile = createImportProfile({
 });
 
 describe("INT-FF-CSV-003-01 INT-FF-CSV-003-02 CSV parser", () => {
-  it("parses CSV rows through an import profile", async () => {
+  it("INT-FF-LOC-004-01 parses CSV rows independently through an import profile", async () => {
     const parser = new SimpleCsvParser();
     const csv = ["Date;Payee;Description;Amount", "15.07.2026;Shop;Card payment;-42,99"].join("\n");
 

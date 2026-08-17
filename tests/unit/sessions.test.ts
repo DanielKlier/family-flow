@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { compareCodePoints } from "../../src/core/shared/compare-code-points.js";
+
 import { SessionService } from "../../src/core/auth/session-service.js";
 import type { SessionRecord, SessionStore } from "../../src/ports/auth/session-store.js";
 
@@ -26,7 +28,8 @@ class MemoryStore implements SessionStore {
       .filter((record) => record.expiresAt <= now || record.revokedAt !== null)
       .sort(
         (left, right) =>
-          left.expiresAt.getTime() - right.expiresAt.getTime() || left.id.localeCompare(right.id),
+          left.expiresAt.getTime() - right.expiresAt.getTime() ||
+          compareCodePoints(left.id, right.id),
       )
       .slice(0, limit);
     for (const record of eligible) this.records.splice(this.records.indexOf(record), 1);

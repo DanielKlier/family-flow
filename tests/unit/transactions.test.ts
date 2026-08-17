@@ -16,13 +16,13 @@ describe("transactions", () => {
 
   it("rejects non-expense amounts", () => {
     expect(() => aTransaction({ amountCents: 100, description: "Refund" })).toThrow(
-      "Transaction amount must be a negative expense",
+      expect.objectContaining({ code: "non_expense_amount" }),
     );
   });
 
   it("rejects invalid dates", () => {
     expect(() => aTransaction({ date: "15.07.2026", amountCents: -100 })).toThrow(
-      "Transaction date must use YYYY-MM-DD",
+      expect.objectContaining({ code: "invalid_date" }),
     );
   });
 
@@ -33,7 +33,7 @@ describe("transactions", () => {
         accountId: "account-person-a-checking",
         categoryId: "category-groceries",
         date: "2026-07-15",
-        amount: "42,99",
+        amountCents: -4299,
         description: "Groceries",
         payee: "Market",
         status: "planned",
@@ -115,7 +115,7 @@ describe("transactions", () => {
 
   it("UNIT-FF-TXN-001-02: rejects unsafe integer transaction amounts", () => {
     expect(() => aTransaction({ amountCents: -9007199254740992 })).toThrow(
-      "Transaction amount must be a negative safe integer expense",
+      expect.objectContaining({ code: "invalid_amount" }),
     );
   });
 
@@ -126,9 +126,9 @@ describe("transactions", () => {
         accountId: "account-person-a-checking",
         categoryId: "category-groceries",
         date: "2026-07-15",
-        amount: "-42.99",
+        amountCents: Number.NaN,
         description: "Groceries",
       }),
-    ).toThrow("Amount must be a positive decimal expense");
+    ).toThrow(expect.objectContaining({ code: "invalid_amount" }));
   });
 });

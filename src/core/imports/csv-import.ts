@@ -103,30 +103,13 @@ export function detectDuplicateImportRows(
 
 function normalizeCsvDate(value: string): string {
   const trimmed = value.trim();
-  const germanDate = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(trimmed);
-  const shortGermanDate = /^(\d{2})\.(\d{2})\.(\d{2})$/.exec(trimmed);
-
-  if (germanDate !== null) {
-    const [, day, month, year] = germanDate;
-    return requireGregorianDate(`${year}-${month}-${day}`);
-  }
-
-  if (shortGermanDate !== null) {
-    const [, day, month, year] = shortGermanDate;
-    return requireGregorianDate(`20${year}-${month}-${day}`);
-  }
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return requireGregorianDate(trimmed);
-  }
-
-  throw new Error("CSV date must use DD.MM.YY, DD.MM.YYYY, or YYYY-MM-DD");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return requireGregorianDate(trimmed);
+  throw new Error("CSV date must use the canonical YYYY-MM-DD format");
 }
 
 function parseCsvAmountCents(value: string): number {
   const compact = value.trim();
-  const normalized = normalizeAmountDecimal(compact);
-  const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(normalized);
+  const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(compact);
   if (match === null) throw new Error("CSV amount must be a decimal value");
 
   const [, sign, whole, fraction = ""] = match;
@@ -141,14 +124,6 @@ function parseCsvAmountCents(value: string): number {
   if (signedCents === 0n) throw new Error("CSV amount must not be zero");
 
   return Number(signedCents);
-}
-
-function normalizeAmountDecimal(compact: string): string {
-  if (!compact.includes(",")) return compact;
-  if (!/^-?(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{1,2})?$/.test(compact)) {
-    throw new Error("CSV amount must be a decimal value");
-  }
-  return compact.replaceAll(".", "").replace(",", ".");
 }
 
 function normalizeRequiredText(value: string, message: string): string {
@@ -204,11 +179,11 @@ function matchesPersistedIdentity(
 }
 
 function normalizeImportText(value: string): string {
-  return normalizeDisplayText(value).normalize("NFKC").toLocaleLowerCase("de-DE");
+  return normalizeDisplayText(value).normalize("NFKC").toLowerCase();
 }
 
 function normalizeLegacyImportText(value: string): string {
-  return normalizeDisplayText(value).toLocaleLowerCase("de-DE");
+  return normalizeDisplayText(value).toLowerCase();
 }
 
 function requireGregorianDate(value: string): string {

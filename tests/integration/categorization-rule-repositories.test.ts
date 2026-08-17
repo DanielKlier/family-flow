@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { compareCodePoints } from "../../src/core/shared/compare-code-points.js";
+
 import { InMemoryCategorizationRuleRepository } from "../../src/adapters/db/in-memory-categorization-rule-repository.js";
 import { createCategorizationRule } from "../../src/core/categorization/categorization-rule.js";
 
@@ -62,7 +64,7 @@ describe("categorization rule repositories", () => {
     ).toEqual(
       actions
         .map(([id, internalTransfer]) => ({ id, internalTransfer }))
-        .sort((left, right) => left.id.localeCompare(right.id)),
+        .sort((left, right) => compareCodePoints(left.id, right.id)),
     );
   });
 });

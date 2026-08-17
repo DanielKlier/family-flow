@@ -1,4 +1,5 @@
 import type { IncomePlan, MonthlyIncomeOverride } from "../../core/income/income-plan.js";
+import { compareCodePoints } from "../../core/shared/compare-code-points.js";
 import type {
   IncomePlanFilters,
   IncomeRepository,
@@ -14,7 +15,7 @@ export class InMemoryIncomeRepository implements IncomeRepository {
       .filter(
         (plan) => filters.ownerContext === undefined || plan.ownerContext === filters.ownerContext,
       )
-      .sort((left, right) => left.name.localeCompare(right.name));
+      .sort((left, right) => compareCodePoints(left.name, right.name));
   }
 
   async getPlan(id: string): Promise<IncomePlan | null> {
@@ -32,7 +33,7 @@ export class InMemoryIncomeRepository implements IncomeRepository {
         (override) =>
           filters.incomePlanId === undefined || override.incomePlanId === filters.incomePlanId,
       )
-      .sort((left, right) => right.month.localeCompare(left.month));
+      .sort((left, right) => compareCodePoints(right.month, left.month));
   }
 
   async saveOverride(override: MonthlyIncomeOverride): Promise<void> {

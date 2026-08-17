@@ -36,7 +36,7 @@ export function registerMasterDataRoutes(
         }),
       );
     } catch (error: unknown) {
-      return renderMasterData(repositories, reply.status(400), errorMessage(error));
+      return renderMasterData(repositories, reply.status(400), errorMessage(error, reply));
     }
 
     return reply.redirect("/admin/master-data");
@@ -81,7 +81,7 @@ export function registerMasterDataRoutes(
           await createFamilyFlowViews(reply).accountEditPage({
             account,
             ownerContexts,
-            formError: errorMessage(error),
+            formError: errorMessage(error, reply),
           }),
         );
     }
@@ -115,7 +115,7 @@ export function registerMasterDataRoutes(
         reply.status(400),
         undefined,
         undefined,
-        errorMessage(error),
+        errorMessage(error, reply),
       );
     }
 
@@ -132,7 +132,12 @@ export function registerMasterDataRoutes(
         }),
       );
     } catch (error: unknown) {
-      return renderMasterData(repositories, reply.status(400), undefined, errorMessage(error));
+      return renderMasterData(
+        repositories,
+        reply.status(400),
+        undefined,
+        errorMessage(error, reply),
+      );
     }
 
     return reply.redirect("/admin/master-data");
@@ -170,7 +175,7 @@ export function registerMasterDataRoutes(
         .send(
           await createFamilyFlowViews(reply).categoryEditPage({
             category,
-            formError: errorMessage(error),
+            formError: errorMessage(error, reply),
           }),
         );
     }
@@ -222,8 +227,8 @@ async function renderMissingResource(reply: FastifyReply, resource: "account" | 
     .send(await createFamilyFlowViews(reply).missingResourcePage(resource));
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Master data could not be saved";
+function errorMessage(error: unknown, reply: FastifyReply): string {
+  return reply.server.localization.errorMessage(error, "master.saveFailed");
 }
 
 function readRouteOwnerContext(params: unknown): ReturnType<typeof parseOwnerContext> {

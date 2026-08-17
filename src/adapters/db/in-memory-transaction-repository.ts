@@ -1,4 +1,5 @@
 import type { Account } from "../../core/accounts/account.js";
+import { compareCodePoints } from "../../core/shared/compare-code-points.js";
 import type { Transaction } from "../../core/transactions/transaction.js";
 import type {
   TransactionFilters,
@@ -23,7 +24,8 @@ export class InMemoryTransactionRepository implements TransactionRepository {
       .filter((transaction) => matchesFilters(transaction, filters, this.#accounts))
       .sort(
         (left, right) =>
-          right.date.localeCompare(left.date) || left.description.localeCompare(right.description),
+          compareCodePoints(right.date, left.date) ||
+          compareCodePoints(left.description, right.description),
       );
   }
 

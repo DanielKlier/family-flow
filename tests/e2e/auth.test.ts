@@ -31,8 +31,8 @@ test("authenticated test user sees the dashboard shell", async ({ request }) => 
     const body = await response.text();
 
     expect(response.status()).toBe(200);
-    expect(body).toContain("Dashboard");
-    expect(body).toContain("Signed in as Test User");
+    expect(body).toContain("Übersicht");
+    expect(body).toContain("Angemeldet als Test User");
   } finally {
     await server.close();
   }

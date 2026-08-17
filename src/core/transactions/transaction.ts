@@ -1,6 +1,24 @@
 export type TransactionStatus = "booked" | "planned";
 export type TransactionSource = "manual" | "csv";
 
+export type TransactionErrorCode =
+  | "required_id"
+  | "required_account"
+  | "required_category"
+  | "invalid_date"
+  | "invalid_amount"
+  | "non_expense_amount"
+  | "required_description"
+  | "invalid_source"
+  | "invalid_status";
+
+export class TransactionValidationError extends Error {
+  constructor(readonly code: TransactionErrorCode) {
+    super(code);
+    this.name = "TransactionValidationError";
+  }
+}
+
 export type Transaction = {
   id: string;
   accountId: string;
@@ -29,7 +47,7 @@ export type ManualExpenseInput = {
   accountId: string;
   categoryId: string;
   date: string;
-  amount: string;
+  amountCents: number;
   description: string;
   payee?: string | null;
   status?: TransactionStatus;
@@ -43,7 +61,7 @@ export function createManualExpense(input: ManualExpenseInput): Transaction {
     accountId: input.accountId,
     categoryId: input.categoryId,
     date: input.date,
-    amountCents: -parsePositiveDecimalCents(input.amount),
+    amountCents: input.amountCents,
     description: input.description,
     payee: input.payee ?? null,
     source: "manual",
@@ -64,31 +82,31 @@ export function createTransaction(input: TransactionInput): Transaction {
   const importHash = normalizeOptionalText(input.importHash ?? null);
 
   if (id === "") {
-    throw new Error("Transaction id is required");
+    throw new TransactionValidationError("required_id");
   }
   if (accountId === "") {
-    throw new Error("Transaction account is required");
+    throw new TransactionValidationError("required_account");
   }
   if (categoryId === "") {
-    throw new Error("Transaction category is required");
+    throw new TransactionValidationError("required_category");
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
-    throw new Error("Transaction date must use YYYY-MM-DD");
+    throw new TransactionValidationError("invalid_date");
   }
   if (!Number.isSafeInteger(input.amountCents)) {
-    throw new Error("Transaction amount must be a negative safe integer expense");
+    throw new TransactionValidationError("invalid_amount");
   }
   if (input.amountCents >= 0) {
-    throw new Error("Transaction amount must be a negative expense");
+    throw new TransactionValidationError("non_expense_amount");
   }
   if (description === "") {
-    throw new Error("Transaction description is required");
+    throw new TransactionValidationError("required_description");
   }
   if (input.source !== "manual" && input.source !== "csv") {
-    throw new Error("Transaction source is invalid");
+    throw new TransactionValidationError("invalid_source");
   }
   if (input.status !== "booked" && input.status !== "planned") {
-    throw new Error("Transaction status is invalid");
+    throw new TransactionValidationError("invalid_status");
   }
 
   return {
@@ -124,13 +142,4 @@ function normalizeOptionalText(value: string | null | undefined): string | null 
 
   const trimmed = value.trim();
   return trimmed === "" ? null : trimmed;
-}
-
-function parsePositiveDecimalCents(value: string): number {
-  const normalized = value.trim().replace(",", ".");
-  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
-    throw new Error("Amount must be a positive decimal expense");
-  }
-
-  return Math.round(Number(normalized) * 100);
 }

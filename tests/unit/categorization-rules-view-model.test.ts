@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
+
+const localization = createGermanLocalization();
 
 describe("categorization-rules view-model preparation", () => {
   it("prepares lookup fallbacks, selected options, explicit fixed-cost state, and encoded actions", async () => {
@@ -17,18 +20,18 @@ describe("categorization-rules view-model preparation", () => {
     };
     const input = { accounts: [], categories: [], rules: [rule] };
 
-    expect(prepareCategorizationRulesViewModel(input).rows).toEqual([
+    expect(prepareCategorizationRulesViewModel(input, localization).rows).toEqual([
       expect.objectContaining({
         name: "<script>rule</script>",
         searchText: '" onfocus="alert(1)',
         category: "missing-category",
-        fixedCostLabel: "leave unchanged",
+        fixedCostLabel: "unverändert lassen",
         enabled: false,
         editUrl: "/categorization-rules/rule%2Fa%20b/edit",
         deleteUrl: "/categorization-rules/rule%2Fa%20b/delete",
       }),
     ]);
-    expect(prepareCategorizationRuleEditViewModel({ ...input, rule })).toMatchObject({
+    expect(prepareCategorizationRuleEditViewModel({ ...input, rule }, localization)).toMatchObject({
       actionUrl: "/categorization-rules/rule%2Fa%20b",
       fixedCostOptions: expect.any(Array),
       enabledChecked: false,

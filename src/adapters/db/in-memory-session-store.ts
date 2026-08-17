@@ -1,3 +1,4 @@
+import { compareCodePoints } from "../../core/shared/compare-code-points.js";
 import type { SessionRecord, SessionStore } from "../../ports/auth/session-store.js";
 
 export class InMemorySessionStore implements SessionStore {
@@ -24,7 +25,8 @@ export class InMemorySessionStore implements SessionStore {
       .filter((record) => record.expiresAt <= now || record.revokedAt !== null)
       .sort(
         (left, right) =>
-          left.expiresAt.getTime() - right.expiresAt.getTime() || left.id.localeCompare(right.id),
+          left.expiresAt.getTime() - right.expiresAt.getTime() ||
+          compareCodePoints(left.id, right.id),
       )
       .slice(0, limit);
     for (const record of records) this.records.delete(record.tokenHash);

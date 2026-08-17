@@ -1,4 +1,5 @@
 import type { CategorizationRule } from "../../core/categorization/categorization-rule.js";
+import { compareCodePoints } from "../../core/shared/compare-code-points.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
 
 export class InMemoryCategorizationRuleRepository implements CategorizationRuleRepository {
@@ -28,5 +29,5 @@ export class InMemoryCategorizationRuleRepository implements CategorizationRuleR
 }
 
 function compareRules(left: CategorizationRule, right: CategorizationRule): number {
-  return left.priority - right.priority || left.name.localeCompare(right.name);
+  return left.priority - right.priority || compareCodePoints(left.name, right.name);
 }

@@ -57,7 +57,7 @@ async function handleListTransactions(
     repositories.categories.listActive(),
     repositories.ownerContexts.list(),
   ]);
-  const filters = readTransactionFilters(request.query);
+  const filters = readTransactionFilters(request.query, reply.server.localization);
   const transactions = await repositories.transactions.list(filters);
 
   const views = createFamilyFlowViews(reply);
@@ -85,10 +85,10 @@ async function handleCreateTransaction(
 ) {
   try {
     await repositories.transactions.save(
-      createTransactionFromForm(readForm(request.body), randomUUID()),
+      createTransactionFromForm(readForm(request.body), randomUUID(), reply.server.localization),
     );
   } catch (error: unknown) {
-    const formError = error instanceof Error ? error.message : "Transaction could not be saved";
+    const formError = reply.server.localization.errorMessage(error, "transaction.saveFailed");
     const state = await readTransactionsState(repositories, formError);
     const views = createFamilyFlowViews(reply);
     const body = isHtmxRequest(request.headers)
@@ -153,7 +153,7 @@ async function handleUpdateTransaction(
 
   try {
     await repositories.transactions.save(
-      createTransactionFromForm(readForm(request.body), id, existing),
+      createTransactionFromForm(readForm(request.body), id, reply.server.localization, existing),
     );
   } catch (error: unknown) {
     const [accounts, categories] = await Promise.all([
@@ -164,7 +164,7 @@ async function handleUpdateTransaction(
       accounts,
       categories,
       transaction: existing,
-      formError: error instanceof Error ? error.message : "Transaction could not be saved",
+      formError: reply.server.localization.errorMessage(error, "transaction.saveFailed"),
     };
     const views = createFamilyFlowViews(reply);
     const body = isHtmxRequest(request.headers)
@@ -195,7 +195,7 @@ async function handleInternalTransfer(
       .type("text/html; charset=utf-8")
       .send(
         await createFamilyFlowViews(reply).badRequestPage(
-          'internalTransfer must be exactly "true" or "false".',
+          reply.server.localization.text("transaction.invalidTransferStatus"),
           requestId,
         ),
       );
@@ -212,7 +212,7 @@ async function handleInternalTransfer(
       .send(await createFamilyFlowViews(reply).missingResourcePage("transaction"));
   }
 
-  const filters = readTransactionFilters(request.query);
+  const filters = readTransactionFilters(request.query, reply.server.localization);
   if (isHtmxRequest(request.headers)) {
     const categories = await repositories.categories.list();
     return reply.type("text/html; charset=utf-8").send(
@@ -224,7 +224,9 @@ async function handleInternalTransfer(
     );
   }
 
-  return reply.redirect(`/transactions${transactionFiltersQuery(filters)}`);
+  return reply.redirect(
+    `/transactions${transactionFiltersQuery(filters, reply.server.localization)}`,
+  );
 }
 
 async function handleDeleteTransaction(

@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { createSeededInMemoryRepositories } from "../../src/adapters/db/default-repositories.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { buildServer } from "../../src/app/server.js";
 import { aTransaction } from "../support/transactions.js";
 
 describe("transaction transfer HTTP adapter", () => {
   it("INT-FF-TXN-005-02: mark and unmark preserve imported transaction identity fields", async () => {
-    const repositories = createSeededInMemoryRepositories();
+    const repositories = createSeededInMemoryRepositories(createGermanLocalization());
     const imported = aTransaction({
       id: "transaction-imported-transfer",
       accountId: "account-shared-checking",

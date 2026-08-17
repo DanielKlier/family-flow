@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
+
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategorizationRuleRepository } from "../../src/adapters/db/drizzle-categorization-rule-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
@@ -33,7 +35,7 @@ describe("Drizzle categorization rule repository", () => {
     };
 
     try {
-      await seedMasterData(repositories);
+      await seedMasterData(repositories, createGermanLocalization());
       await repositories.rules.delete("rule-groceries");
       const rule = createCategorizationRule({
         id: "rule-groceries",
@@ -75,7 +77,7 @@ describe("Drizzle categorization rule repository", () => {
       };
 
       try {
-        await seedMasterData(repositories);
+        await seedMasterData(repositories, createGermanLocalization());
         await Promise.all(transferRuleIds.map((id) => repositories.rules.delete(id)));
         const actions = [
           [transferRuleIds[0], true],

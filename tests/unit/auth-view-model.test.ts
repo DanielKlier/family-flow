@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
+
+const localization = createGermanLocalization();
 
 describe("auth view-model preparation", () => {
   it("prepares escaped-template-safe dashboard and login primitives including an encoded return URL", async () => {
@@ -6,25 +9,28 @@ describe("auth view-model preparation", () => {
       "../../src/adapters/http/auth-view-model.js"
     );
 
-    expect(prepareLoginViewModel("/transactions?next=<script>")).toEqual({
-      title: "FamilyFlow Login",
-      heading: "Login",
+    expect(prepareLoginViewModel("/transactions?next=<script>", localization)).toEqual({
+      title: "FamilyFlow Anmeldung",
+      heading: "Anmeldung",
       testLoginUrl: "/auth/test-login?returnTo=%2Ftransactions%3Fnext%3D%3Cscript%3E",
-      signInLabel: "Sign in as Test User",
+      signInLabel: "Als Testbenutzer anmelden",
     });
     expect(
-      prepareDashboardViewModel({
-        id: "user-1",
-        displayName: "<img onerror=alert(1)>",
-        email: null,
-      }),
+      prepareDashboardViewModel(
+        {
+          id: "user-1",
+          displayName: "<img onerror=alert(1)>",
+          email: null,
+        },
+        localization,
+      ),
     ).toMatchObject({
-      title: "FamilyFlow Dashboard",
-      heading: "Dashboard",
-      signedInLabel: "Signed in as",
+      title: "FamilyFlow Übersicht",
+      heading: "Übersicht",
+      signedInLabel: "Angemeldet als",
       userDisplayName: "<img onerror=alert(1)>",
       logoutAction: "/auth/logout",
-      logoutLabel: "Logout",
+      logoutLabel: "Abmelden",
     });
   });
 });

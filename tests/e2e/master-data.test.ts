@@ -14,10 +14,10 @@ test("accounts list is visible after seeding", async ({ request }) => {
     const body = await response.text();
 
     expect(response.status()).toBe(200);
-    expect(body).toContain("Accounts");
-    expect(body).toContain("Person A checking");
-    expect(body).toContain("Person B checking");
-    expect(body).toContain("Shared checking");
+    expect(body).toContain("Konten");
+    expect(body).toContain("Girokonto Person A");
+    expect(body).toContain("Girokonto Person B");
+    expect(body).toContain("Gemeinsames Girokonto");
   } finally {
     await server.close();
   }
@@ -33,7 +33,7 @@ test("categories list is visible after seeding", async ({ request }) => {
     const body = await response.text();
 
     expect(response.status()).toBe(200);
-    expect(body).toContain("Categories");
+    expect(body).toContain("Kategorien");
     expect(body).toContain("Wohnen/Miete");
     expect(body).toContain("Lebensmittel");
     expect(body).toContain("Sonstiges");
@@ -49,12 +49,16 @@ test("account can be created and used in the transaction form", async ({ page })
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/admin/master-data`);
-    await page.getByLabel("New account name").fill("Vacation savings");
-    await page.getByLabel("New account owner").selectOption("shared");
-    await page.getByRole("button", { name: "Add account" }).click();
+    await page.getByLabel("Neuer Kontoname").fill("Vacation savings");
+    await page
+      .locator('form[action="/admin/master-data/accounts"] select[name="ownerContext"]')
+      .selectOption("shared");
+    await page.getByRole("button", { name: "Konto hinzufügen" }).click();
     await page.goto(`${baseUrl}/transactions`);
 
-    await expect(page.getByLabel("Transaction account")).toContainText("Vacation savings");
+    await expect(page.locator("#transaction-form").getByLabel("Konto")).toContainText(
+      "Vacation savings",
+    );
   } finally {
     await server.close();
   }
@@ -67,13 +71,13 @@ test("account can be edited", async ({ page }) => {
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/admin/master-data`);
-    const row = page.getByRole("row").filter({ hasText: "Person A checking" });
-    await row.getByRole("link", { name: "Edit account" }).click();
-    await page.getByLabel("Account name").fill("Personal checking");
-    await page.getByRole("button", { name: "Save account" }).click();
+    const row = page.getByRole("row").filter({ hasText: "Girokonto Person A" });
+    await row.getByRole("link", { name: "Konto bearbeiten" }).click();
+    await page.getByLabel("Kontoname").fill("Personal checking");
+    await page.getByRole("button", { name: "Konto speichern" }).click();
 
     await expect(page.getByRole("cell", { name: "Personal checking" })).toBeVisible();
-    await expect(page.getByText("Person A checking")).not.toBeVisible();
+    await expect(page.getByText("Girokonto Person A")).not.toBeVisible();
   } finally {
     await server.close();
   }
@@ -86,21 +90,26 @@ test("account can be deactivated without losing existing transactions", async ({
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/transactions`);
-    await page.getByLabel("Transaction account").selectOption("account-person-a-checking");
-    await page.getByLabel("Description").fill("Existing transaction");
-    await page.getByLabel("Amount").fill("10.00");
-    await page.getByLabel("Date").fill("2026-07-10");
-    await page.getByRole("button", { name: "Add transaction" }).click();
+    await page
+      .locator("#transaction-form")
+      .getByLabel("Konto")
+      .selectOption("account-person-a-checking");
+    await page.getByLabel("Beschreibung").fill("Existing transaction");
+    await page.getByLabel("Betrag").fill("10,00");
+    await page.getByLabel("Datum").fill("10.07.2026");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
     await page.goto(`${baseUrl}/admin/master-data`);
     await page
       .getByRole("row")
-      .filter({ hasText: "Person A checking" })
-      .getByRole("button", { name: "Deactivate account" })
+      .filter({ hasText: "Girokonto Person A" })
+      .getByRole("button", { name: "Konto deaktivieren" })
       .click();
     await page.goto(`${baseUrl}/transactions`);
 
     await expect(page.getByRole("cell", { name: "Existing transaction" })).toBeVisible();
-    await expect(page.getByLabel("Transaction account")).not.toContainText("Person A checking");
+    await expect(page.locator("#transaction-form").getByLabel("Konto")).not.toContainText(
+      "Girokonto Person A",
+    );
   } finally {
     await server.close();
   }
@@ -113,12 +122,12 @@ test("account owner display names can be edited", async ({ page }) => {
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/admin/master-data`);
-    await page.getByLabel("Owner name for person_a").fill("Daniel");
-    await page.getByRole("button", { name: "Save owner name for person_a" }).click();
+    await page.getByLabel("Eigentümername für person_a").fill("Daniel");
+    await page.getByRole("button", { name: "Eigentümername für person_a speichern" }).click();
 
-    await expect(page.getByLabel("Owner name for person_a")).toHaveValue("Daniel");
+    await expect(page.getByLabel("Eigentümername für person_a")).toHaveValue("Daniel");
     await expect(
-      page.getByRole("row").filter({ hasText: "Person A checking" }).getByRole("cell", {
+      page.getByRole("row").filter({ hasText: "Girokonto Person A" }).getByRole("cell", {
         name: "Daniel",
       }),
     ).toBeVisible();
@@ -136,14 +145,14 @@ test("edited account owner display names appear in transaction and income filter
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/admin/master-data`);
-    await page.getByLabel("Owner name for shared").fill("Household");
-    await page.getByRole("button", { name: "Save owner name for shared" }).click();
+    await page.getByLabel("Eigentümername für shared").fill("Household");
+    await page.getByRole("button", { name: "Eigentümername für shared speichern" }).click();
 
     await page.goto(`${baseUrl}/transactions`);
-    await expect(page.getByLabel("Owner context")).toContainText("Household");
+    await expect(page.getByLabel("Eigentümer")).toContainText("Household");
 
     await page.goto(`${baseUrl}/income`);
-    await expect(page.getByLabel("Filter owner context")).toContainText("Household");
+    await expect(page.getByLabel("Eigentümer filtern")).toContainText("Household");
   } finally {
     await server.close();
   }
@@ -156,11 +165,13 @@ test("category can be created and used in the transaction form", async ({ page }
     const baseUrl = await listen(server);
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/admin/master-data`);
-    await page.getByLabel("New category name").fill("Hobbies");
-    await page.getByRole("button", { name: "Add category" }).click();
+    await page.getByLabel("Neuer Kategoriename").fill("Hobbies");
+    await page.getByRole("button", { name: "Kategorie hinzufügen" }).click();
     await page.goto(`${baseUrl}/transactions`);
 
-    await expect(page.locator("#transaction-form").getByLabel("Category")).toContainText("Hobbies");
+    await expect(page.locator("#transaction-form").getByLabel("Kategorie")).toContainText(
+      "Hobbies",
+    );
   } finally {
     await server.close();
   }
@@ -174,9 +185,9 @@ test("category can be edited", async ({ page }) => {
     await loginAsTestUserPage(page, baseUrl);
     await page.goto(`${baseUrl}/admin/master-data`);
     const row = page.getByRole("row").filter({ hasText: "Lebensmittel" });
-    await row.getByRole("link", { name: "Edit category" }).click();
-    await page.getByLabel("Category name").fill("Groceries");
-    await page.getByRole("button", { name: "Save category" }).click();
+    await row.getByRole("link", { name: "Kategorie bearbeiten" }).click();
+    await page.getByLabel("Kategoriename").fill("Groceries");
+    await page.getByRole("button", { name: "Kategorie speichern" }).click();
 
     await expect(page.getByRole("cell", { name: "Groceries" })).toBeVisible();
     await expect(page.getByText("Lebensmittel")).not.toBeVisible();
@@ -194,22 +205,22 @@ test("category can be deactivated without losing existing transactions", async (
     await page.goto(`${baseUrl}/transactions`);
     await page
       .locator("#transaction-form")
-      .getByLabel("Category")
+      .getByLabel("Kategorie")
       .selectOption("category-groceries");
-    await page.getByLabel("Description").fill("Existing groceries");
-    await page.getByLabel("Amount").fill("10.00");
-    await page.getByLabel("Date").fill("2026-07-10");
-    await page.getByRole("button", { name: "Add transaction" }).click();
+    await page.getByLabel("Beschreibung").fill("Existing groceries");
+    await page.getByLabel("Betrag").fill("10,00");
+    await page.getByLabel("Datum").fill("10.07.2026");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
     await page.goto(`${baseUrl}/admin/master-data`);
     await page
       .getByRole("row")
       .filter({ hasText: "Lebensmittel" })
-      .getByRole("button", { name: "Deactivate category" })
+      .getByRole("button", { name: "Kategorie deaktivieren" })
       .click();
     await page.goto(`${baseUrl}/transactions`);
 
     await expect(page.getByRole("cell", { name: "Existing groceries" })).toBeVisible();
-    await expect(page.locator("#transaction-form").getByLabel("Category")).not.toContainText(
+    await expect(page.locator("#transaction-form").getByLabel("Kategorie")).not.toContainText(
       "Lebensmittel",
     );
   } finally {

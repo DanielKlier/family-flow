@@ -1,4 +1,5 @@
 import type { ImportProfile } from "../../core/imports/import-profile.js";
+import { compareCodePoints } from "../../core/shared/compare-code-points.js";
 import type { ImportProfileRepository } from "../../ports/repositories/import-profile-repository.js";
 
 export class InMemoryImportProfileRepository implements ImportProfileRepository {
@@ -12,7 +13,7 @@ export class InMemoryImportProfileRepository implements ImportProfileRepository 
 
   async list(): Promise<ImportProfile[]> {
     return [...this.#importProfiles.values()].sort((left, right) =>
-      left.name.localeCompare(right.name),
+      compareCodePoints(left.name, right.name),
     );
   }
 

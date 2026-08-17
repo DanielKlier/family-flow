@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { InMemoryTransactionRepository } from "../../src/adapters/db/in-memory-transaction-repository.js";
-import { initialAccounts } from "../../src/adapters/db/seeds/master-data.js";
+import { createInitialAccounts } from "../../src/adapters/db/seeds/master-data.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
+
+const initialAccounts = createInitialAccounts(createGermanLocalization());
 import { expectTransactionFilterContract } from "../support/transaction-repository-contract.js";
 import { aTransaction } from "../support/transactions.js";
 

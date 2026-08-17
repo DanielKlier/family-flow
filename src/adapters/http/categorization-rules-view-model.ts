@@ -1,6 +1,7 @@
 import type { Account } from "../../core/accounts/account.js";
 import type { Category } from "../../core/categories/category.js";
 import type { CategorizationRule } from "../../core/categorization/categorization-rule.js";
+import type { Localization } from "../../ports/localization/localization.js";
 
 type RulesInput = {
   accounts: Account[];
@@ -9,63 +10,56 @@ type RulesInput = {
   formError?: string;
 };
 
-function fixedCostValue(value: boolean | null): string {
-  if (value === true) return "fixed";
-  if (value === false) return "variable";
-  return "unchanged";
+function actionValue(value: boolean | null, truthy: string, falsy: string): string {
+  return value === true ? truthy : value === false ? falsy : "unchanged";
 }
-
-function fixedCostLabel(value: boolean | null): string {
-  if (value === true) return "mark fixed";
-  if (value === false) return "mark variable";
-  return "leave unchanged";
+function actionLabel(
+  value: boolean | null,
+  localization: Localization,
+  truthy: string,
+  falsy: string,
+): string {
+  return localization.text(value === true ? truthy : value === false ? falsy : "common.unchanged");
 }
-
-function internalTransferValue(value: boolean | null): string {
-  if (value === true) return "mark";
-  if (value === false) return "unmark";
-  return "unchanged";
+function ruleText(localization: Localization) {
+  const text = (key: string) => localization.text(key);
+  return {
+    name: text("rules.ruleName"),
+    searchText: text("rules.searchText"),
+    category: text("common.category"),
+    account: text("common.account"),
+    fixedCostAction: text("rules.fixedAction"),
+    internalTransferAction: text("rules.transferAction"),
+    priority: text("rules.priority"),
+    listHeading: text("rules.list"),
+    apply: text("rules.apply"),
+    empty: text("rules.empty"),
+    categoryColumn: text("common.category"),
+    accountColumn: text("common.account"),
+    fixedCostColumn: text("rules.fixedColumn"),
+    internalTransferColumn: text("rules.transferColumn"),
+    status: text("common.status"),
+    actions: text("common.actions"),
+    edit: text("common.edit"),
+    delete: text("common.delete"),
+  };
 }
-
-function internalTransferLabel(value: boolean | null): string {
-  if (value === true) return "mark transfer";
-  if (value === false) return "unmark transfer";
-  return "leave unchanged";
-}
-
-const categorizationRuleText = {
-  name: "Rule name",
-  searchText: "Search text",
-  category: "Rule category",
-  account: "Rule account",
-  fixedCostAction: "Fixed cost action",
-  internalTransferAction: "Internal transfer action",
-  priority: "Priority",
-  listHeading: "Rule list",
-  apply: "Apply rules to existing transactions",
-  empty: "No categorization rules found.",
-  categoryColumn: "Category",
-  accountColumn: "Account",
-  fixedCostColumn: "Fixed cost",
-  internalTransferColumn: "Internal transfer",
-  status: "Status",
-  actions: "Actions",
-  edit: "Edit",
-  delete: "Delete",
-} as const;
 
 function prepareForm(
   input: Pick<RulesInput, "accounts" | "categories">,
+  localization: Localization,
   rule?: CategorizationRule,
 ) {
+  const fixedValue = actionValue(rule?.fixedCost ?? null, "fixed", "variable");
+  const transferValue = actionValue(rule?.internalTransfer ?? null, "mark", "unmark");
   return {
-    text: categorizationRuleText,
-    heading: rule === undefined ? "Add categorization rule" : "Edit categorization rule",
+    text: ruleText(localization),
+    heading: localization.text(rule === undefined ? "rules.add" : "rules.edit"),
     actionUrl:
       rule === undefined
         ? "/categorization-rules"
         : `/categorization-rules/${encodeURIComponent(rule.id)}`,
-    submitLabel: rule === undefined ? "Add rule" : "Save rule",
+    submitLabel: localization.text(rule === undefined ? "rules.addSubmit" : "rules.save"),
     name: rule?.name ?? "",
     searchText: rule?.searchText ?? "",
     categories: input.categories.map(({ id, name }) => ({
@@ -74,7 +68,11 @@ function prepareForm(
       selected: id === rule?.categoryId,
     })),
     accounts: [
-      { value: "", label: "All accounts", selected: rule?.accountId == null },
+      {
+        value: "",
+        label: localization.text("common.allAccounts"),
+        selected: rule?.accountId == null,
+      },
       ...input.accounts.map(({ id, name }) => ({
         value: id,
         label: name,
@@ -82,47 +80,53 @@ function prepareForm(
       })),
     ],
     fixedCostOptions: [
-      { value: "unchanged", label: "leave unchanged" },
-      { value: "fixed", label: "mark fixed" },
-      { value: "variable", label: "mark variable" },
-    ].map((option) => ({
-      ...option,
-      selected: option.value === fixedCostValue(rule?.fixedCost ?? null),
-    })),
+      { value: "unchanged", label: localization.text("common.unchanged") },
+      { value: "fixed", label: localization.text("rules.markFixed") },
+      { value: "variable", label: localization.text("rules.markVariable") },
+    ].map((option) => ({ ...option, selected: option.value === fixedValue })),
     internalTransferOptions: [
-      { value: "unchanged", label: "leave unchanged" },
-      { value: "mark", label: "mark transfer" },
-      { value: "unmark", label: "unmark transfer" },
-    ].map((option) => ({
-      ...option,
-      selected: option.value === internalTransferValue(rule?.internalTransfer ?? null),
-    })),
+      { value: "unchanged", label: localization.text("common.unchanged") },
+      { value: "mark", label: localization.text("rules.markTransfer") },
+      { value: "unmark", label: localization.text("rules.unmarkTransfer") },
+    ].map((option) => ({ ...option, selected: option.value === transferValue })),
     priority: rule?.priority ?? 100,
     enabledChecked: rule?.enabled ?? true,
   };
 }
 
-export function prepareCategorizationRulesViewModel(input: RulesInput) {
+export function prepareCategorizationRulesViewModel(input: RulesInput, localization: Localization) {
   const accounts = new Map(input.accounts.map(({ id, name }) => [id, name]));
   const categories = new Map(input.categories.map(({ id, name }) => [id, name]));
   return {
-    title: "FamilyFlow Categorization Rules",
-    heading: "Categorization Rules",
-    text: categorizationRuleText,
+    title: localization.text("rules.title"),
+    heading: localization.text("rules.heading"),
+    text: ruleText(localization),
     formError: input.formError,
-    form: prepareForm(input),
+    form: prepareForm(input, localization),
     empty: input.rules.length === 0,
     rows: input.rules.map((rule) => ({
       name: rule.name,
       searchText: rule.searchText,
       category: categories.get(rule.categoryId) ?? rule.categoryId,
       account:
-        rule.accountId === null ? "All accounts" : (accounts.get(rule.accountId) ?? rule.accountId),
-      fixedCostLabel: fixedCostLabel(rule.fixedCost),
-      internalTransferLabel: internalTransferLabel(rule.internalTransfer),
+        rule.accountId === null
+          ? localization.text("common.allAccounts")
+          : (accounts.get(rule.accountId) ?? rule.accountId),
+      fixedCostLabel: actionLabel(
+        rule.fixedCost,
+        localization,
+        "rules.markFixed",
+        "rules.markVariable",
+      ),
+      internalTransferLabel: actionLabel(
+        rule.internalTransfer,
+        localization,
+        "rules.markTransfer",
+        "rules.unmarkTransfer",
+      ),
       priority: String(rule.priority),
       enabled: rule.enabled,
-      statusLabel: rule.enabled ? "enabled" : "disabled",
+      statusLabel: localization.text(rule.enabled ? "common.enabled" : "common.disabled"),
       editUrl: `/categorization-rules/${encodeURIComponent(rule.id)}/edit`,
       deleteUrl: `/categorization-rules/${encodeURIComponent(rule.id)}/delete`,
     })),
@@ -131,11 +135,12 @@ export function prepareCategorizationRulesViewModel(input: RulesInput) {
 
 export function prepareCategorizationRuleEditViewModel(
   input: RulesInput & { rule: CategorizationRule },
+  localization: Localization,
 ) {
   return {
-    title: "Edit Categorization Rule",
-    ...prepareForm(input, input.rule),
-    heading: "Edit Categorization Rule",
+    title: localization.text("rules.edit"),
+    ...prepareForm(input, localization, input.rule),
+    heading: localization.text("rules.edit"),
     formError: input.formError,
   };
 }
