@@ -522,7 +522,7 @@
     },
     {
       "id": "PH-07-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Purpose matching, deterministic ties, rule CRUD, and reapplication acceptance.",
       "classification": "Behavior change"
     },
@@ -962,7 +962,7 @@
     },
     {
       "id": "FF-TXN-001-AC04",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-07-R01",
       "test": "INT-FF-TXN-001-04",
       "file": "tests/integration/drizzle-transaction-repository.test.ts",
@@ -1202,7 +1202,7 @@
     },
     {
       "id": "FF-CAT-001-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-07-R01",
       "test": "UNIT-FF-CAT-001-01",
       "file": "tests/unit/categorization-rules.test.ts",
@@ -1210,7 +1210,7 @@
     },
     {
       "id": "FF-CAT-002-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-07-R01",
       "test": "UNIT-FF-CAT-002-01",
       "file": "tests/unit/categorization-rules.test.ts",
@@ -1226,15 +1226,15 @@
     },
     {
       "id": "FF-CAT-003-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-07-R01",
-      "test": "UNIT-FF-CAT-003-01",
-      "file": "tests/unit/categorization-rules.test.ts",
-      "operation": null
+      "test": "INT-FF-CAT-003-01",
+      "file": "tests/integration/drizzle-categorization-rule-repository.test.ts",
+      "operation": "OPS-FF-CAT-002-01"
     },
     {
       "id": "FF-CAT-004-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-07-R01",
       "test": "E2E-FF-CAT-004-01",
       "file": "tests/e2e/categorization-rules.test.ts",
@@ -1242,7 +1242,7 @@
     },
     {
       "id": "FF-CAT-004-AC02",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-07-R01",
       "test": "INT-FF-CAT-004-02",
       "file": "tests/integration/categorization-rule-migration.test.ts",
@@ -1250,7 +1250,7 @@
     },
     {
       "id": "FF-CAT-005-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-07-R01",
       "test": "E2E-FF-CAT-005-01",
       "file": "tests/e2e/categorization-rules.test.ts",
@@ -1258,7 +1258,7 @@
     },
     {
       "id": "FF-CAT-005-AC02",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-07-R01",
       "test": "E2E-FF-CAT-005-02",
       "file": "tests/e2e/categorization-rules.test.ts",
@@ -1266,7 +1266,7 @@
     },
     {
       "id": "FF-CAT-005-AC03",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-07-R01",
       "test": "INT-FF-CAT-005-03",
       "file": "tests/integration/categorization-rule-migration.test.ts",
@@ -1741,6 +1741,14 @@
     {
       "id": "E2E-FF-CAT-001-01",
       "acceptance": "FF-CAT-001-AC01",
+      "phase": "PH-07-R01",
+      "file": "tests/e2e/categorization-rules.test.ts",
+      "boundary": "End-to-end",
+      "classification": "Expected red before production change"
+    },
+    {
+      "id": "E2E-FF-CAT-002-01",
+      "acceptance": "FF-CAT-002-AC01",
       "phase": "PH-07-R01",
       "file": "tests/e2e/categorization-rules.test.ts",
       "boundary": "End-to-end",
@@ -2398,13 +2406,13 @@
       "id": "INT-FF-CAT-005-01",
       "acceptance": "FF-CAT-005-AC01",
       "phase": "PH-07-R01",
-      "file": "tests/integration/categorization-rule-http.test.ts",
+      "file": "tests/integration/categorization-rules-http.test.ts",
       "boundary": "HTTP adapter",
       "classification": "Expected red before production change"
     },
     {
-      "id": "INT-FF-CAT-005-02",
-      "acceptance": "FF-CAT-005-AC01",
+      "id": "INT-FF-CAT-003-01",
+      "acceptance": "FF-CAT-003-AC01",
       "phase": "PH-07-R01",
       "file": "tests/integration/drizzle-categorization-rule-repository.test.ts",
       "boundary": "PostgreSQL adapter",
@@ -2851,6 +2859,14 @@
       "classification": "Expected red before production change"
     },
     {
+      "id": "INT-FF-TXN-001-05",
+      "acceptance": "FF-TXN-001-AC04",
+      "phase": "PH-07-R01",
+      "file": "tests/integration/transaction-http.test.ts",
+      "boundary": "HTTP adapter",
+      "classification": "Expected red before production change"
+    },
+    {
       "id": "INT-FF-TXN-002-01",
       "acceptance": "FF-TXN-002-AC01",
       "phase": "PH-04-R01",
@@ -3134,7 +3150,7 @@
       "id": "UNIT-FF-CAT-004-01",
       "acceptance": "FF-CAT-004-AC01",
       "phase": "PH-07-R01",
-      "file": "tests/unit/categorization-rules.test.ts",
+      "file": "tests/unit/categorization-correction.test.ts",
       "boundary": "Core",
       "classification": "Expected red before production change"
     },
@@ -3142,7 +3158,7 @@
       "id": "UNIT-FF-CAT-005-02",
       "acceptance": "FF-CAT-005-AC02",
       "phase": "PH-07-R01",
-      "file": "tests/unit/categorization-rules.test.ts",
+      "file": "tests/unit/categorization-correction.test.ts",
       "boundary": "Core",
       "classification": "Expected red before production change"
     },
@@ -3363,6 +3379,14 @@
       "classification": "Expected red before production change"
     },
     {
+      "id": "UNIT-FF-TXN-001-04",
+      "acceptance": "FF-TXN-001-AC04",
+      "phase": "PH-07-R01",
+      "file": "tests/unit/transactions.test.ts",
+      "boundary": "Core",
+      "classification": "Expected red before production change"
+    },
+    {
       "id": "UNIT-FF-TXN-005-01",
       "acceptance": "FF-TXN-005-AC01",
       "phase": "PH-11",
@@ -3443,9 +3467,9 @@
     {
       "id": "OPS-FF-CAT-002-01",
       "procedure": "**Categorization Rules**: apply deterministic fixture rules to preview and persisted transactions.",
-      "outcome": "Category/fixed-cost outcomes and changed/unchanged counts match.",
+      "outcome": "Category origins survive PostgreSQL and description-edit round trips; category/fixed-cost outcomes, code-point tie ordering, and changed/unchanged counts match.",
       "rollback": "Stop reapplication and restore backup if persisted scope was wrong.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-CAT-002-01"
     },
     {
       "id": "OPS-FF-CSV-001-01",
