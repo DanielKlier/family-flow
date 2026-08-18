@@ -1,5 +1,2 @@
 {% extends "layouts/app.njk" %}
-{% block content %}<section class="panel">
-  <p>{{ signedInLabel }} {{ userDisplayName }}</p>
-  <form method="post" action="{{ logoutAction }}"><button type="submit">{{ logoutLabel }}</button></form>
-</section>{% endblock %}
+{% block content %}{% include "partials/dashboard-panel.njk" %}{% endblock %}

@@ -1,7 +1,15 @@
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+const { spawnMock } = vi.hoisted(() => ({ spawnMock: vi.fn() }));
+
+vi.mock("node:child_process", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("node:child_process")>()),
+  spawn: spawnMock,
+}));
+
 import {
   type OperationRegistry,
   operationRegistry,
@@ -84,9 +92,45 @@ describe("INT-FF-QUA-004-01 bounded quality tooling", () => {
     );
   });
 
+  it("selects current, past, future, and planned-to-booked forecast evidence", async () => {
+    spawnMock.mockImplementation(() => ({
+      on(event: string, listener: (code: number | null, signal: NodeJS.Signals | null) => void) {
+        if (event === "close") queueMicrotask(() => listener(0, null));
+        return this;
+      },
+    }));
+
+    await expect(
+      verifyOperation("OPS-FF-FOR-001-01", operationRegistry, {
+        PATH: "/controlled/path",
+        HOME: "/controlled/home",
+      }),
+    ).resolves.toEqual({ operationId: "OPS-FF-FOR-001-01", status: "passed" });
+
+    expect(spawnMock.mock.calls.map(([, arguments_]) => arguments_)).toEqual([
+      ["exec", "vitest", "run", "tests/unit/dashboard.test.ts", "--testNamePattern", "UNIT-FF-FOR"],
+      [
+        "exec",
+        "playwright",
+        "test",
+        "tests/e2e/dashboard.test.ts",
+        "--grep",
+        "(?:E2E-FF-FOR|distinguishes localized past and future dashboard months)",
+        "--workers=1",
+      ],
+    ]);
+  });
+
   it("registers the completed bounded session operation verifiers", () => {
     expect(Object.keys(operationRegistry)).toEqual(
-      expect.arrayContaining(["OPS-FF-AUTH-006-01", "OPS-FF-AUTH-009-01", "OPS-FF-TXN-005-01"]),
+      expect.arrayContaining([
+        "OPS-FF-AUTH-006-01",
+        "OPS-FF-AUTH-009-01",
+        "OPS-FF-DASH-001-01",
+        "OPS-FF-FOR-001-01",
+        "OPS-FF-INC-001-01",
+        "OPS-FF-TXN-005-01",
+      ]),
     );
   });
 

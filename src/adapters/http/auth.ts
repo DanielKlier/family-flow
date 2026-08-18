@@ -85,21 +85,6 @@ export function registerAuth(
     }
   });
 
-  server.get("/", async (request: RequestWithUser, reply) => {
-    const user = request.userContext;
-    const views = createFamilyFlowViews(reply);
-    if (user === undefined) {
-      return reply
-        .status(500)
-        .type("text/html; charset=utf-8")
-        .send(
-          await views.authErrorPage(reply.request.localization.text("auth.missingUserContext")),
-        );
-    }
-
-    return reply.type("text/html; charset=utf-8").send(await views.dashboardPage(user));
-  });
-
   server.get("/auth/login", async (request, reply) => {
     const returnTo = readSafeReturnTo(request.query);
     if (config.mode === "test") {

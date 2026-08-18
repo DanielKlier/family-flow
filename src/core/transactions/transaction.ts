@@ -12,11 +12,15 @@ export type TransactionErrorCode =
   | "non_expense_amount"
   | "required_description"
   | "invalid_source"
-  | "invalid_status";
+  | "invalid_status"
+  | "unsafe_expense_total";
 
 export class TransactionValidationError extends Error {
-  constructor(readonly code: TransactionErrorCode) {
-    super(code);
+  constructor(
+    readonly code: TransactionErrorCode,
+    message: string = code,
+  ) {
+    super(message);
     this.name = "TransactionValidationError";
   }
 }
@@ -144,11 +148,16 @@ export function createTransaction(input: TransactionInput): Transaction {
 }
 
 export function expenseTotalCents(transactions: Transaction[]): number {
-  return transactions.reduce(
-    (total, transaction) =>
-      transaction.internalTransfer ? total : total + transaction.amountCents,
-    0,
-  );
+  return transactions.reduce((total, transaction) => {
+    const next = transaction.internalTransfer ? total : total + transaction.amountCents;
+    if (!Number.isSafeInteger(next)) {
+      throw new TransactionValidationError(
+        "unsafe_expense_total",
+        "Expense total must be a safe integer",
+      );
+    }
+    return next;
+  }, 0);
 }
 
 function isCategoryOrigin(value: unknown): value is CategoryOrigin {

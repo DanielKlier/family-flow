@@ -1,0 +1,3 @@
+{
+  "commands": [["exec", "playwright", "test", "tests/e2e/restore-smoke.test.ts", "--workers=1"]]
+}

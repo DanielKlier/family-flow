@@ -10,19 +10,15 @@ import type { CategorizationRule } from "../../core/categorization/categorizatio
 import type { IncomePlan } from "../../core/income/income-plan.js";
 import type { OwnerContextLabel } from "../../core/shared/owner-context.js";
 import type { Transaction } from "../../core/transactions/transaction.js";
-import type { UserContext } from "../../ports/auth/user-context.js";
 import type { Localization } from "../../ports/localization/localization.js";
 import type { TransactionFilters } from "../../ports/repositories/transaction-repository.js";
-import {
-  prepareAuthErrorViewModel,
-  prepareDashboardViewModel,
-  prepareLoginViewModel,
-} from "./auth-view-model.js";
+import { prepareAuthErrorViewModel, prepareLoginViewModel } from "./auth-view-model.js";
 import {
   prepareCategorizationRuleEditViewModel,
   prepareCategorizationRulesViewModel,
 } from "./categorization-rules-view-model.js";
 import { type CsvImportViewInput, prepareCsvImportViewModel } from "./csv-import-view-model.js";
+import { type DashboardViewInput, prepareDashboardViewModel } from "./dashboard-view-model.js";
 import {
   type IncomeViewInput,
   prepareIncomeEditViewModel,
@@ -96,10 +92,16 @@ export function createFamilyFlowViews(renderer: ViewRenderer, configured?: Local
     htmxEnabled = false,
   ) => preparePage(model, navigation, htmxEnabled, localization.locale);
   return {
-    dashboardPage(user: UserContext): Promise<string> {
+    dashboardPage(input: DashboardViewInput): Promise<string> {
       return renderer.viewAsync(
         "pages/dashboard.njk",
-        page(prepareDashboardViewModel(user, localization), mainNavigation(localization)),
+        page(prepareDashboardViewModel(input, localization), mainNavigation(localization), true),
+      );
+    },
+    dashboardPanel(input: DashboardViewInput): Promise<string> {
+      return renderer.viewAsync(
+        "partials/dashboard-panel.njk",
+        prepareDashboardViewModel(input, localization),
       );
     },
     authLoginPage(returnTo: string): Promise<string> {

@@ -45,7 +45,10 @@ export function createIncomePlan(input: IncomePlanInput): IncomePlan {
   if (name === "") {
     throw new Error("Income name is required");
   }
-  if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) {
+  if (!Number.isSafeInteger(input.amountCents)) {
+    throw new Error("Income amount must be a safe integer");
+  }
+  if (input.amountCents <= 0) {
     throw new Error("Income amount must be positive cents");
   }
   assertMonth(input.startMonth, "Income start month must use YYYY-MM");
@@ -80,8 +83,8 @@ export function createMonthlyIncomeOverride(
     throw new Error("Income override plan is required");
   }
   assertMonth(input.month, "Income override month must use YYYY-MM");
-  if (!Number.isInteger(input.amountCents) || input.amountCents < 0) {
-    throw new Error("Income override amount must be non-negative cents");
+  if (!Number.isSafeInteger(input.amountCents) || input.amountCents < 0) {
+    throw new Error("Income override amount must be non-negative safe integer cents");
   }
 
   return {
@@ -116,11 +119,15 @@ export function calculateMonthlyIncome(
       };
     });
 
-  return {
-    month: filters.month,
-    totalCents: entries.reduce((sum, entry) => sum + entry.amountCents, 0),
-    entries,
-  };
+  const totalCents = entries.reduce((sum, entry) => {
+    const next = sum + entry.amountCents;
+    if (!Number.isSafeInteger(next)) {
+      throw new Error("Monthly income total must be a safe integer");
+    }
+    return next;
+  }, 0);
+
+  return { month: filters.month, totalCents, entries };
 }
 
 function isPlanActiveForMonth(plan: IncomePlan, month: string): boolean {
@@ -132,7 +139,7 @@ function isPlanActiveForMonth(plan: IncomePlan, month: string): boolean {
 }
 
 function assertMonth(value: string, message: string): void {
-  if (!/^\d{4}-\d{2}$/.test(value)) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)) {
     throw new Error(message);
   }
 }
