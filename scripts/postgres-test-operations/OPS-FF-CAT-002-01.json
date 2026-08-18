@@ -1,0 +1,31 @@
+{
+  "commands": [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "--no-file-parallelism",
+      "tests/integration/categorization-rule-migration.test.ts",
+      "tests/integration/categorization-rule-repositories.test.ts",
+      "tests/integration/drizzle-categorization-rule-repository.test.ts",
+      "tests/integration/drizzle-master-data-repositories.test.ts",
+      "tests/integration/drizzle-transaction-repository.test.ts",
+      "tests/integration/categorization-rules-http.test.ts",
+      "tests/integration/transaction-http.test.ts",
+      "tests/integration/category-normalization-http.test.ts",
+      "tests/unit/categorization-correction.test.ts",
+      "tests/unit/categorization-rules.test.ts",
+      "--testNamePattern",
+      "(?:INT|UNIT)-FF-(?:CAT-00[1-5]|TXN-001-0[45])"
+    ],
+    [
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/categorization-rules.test.ts",
+      "--grep",
+      "E2E-FF-CAT-(?:001|002|004|005)",
+      "--workers=1"
+    ]
+  ]
+}

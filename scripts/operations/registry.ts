@@ -22,21 +22,45 @@ function verifyPostgresOperation(id: string): OperationVerifier {
   };
 }
 
-function verifyVitestOperation(id: string, file: string): OperationVerifier {
+function verifyTestCommands(id: string, commands: string[][]): OperationVerifier {
   return async (environment) => {
-    await new Promise<void>((resolve, reject) => {
-      const child = spawn("pnpm", ["exec", "vitest", "run", file], {
-        env: environment,
-        stdio: "inherit",
-      });
-      child.on("error", reject);
-      child.on("close", (code, signal) => {
-        if (code === 0) resolve();
-        else reject(new Error(`Operation ${id} verifier exited with ${code ?? signal}`));
-      });
-    });
+    for (const arguments_ of commands) {
+      await runPnpmVerifier(id, arguments_, environment);
+    }
     return { operationId: id, status: "passed" };
   };
+}
+
+function verifyPostgresAndTestCommands(id: string, commands: string[][]): OperationVerifier {
+  return async (environment) => {
+    await verifyPostgresOperation(id)(environment);
+    return verifyTestCommands(id, commands)(environment);
+  };
+}
+
+function verifyVitestOperation(
+  id: string,
+  files: string | string[],
+  testNamePattern?: string,
+): OperationVerifier {
+  const arguments_ = ["exec", "vitest", "run", ...[files].flat()];
+  if (testNamePattern !== undefined) arguments_.push("--testNamePattern", testNamePattern);
+  return verifyTestCommands(id, [arguments_]);
+}
+
+function runPnpmVerifier(
+  id: string,
+  arguments_: string[],
+  environment: NodeJS.ProcessEnv,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn("pnpm", arguments_, { env: environment, stdio: "inherit" });
+    child.on("error", reject);
+    child.on("close", (code, signal) => {
+      if (code === 0) resolve();
+      else reject(new Error(`Operation ${id} verifier exited with ${code ?? signal}`));
+    });
+  });
 }
 
 // Verifiers are registered here when their owning phase delivers executable operations evidence.
@@ -50,6 +74,42 @@ export const operationRegistry: OperationRegistry = {
     "OPS-FF-LOC-002-01",
     "tests/integration/localization.test.ts",
   ),
+  "OPS-FF-INC-001-01": verifyVitestOperation("OPS-FF-INC-001-01", [
+    "tests/unit/income-plans.test.ts",
+    "tests/integration/income-http.test.ts",
+  ]),
+  "OPS-FF-DASH-001-01": verifyPostgresAndTestCommands("OPS-FF-DASH-001-01", [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "tests/unit/dashboard.test.ts",
+      "tests/integration/dashboard-http.test.ts",
+      "--testNamePattern",
+      "(?:UNIT|INT)-FF-DASH",
+    ],
+    [
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/dashboard.test.ts",
+      "--grep",
+      "(?:E2E-FF-DASH|distinguishes localized past and future dashboard months)",
+      "--workers=1",
+    ],
+  ]),
+  "OPS-FF-FOR-001-01": verifyTestCommands("OPS-FF-FOR-001-01", [
+    ["exec", "vitest", "run", "tests/unit/dashboard.test.ts", "--testNamePattern", "UNIT-FF-FOR"],
+    [
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/dashboard.test.ts",
+      "--grep",
+      "(?:E2E-FF-FOR|distinguishes localized past and future dashboard months)",
+      "--workers=1",
+    ],
+  ]),
 };
 
 export async function verifyOperation(

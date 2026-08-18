@@ -1,15 +1,16 @@
 import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-
 import {
   calculateMonthlyIncome,
   createIncomePlan,
   createMonthlyIncomeOverride,
 } from "../../core/income/income-plan.js";
+import type { Clock } from "../../ports/clock/clock.js";
 import type { Localization } from "../../ports/localization/localization.js";
 import type { IncomeRepository } from "../../ports/repositories/income-repository.js";
 import type { OwnerContextRepository } from "../../ports/repositories/owner-context-repository.js";
+import { toLocalCalendarMonth } from "../clock/local-calendar-date.js";
 import { readIncomeFilters, requireFormValue } from "./income-request.js";
 import { isHtmxRequest, readForm, readRouteId } from "./request-values.js";
 import { createFamilyFlowViews } from "./views.js";
@@ -22,17 +23,18 @@ type IncomeRouteRepositories = {
 export function registerIncomeRoutes(
   server: FastifyInstance,
   repositories: IncomeRouteRepositories,
+  clock: Clock,
 ): void {
   server.get("/income", async (request, reply) => {
-    return handleListIncome(repositories, request, reply);
+    return handleListIncome(repositories, clock, request, reply);
   });
 
   server.post("/income", async (request, reply) => {
-    return handleCreateIncome(repositories, request, reply);
+    return handleCreateIncome(repositories, clock, request, reply);
   });
 
   server.post("/income/overrides", async (request, reply) => {
-    return handleCreateOverride(repositories, request, reply);
+    return handleCreateOverride(repositories, clock, request, reply);
   });
 
   server.get("/income/:id/edit", async (request, reply) => {
@@ -40,16 +42,25 @@ export function registerIncomeRoutes(
   });
 
   server.post("/income/:id", async (request, reply) => {
-    return handleUpdateIncome(repositories, request, reply);
+    return handleUpdateIncome(repositories, clock, request, reply);
+  });
+
+  server.post("/income/:id/deactivate", async (request, reply) => {
+    return handleActivation(repositories, clock, request, reply, false);
+  });
+
+  server.post("/income/:id/activate", async (request, reply) => {
+    return handleActivation(repositories, clock, request, reply, true);
   });
 }
 
 async function handleListIncome(
   repositories: IncomeRouteRepositories,
+  clock: Clock,
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const filters = readIncomeFilters(request.query, currentMonth(), reply.request.localization);
+  const filters = readIncomeFilters(request.query, currentMonth(clock), reply.request.localization);
   const state = await readIncomePanelState(repositories, filters);
 
   const views = createFamilyFlowViews(reply);
@@ -62,6 +73,7 @@ async function handleListIncome(
 
 async function handleCreateIncome(
   repositories: IncomeRouteRepositories,
+  clock: Clock,
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
@@ -70,10 +82,10 @@ async function handleCreateIncome(
       createIncomePlanFromForm(readForm(request.body), randomUUID(), reply.request.localization),
     );
   } catch (error: unknown) {
-    return handleFormError(repositories, request, reply, error, "income.saveFailed");
+    return handleFormError(repositories, clock, request, reply, error, "income.saveFailed");
   }
 
-  return sendIncomeState(repositories, request, reply);
+  return sendIncomeState(repositories, clock, request, reply);
 }
 
 async function handleEditIncomeForm(
@@ -99,6 +111,7 @@ async function handleEditIncomeForm(
 
 async function handleUpdateIncome(
   repositories: IncomeRouteRepositories,
+  clock: Clock,
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
@@ -129,11 +142,37 @@ async function handleUpdateIncome(
     return reply.status(400).type("text/html; charset=utf-8").send(body);
   }
 
-  return sendIncomeState(repositories, request, reply);
+  return sendIncomeState(repositories, clock, request, reply);
+}
+
+async function handleActivation(
+  repositories: IncomeRouteRepositories,
+  clock: Clock,
+  request: FastifyRequest,
+  reply: FastifyReply,
+  active: boolean,
+) {
+  const plan = await repositories.income.getPlan(readRouteId(request.params));
+  if (plan === null) {
+    return reply
+      .status(404)
+      .type("text/html; charset=utf-8")
+      .send(await createFamilyFlowViews(reply).missingResourcePage("incomePlan"));
+  }
+
+  await repositories.income.savePlan({ ...plan, active });
+  return sendIncomeState(
+    repositories,
+    clock,
+    request,
+    reply,
+    readIncomeFilters(request.query, currentMonth(clock), reply.request.localization),
+  );
 }
 
 async function handleCreateOverride(
   repositories: IncomeRouteRepositories,
+  clock: Clock,
   request: FastifyRequest,
   reply: FastifyReply,
 ) {
@@ -153,23 +192,25 @@ async function handleCreateOverride(
       }),
     );
   } catch (error: unknown) {
-    return handleFormError(repositories, request, reply, error, "income.overrideSaveFailed");
+    return handleFormError(repositories, clock, request, reply, error, "income.overrideSaveFailed");
   }
 
-  return sendIncomeState(repositories, request, reply);
+  return sendIncomeState(repositories, clock, request, reply);
 }
 
 async function sendIncomeState(
   repositories: IncomeRouteRepositories,
+  clock: Clock,
   request: FastifyRequest,
   reply: FastifyReply,
+  filters = { month: currentMonth(clock) },
 ) {
   if (isHtmxRequest(request.headers)) {
     return reply
       .type("text/html; charset=utf-8")
       .send(
         await createFamilyFlowViews(reply).incomePanel(
-          await readIncomePanelState(repositories, { month: currentMonth() }),
+          await readIncomePanelState(repositories, filters),
         ),
       );
   }
@@ -179,6 +220,7 @@ async function sendIncomeState(
 
 async function handleFormError(
   repositories: IncomeRouteRepositories,
+  clock: Clock,
   request: FastifyRequest,
   reply: FastifyReply,
   error: unknown,
@@ -186,7 +228,7 @@ async function handleFormError(
 ) {
   const state = await readIncomePanelState(
     repositories,
-    { month: currentMonth() },
+    { month: currentMonth(clock) },
     reply.request.localization.errorMessage(error, fallbackKey),
   );
   const views = createFamilyFlowViews(reply);
@@ -231,6 +273,6 @@ function createIncomePlanFromForm(
   });
 }
 
-function currentMonth(): string {
-  return new Date().toISOString().slice(0, 7);
+function currentMonth(clock?: Clock): string {
+  return toLocalCalendarMonth(clock?.now() ?? new Date());
 }

@@ -1,0 +1,13 @@
+{
+  "commands": [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "--no-file-parallelism",
+      "tests/integration/postgres-session-store.test.ts",
+      "--testNamePattern",
+      "INT-FF-AUTH-006"
+    ]
+  ]
+}

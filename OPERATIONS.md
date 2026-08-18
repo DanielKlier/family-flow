@@ -250,7 +250,7 @@ Migration `0014_internal_transfers.sql` adds a non-null transfer flag and classi
 Interpretation and correction:
 
 - Mark each transaction leg that represents movement between household-owned accounts. Classification is explicit; FamilyFlow does not automatically match transfer pairs.
-- Marking either one leg or both legs makes every marked leg contribute zero to the reusable core expense aggregate. Dashboard, historical-average, and forecast integration of this rule is delivered separately in `PH-13`; do not use the current dashboard as transfer-exclusion evidence.
+- Marking either one leg or both legs makes every marked leg contribute zero to the reusable core expense aggregate and to dashboard actuals, historical averages, and forecasts.
 - If an expense was marked incorrectly, unmark it through its transaction row. If many historical rows need correction, take a backup first, identify rows by stable transaction ID, and apply deliberate changes rather than guessing pairs from equal amounts.
 - Transfer actions preserve active canonical transaction filters. A row that no longer matches after mark/unmark disappears from the filtered list without exposing rows from another transfer state.
 - Requests must submit exactly `internalTransfer=true` or `internalTransfer=false`. Invalid values return HTTP 400 with the response request ID and do not mutate the transaction.
@@ -287,17 +287,44 @@ Supported maintenance actions:
 
 - Create recurring income plans with owner context, name, amount, start month, and optional end month.
 - Edit existing income plans from the income list.
-- Capture a monthly override amount for a specific income plan and month.
+- Capture a monthly override amount, including zero, for a specific income plan and month.
+- Deactivate a plan without deleting its fields or overrides, and reactivate it under the same range and override rules.
 - Filter income plans and monthly planned income totals by owner context.
 - Change the calculation month to review the recurring income and matching overrides for that month.
 
 Operational notes:
 
 - Income amounts are entered as positive decimal amounts and stored as positive cents in PostgreSQL.
-- Monthly overrides replace the recurring amount for the selected income plan in that month; they do not add an extra income row.
+- Monthly overrides replace the recurring amount for the selected income plan in that month; they do not add an extra income row. A zero override intentionally contributes no income for that plan and month.
+- Deactivation excludes a plan from every monthly total. Reactivation restores it without changing its amount, range, owner, or overrides.
 - Owner-context filtering uses the income plan owner context directly.
 - If an income calculation looks unexpected, verify the selected calculation month, owner-context filter, start and end months, and matching monthly overrides before editing database rows directly.
 - For support cases, capture the visible `X-Request-Id` and use minimized examples. Avoid exporting broad income or household finance data into logs or tickets.
+
+## Dashboard Interpretation And Forecast Limits
+
+Authenticated users can review the monthly dashboard at `/`. The selected month defaults from the application clock and cannot be later than the current controlled month.
+
+Interpretation rules:
+
+- Planned income uses active recurring plans and exact monthly overrides. The owner filter constrains both income and expenses; account and category filters constrain expenses only.
+- Actual expenses include booked transactions only, display their non-negative magnitude, and exclude internal transfers. Balance is planned income minus that expense magnitude.
+- Category and account/owner breakdowns use the same filters and reconcile with the displayed expense total.
+- Three-, six-, and twelve-month averages use the completed months immediately before the selected month. Zero-expense months remain in each divisor; planned expenses and internal transfers are excluded.
+- Forecast is shown only for the controlled current month. It combines booked fixed expenses, open planned fixed expenses, and booked variable expenses extrapolated over the calendar month. A transaction changing from planned to booked on the same ID moves components rather than being counted twice.
+- Variable extrapolation uses elapsed calendar days inclusively and one half-up rounding step to cents. It is an estimate, not a commitment or available-balance calculation; unusual early-month spending can make it volatile.
+
+Troubleshooting:
+
+1. Confirm the selected month and all owner, account, and category filters.
+2. Review transaction status, fixed-cost classification, account owner, and internal-transfer flag at `/transactions`.
+3. Review active income ranges and overrides at `/income`.
+4. Future-month requests return HTTP 400. Use the visible `X-Request-Id` to correlate the response with the single request log entry.
+5. If totals do not reconcile, use a minimized fixture and compare actual, breakdown, and forecast components. Do not place broad financial records in logs or support tickets.
+
+Run `pnpm ops:verify --id OPS-FF-DASH-001-01` to provision isolated PostgreSQL for the canonical repository fixture and then execute the named reconciled/filter/current/past/future UI and core fixtures. The verifier checks the documented fixture exactly: €3,000.00 income, €1,300.00 actual expense, €1,700.00 balance; category and account rows each sum to €1,300.00; the three/six/twelve-month averages are €600.00/€300.00/€150.00; the combined owner/account/category filter leaves €300.00 expense; a past month has no forecast; and a future month returns HTTP 400.
+
+Run `pnpm ops:verify --id OPS-FF-FOR-001-01` to execute the named current, past, future, and planned-to-booked forecast fixtures. The current fixture verifies €1,000.00 booked fixed, €500.00 open planned fixed, €930.00 extrapolated variable, and €2,430.00 total; the past fixture shows actuals without a forecast, and the future fixture is rejected. After booking the €500.00 planned item on the same transaction ID, booked fixed becomes €1,500.00, open planned becomes zero, actual expense becomes €1,800.00, and the forecast total remains €2,430.00. Any different value fails the verifier; investigate rather than adjusting the fixture to production data.
 
 ## Template Packaging And Rendering
 

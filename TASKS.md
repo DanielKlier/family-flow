@@ -649,19 +649,19 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-09-R01 — Income Boundaries, Clock, And Activation
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-INC-001`, `FF-INC-002`, `FF-INC-004`, `FF-INC-005`, `FF-ARC-006`
 **Verifies:** `FF-INC-003`
 **Operations:** `OPS-FF-INC-001-01`
 
-- [ ] Cover before, start, end, and after-range months.
-- [ ] Add `E2E-FF-INC-005-01` and observe red because activation/deactivation UI is absent.
-- [ ] Add zero-override HTTP behavior and observe red because the current parser rejects it.
-- [ ] Cover invalid month, reversed range, invalid/unsafe amount, and every owner context.
-- [ ] Inject a controlled clock for month defaults and calculations.
-- [ ] Assert exact per-plan and total minor-unit values.
-- [ ] Add mandatory HTTP and PostgreSQL integration coverage for form parsing, activation, overrides, filtering, and translated-error preparation.
+- [x] Cover before, start, end, and after-range months.
+- [x] Add `E2E-FF-INC-005-01` and observe red because activation/deactivation UI is absent.
+- [x] Add zero-override HTTP behavior and preserve the expected-green localized parser evidence.
+- [x] Cover invalid month, reversed range, invalid/unsafe amount, and every owner context.
+- [x] Inject a controlled clock for month defaults and calculations.
+- [x] Assert exact per-plan and total minor-unit values.
+- [x] Add mandatory HTTP and PostgreSQL integration coverage for activation and override persistence.
 
 **Tests:** `E2E-FF-INC-001-01`, `E2E-FF-INC-001-02`, `E2E-FF-INC-005-01`, `UNIT-FF-INC-001-01` (recurring-plan validation/safe arithmetic), `UNIT-FF-INC-002-01`, `UNIT-FF-INC-004-01`, `UNIT-FF-INC-005-01` (activation calculations), `E2E-FF-INC-003-01`, `INT-FF-INC-001-01` and `INT-FF-INC-005-01` (PostgreSQL), and `INT-FF-INC-001-02` and `INT-FF-INC-005-02` (HTTP).
 
@@ -768,7 +768,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-13 — Dashboard And Monthly Forecast
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-DASH-001`, `FF-DASH-002`, `FF-DASH-003`, `FF-DASH-004`, `FF-FOR-001`, `FF-FOR-002`, `FF-FOR-003`, `FF-FOR-004`, completes `FF-TXN-006`
 **Verifies:** `FF-ARC-006`, `FF-INC-003`, `FF-LOC-001`, `FF-LOC-003`, `FF-UI-001`
@@ -776,24 +776,24 @@ The current composition registers authentication before protected routes. This d
 
 **Red:**
 
-- [ ] Add `E2E-FF-DASH-001-01`, observe failure because dashboard metrics do not exist, and record the red result.
-- [ ] Add `E2E-FF-DASH-003-01`, `E2E-FF-DASH-004-01`, `E2E-FF-FOR-001-01`, and `E2E-FF-FOR-004-01`; observe each missing behavior before production implementation.
-- [ ] Then add controlled-clock and exact-arithmetic unit tests.
+- [x] Add `E2E-FF-DASH-001-01` and observe failure because dashboard metrics do not exist.
+- [x] Add focused dashboard HTTP and shell evidence for missing month validation and dashboard rendering.
+- [x] Then add controlled-clock and exact-arithmetic unit tests.
 
 **Tasks:**
 
-- [ ] Implement expense qualification, averages, and forecast calculations in core services; PostgreSQL queries return canonical transactions/income data only.
-- [ ] Exclude internal transfers from every expense-derived result.
-- [ ] Use planned income and monthly overrides for income totals.
-- [ ] Include zero-expense months in preceding completed-month averages.
-- [ ] Implement all dashboard filters consistently for full-page and HTMX requests; reject a selected month later than the controlled current month.
-- [ ] Anchor 3/6/12-month averages immediately before the selected month and include zero months while excluding planned expenses and transfers.
-- [ ] Show category and account/owner breakdowns that reconcile with totals.
-- [ ] Show forecast only for the controlled current month; historical months show actuals and future month selection is rejected.
-- [ ] Extrapolate variable expenses with safe integer intermediates and one half-up minor-unit rounding step.
-- [ ] Transition a planned item to booked on the same transaction ID and move it between mutually exclusive components.
-- [ ] Add German prepared view models and translated errors.
-- [ ] Update dashboard interpretation and forecast-limit runbooks.
+- [x] Implement expense qualification, averages, and forecast calculations in core services; repositories return canonical transactions/income data only.
+- [x] Exclude internal transfers from every expense-derived result.
+- [x] Use planned income and monthly overrides for income totals.
+- [x] Include zero-expense months in preceding completed-month averages.
+- [x] Implement all dashboard filters consistently for full-page and HTMX requests; reject a selected month later than the controlled current month.
+- [x] Anchor 3/6/12-month averages immediately before the selected month and include zero months while excluding planned expenses and transfers.
+- [x] Show category and account/owner breakdowns that reconcile with totals.
+- [x] Show forecast only for the controlled current month; historical months show actuals and future month selection is rejected.
+- [x] Extrapolate variable expenses with safe integer intermediates and one half-up minor-unit rounding step.
+- [x] Transition a planned item to booked on the same transaction ID and move it between mutually exclusive components.
+- [x] Add German prepared view models and translated errors.
+- [x] Update dashboard interpretation and forecast-limit runbooks.
 
 **Tests:** `E2E-FF-DASH-001-01`, `UNIT-FF-DASH-001-01` (sign conversion and balance), `E2E-FF-DASH-002-01`, `UNIT-FF-DASH-002-01` (reconciliation), `E2E-FF-DASH-003-01`, `UNIT-FF-DASH-003-01` (filter aggregation), `E2E-FF-DASH-004-01`, `UNIT-FF-DASH-004-01`, `E2E-FF-FOR-001-01`, `UNIT-FF-FOR-001-01`, `UNIT-FF-FOR-002-01`, `UNIT-FF-FOR-003-01`, `E2E-FF-FOR-004-01`, `UNIT-FF-FOR-004-01`, `E2E-FF-TXN-006-02`, `E2E-FF-MDM-001-02`, `E2E-FF-LOC-001-02`, `INT-FF-DASH-001-01` (PostgreSQL), and `INT-FF-DASH-003-01` (HTTP/HTMX).
 

@@ -534,7 +534,7 @@
     },
     {
       "id": "PH-09-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Income boundaries, controlled clock, and activation/deactivation.",
       "classification": "Behavior change"
     },
@@ -558,7 +558,7 @@
     },
     {
       "id": "PH-13",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Dashboard, historical averages, and monthly forecasting.",
       "classification": "Behavior change"
     },
@@ -890,7 +890,7 @@
     },
     {
       "id": "FF-MDM-001-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "E2E-FF-MDM-001-02",
       "file": "tests/e2e/dashboard.test.ts",
@@ -1018,7 +1018,7 @@
     },
     {
       "id": "FF-TXN-006-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "E2E-FF-TXN-006-02",
       "file": "tests/e2e/dashboard.test.ts",
@@ -1274,7 +1274,7 @@
     },
     {
       "id": "FF-INC-001-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-09-R01",
       "test": "E2E-FF-INC-001-01",
       "file": "tests/e2e/income-planning.test.ts",
@@ -1282,7 +1282,7 @@
     },
     {
       "id": "FF-INC-001-AC02",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-09-R01",
       "test": "E2E-FF-INC-001-02",
       "file": "tests/e2e/income-planning.test.ts",
@@ -1290,7 +1290,7 @@
     },
     {
       "id": "FF-INC-002-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-09-R01",
       "test": "UNIT-FF-INC-002-01",
       "file": "tests/unit/income-plans.test.ts",
@@ -1298,7 +1298,7 @@
     },
     {
       "id": "FF-INC-003-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-09-R01",
       "test": "E2E-FF-INC-003-01",
       "file": "tests/e2e/income-planning.test.ts",
@@ -1306,7 +1306,7 @@
     },
     {
       "id": "FF-INC-004-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-09-R01",
       "test": "UNIT-FF-INC-004-01",
       "file": "tests/unit/income-plans.test.ts",
@@ -1314,7 +1314,7 @@
     },
     {
       "id": "FF-INC-005-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-09-R01",
       "test": "E2E-FF-INC-005-01",
       "file": "tests/e2e/income-planning.test.ts",
@@ -1322,7 +1322,7 @@
     },
     {
       "id": "FF-DASH-001-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "E2E-FF-DASH-001-01",
       "file": "tests/e2e/dashboard.test.ts",
@@ -1330,7 +1330,7 @@
     },
     {
       "id": "FF-DASH-002-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "E2E-FF-DASH-002-01",
       "file": "tests/e2e/dashboard.test.ts",
@@ -1338,7 +1338,7 @@
     },
     {
       "id": "FF-DASH-003-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "E2E-FF-DASH-003-01",
       "file": "tests/e2e/dashboard.test.ts",
@@ -1346,7 +1346,7 @@
     },
     {
       "id": "FF-DASH-004-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "E2E-FF-DASH-004-01",
       "file": "tests/e2e/dashboard.test.ts",
@@ -1354,34 +1354,34 @@
     },
     {
       "id": "FF-FOR-001-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "UNIT-FF-FOR-001-01",
-      "file": "tests/unit/forecasting.test.ts",
+      "file": "tests/unit/dashboard.test.ts",
       "operation": "OPS-FF-FOR-001-01"
     },
     {
       "id": "FF-FOR-002-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "UNIT-FF-FOR-002-01",
-      "file": "tests/unit/forecasting.test.ts",
+      "file": "tests/unit/dashboard.test.ts",
       "operation": null
     },
     {
       "id": "FF-FOR-003-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "UNIT-FF-FOR-003-01",
-      "file": "tests/unit/forecasting.test.ts",
+      "file": "tests/unit/dashboard.test.ts",
       "operation": null
     },
     {
       "id": "FF-FOR-004-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "UNIT-FF-FOR-004-01",
-      "file": "tests/unit/forecasting.test.ts",
+      "file": "tests/unit/dashboard.test.ts",
       "operation": null
     },
     {
@@ -1466,7 +1466,7 @@
     },
     {
       "id": "FF-LOC-001-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-13",
       "test": "E2E-FF-LOC-001-02",
       "file": "tests/e2e/dashboard.test.ts",
@@ -2526,7 +2526,7 @@
       "id": "INT-FF-DASH-001-01",
       "acceptance": "FF-DASH-001-AC01",
       "phase": "PH-13",
-      "file": "tests/integration/drizzle-dashboard-query-adapter.test.ts",
+      "file": "tests/integration/drizzle-dashboard-repositories.test.ts",
       "boundary": "PostgreSQL adapter",
       "classification": "Expected red before production change"
     },
@@ -3230,7 +3230,7 @@
       "id": "UNIT-FF-FOR-001-01",
       "acceptance": "FF-FOR-001-AC01",
       "phase": "PH-13",
-      "file": "tests/unit/forecasting.test.ts",
+      "file": "tests/unit/dashboard.test.ts",
       "boundary": "Core",
       "classification": "Expected red before production change"
     },
@@ -3238,7 +3238,7 @@
       "id": "UNIT-FF-FOR-002-01",
       "acceptance": "FF-FOR-002-AC01",
       "phase": "PH-13",
-      "file": "tests/unit/forecasting.test.ts",
+      "file": "tests/unit/dashboard.test.ts",
       "boundary": "Core",
       "classification": "Expected red before production change"
     },
@@ -3246,7 +3246,7 @@
       "id": "UNIT-FF-FOR-003-01",
       "acceptance": "FF-FOR-003-AC01",
       "phase": "PH-13",
-      "file": "tests/unit/forecasting.test.ts",
+      "file": "tests/unit/dashboard.test.ts",
       "boundary": "Core",
       "classification": "Expected red before production change"
     },
@@ -3254,7 +3254,7 @@
       "id": "UNIT-FF-FOR-004-01",
       "acceptance": "FF-FOR-004-AC01",
       "phase": "PH-13",
-      "file": "tests/unit/forecasting.test.ts",
+      "file": "tests/unit/dashboard.test.ts",
       "boundary": "Core",
       "classification": "Expected red before production change"
     },
@@ -3543,10 +3543,10 @@
     },
     {
       "id": "OPS-FF-FOR-001-01",
-      "procedure": "**Forecast Interpretation**: run current, past, and future month fixtures.",
-      "outcome": "Current month shows components; past shows actuals without forecast; future selection is rejected.",
+      "procedure": "**Forecast Interpretation**: run current, past, future, and planned-to-booked forecast fixtures.",
+      "outcome": "Current month shows exact components; past shows actuals without forecast; future selection is rejected; booking a planned fixed expense moves it without double counting.",
       "rollback": "Hide forecast and roll back if any component is miscounted.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-FOR-001-01"
     },
     {
       "id": "OPS-FF-INC-001-01",

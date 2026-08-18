@@ -1,0 +1,18 @@
+<section id="dashboard-panel">
+  <section class="panel"><p>{{ session.label }}</p><form method="post" action="{{ session.logoutAction }}"><button type="submit">{{ session.logoutLabel }}</button></form></section>
+  <section class="panel">
+    <h2 id="dashboard-filters-heading">{{ text.filters }}</h2>
+    <form aria-label="{{ text.filters }}" class="grid-form" method="get" action="/" hx-get="/" hx-target="#dashboard-panel" hx-swap="outerHTML">
+      <label class="field">{{ text.month }} <input name="month" inputmode="numeric" placeholder="{{ monthPlaceholder }}" value="{{ filterMonth }}"></label>
+      <label class="field">{{ text.owner }} <select name="ownerContext">{% for option in ownerOptions %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+      <label class="field">{{ text.account }} <select name="accountId">{% for option in accountOptions %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+      <label class="field">{{ text.category }} <select name="categoryId">{% for option in categoryOptions %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></label>
+      <button type="submit">{{ text.apply }}</button>
+    </form>
+  </section>
+  <section class="panel metrics"><dl><dt>{{ text.income }}</dt><dd>{{ metrics.income }}</dd><dt>{{ text.expenses }}</dt><dd>{{ metrics.expenses }}</dd><dt>{{ text.balance }}</dt><dd>{{ metrics.balance }}</dd></dl></section>
+  <section class="panel"><h2>{{ text.averages }}</h2><ul>{% for average in averages %}<li>{{ average }}</li>{% endfor %}</ul></section>
+  <section class="panel"><h2>{{ text.categoryBreakdown }}</h2><ul>{% for row in byCategory %}<li>{{ row }}</li>{% endfor %}</ul></section>
+  <section class="panel"><h2>{{ text.accountBreakdown }}</h2><ul>{% for row in byAccount %}<li>{{ row }}</li>{% endfor %}</ul></section>
+  <section class="panel"><h2>{{ text.forecast }}</h2>{% if forecast %}<dl><dt>{{ text.bookedFixed }}</dt><dd>{{ forecast.bookedFixed }}</dd><dt>{{ text.plannedFixed }}</dt><dd>{{ forecast.plannedFixed }}</dd><dt>{{ text.variable }}</dt><dd>{{ forecast.variable }}</dd><dt>{{ text.total }}</dt><dd>{{ forecast.total }}</dd></dl>{% else %}<p>{{ text.noForecast }}</p>{% endif %}</section>
+</section>

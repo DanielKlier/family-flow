@@ -128,6 +128,15 @@ describe("transactions", () => {
     expect(expenseTotalCents([normalExpense, markedLeg])).toBe(-4299);
   });
 
+  it("UNIT-FF-DASH-001-01 rejects an unsafe reusable expense total instead of returning an imprecise amount", () => {
+    const first = aTransaction({ id: "expense-first", amountCents: -Number.MAX_SAFE_INTEGER });
+    const second = aTransaction({ id: "expense-second", amountCents: -Number.MAX_SAFE_INTEGER });
+
+    expect(() => transactionCore.expenseTotalCents([first, second])).toThrow(
+      "Expense total must be a safe integer",
+    );
+  });
+
   it("UNIT-FF-TXN-001-02: rejects unsafe integer transaction amounts", () => {
     expect(() => aTransaction({ amountCents: -9007199254740992 })).toThrow(
       expect.objectContaining({ code: "invalid_amount" }),

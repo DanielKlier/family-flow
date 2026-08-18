@@ -84,6 +84,72 @@ describe("income plans", () => {
     ).toMatchObject({ totalCents: 250000 });
   });
 
+  it("UNIT-FF-INC-001-01 UNIT-FF-INC-002-01 rejects non-Gregorian months and unsafe income amounts", () => {
+    expect(() =>
+      createIncomePlan({
+        id: "income-invalid-month",
+        ownerContext: "person_a",
+        name: "Invalid month",
+        amountCents: 1,
+        startMonth: "2026-13",
+        endMonth: null,
+        active: true,
+      }),
+    ).toThrow("Income start month must use YYYY-MM");
+
+    expect(() =>
+      createIncomePlan({
+        id: "income-unsafe-amount",
+        ownerContext: "person_a",
+        name: "Unsafe amount",
+        amountCents: Number.MAX_SAFE_INTEGER + 1,
+        startMonth: "2026-01",
+        endMonth: null,
+        active: true,
+      }),
+    ).toThrow("Income amount must be a safe integer");
+  });
+
+  it("UNIT-FF-INC-004-01 UNIT-FF-INC-005-01 includes range boundaries, replaces with zero, excludes inactive plans, and rejects unsafe totals", () => {
+    const bounded = createIncomePlan({
+      id: "income-bounded",
+      ownerContext: "person_a",
+      name: "Bounded salary",
+      amountCents: Number.MAX_SAFE_INTEGER,
+      startMonth: "2026-01",
+      endMonth: "2026-02",
+      active: true,
+    });
+    const inactive = createIncomePlan({
+      id: "income-inactive",
+      ownerContext: "person_a",
+      name: "Inactive salary",
+      amountCents: 100,
+      startMonth: "2026-01",
+      endMonth: null,
+      active: false,
+    });
+    const zeroOverride = createMonthlyIncomeOverride({
+      id: "override-zero",
+      incomePlanId: bounded.id,
+      month: "2026-02",
+      amountCents: 0,
+      note: null,
+    });
+
+    expect(
+      calculateMonthlyIncome([bounded, inactive], [zeroOverride], { month: "2026-02" }),
+    ).toMatchObject({ totalCents: 0, entries: [{ incomePlanId: bounded.id, amountCents: 0 }] });
+    expect(calculateMonthlyIncome([bounded], [], { month: "2026-03" })).toMatchObject({
+      totalCents: 0,
+    });
+    expect(() =>
+      calculateMonthlyIncome([bounded, { ...bounded, id: "income-overflow" }], [], {
+        month: "2026-01",
+      }),
+    ).toThrow("Monthly income total must be a safe integer");
+  });
+
   it("rejects invalid income plan data", () => {
     expect(() =>
       createIncomePlan({

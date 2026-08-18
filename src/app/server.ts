@@ -31,6 +31,7 @@ import { registerStaticAssets } from "../adapters/http/assets.js";
 import { type AuthRuntimeConfig, registerAuth } from "../adapters/http/auth.js";
 import { registerCategorizationRuleRoutes } from "../adapters/http/categorization-rules.js";
 import { registerFormParser } from "../adapters/http/form-parser.js";
+import { registerDashboardRoutes } from "../adapters/http/dashboard.js";
 import { registerCsvImportRoutes } from "../adapters/http/imports.js";
 import { registerIncomeRoutes } from "../adapters/http/income.js";
 import { registerRequestLocalization } from "../adapters/http/localization.js";
@@ -115,7 +116,8 @@ export function buildServer(options: ServerOptions = {}) {
   registerTransactionRoutes(server, repositories);
   registerCategorizationRuleRoutes(server, repositories);
   registerCsvImportRoutes(server, { ...repositories, importPreviewBatches }, csvParser, clock);
-  registerIncomeRoutes(server, repositories);
+  registerIncomeRoutes(server, repositories, clock);
+  registerDashboardRoutes(server, repositories, clock);
 
   server.setNotFoundHandler(async (_request, reply) => {
     const requestId = String(reply.getHeader("x-request-id"));

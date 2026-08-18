@@ -1,5 +1,6 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { readFile } from "node:fs/promises";
 
 const project = `family-flow-test-${process.pid}-${randomBytes(4).toString("hex")}`;
 const compose = ["compose", "-f", "compose.test.yaml", "-p", project];
@@ -55,111 +56,58 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
   });
 }
 
-type PostgresOperation =
-  | "OPS-FF-AUTH-006-01"
-  | "OPS-FF-AUTH-009-01"
-  | "OPS-FF-CAT-002-01"
-  | "OPS-FF-TXN-005-01";
+type EvidencePlan = Readonly<{ commands: readonly (readonly string[])[] }>;
 
-function requestedOperation(arguments_: string[]): PostgresOperation | undefined {
+const defaultEvidencePlan: EvidencePlan = {
+  commands: [
+    ["exec", "vitest", "run", "--no-file-parallelism"],
+    ["exec", "playwright", "test", "tests/e2e/restore-smoke.test.ts", "--workers=1"],
+  ],
+};
+
+function requestedOperation(arguments_: string[]): string | undefined {
   if (arguments_.length === 0) return undefined;
   if (arguments_.length !== 2 || arguments_[0] !== "--operation") {
     throw new Error("Usage: tsx scripts/run-postgres-tests.ts [--operation <OPS-ID>]");
   }
   const id = arguments_[1];
-  if (
-    id !== "OPS-FF-AUTH-006-01" &&
-    id !== "OPS-FF-AUTH-009-01" &&
-    id !== "OPS-FF-CAT-002-01" &&
-    id !== "OPS-FF-TXN-005-01"
-  ) {
-    throw new Error(`Unsupported PostgreSQL operation: ${id}`);
-  }
+  if (!/^OPS-[A-Z0-9-]+$/.test(id)) throw new Error(`Unsupported PostgreSQL operation: ${id}`);
   return id;
 }
 
-async function runEvidence(
-  operation: PostgresOperation | undefined,
-  environment: NodeJS.ProcessEnv,
-): Promise<void> {
-  if (operation !== "OPS-FF-AUTH-009-01") {
-    const vitestArguments = ["exec", "vitest", "run", "--no-file-parallelism"];
-    if (operation === "OPS-FF-AUTH-006-01") {
-      vitestArguments.push(
-        "tests/integration/postgres-session-store.test.ts",
-        "--testNamePattern",
-        "INT-FF-AUTH-006",
-      );
-    }
-    if (operation === "OPS-FF-CAT-002-01") {
-      vitestArguments.push(
-        "tests/integration/categorization-rule-migration.test.ts",
-        "tests/integration/categorization-rule-repositories.test.ts",
-        "tests/integration/drizzle-categorization-rule-repository.test.ts",
-        "tests/integration/drizzle-master-data-repositories.test.ts",
-        "tests/integration/drizzle-transaction-repository.test.ts",
-        "tests/integration/categorization-rules-http.test.ts",
-        "tests/integration/transaction-http.test.ts",
-        "tests/integration/category-normalization-http.test.ts",
-        "tests/unit/categorization-correction.test.ts",
-        "tests/unit/categorization-rules.test.ts",
-        "--testNamePattern",
-        "(?:INT|UNIT)-FF-(?:CAT-00[1-5]|TXN-001-0[45])",
-      );
-    }
-    if (operation === "OPS-FF-TXN-005-01") {
-      vitestArguments.push(
-        "tests/integration/drizzle-transaction-repository.test.ts",
-        "tests/integration/drizzle-categorization-rule-repository.test.ts",
-        "tests/integration/categorization-rule-migration.test.ts",
-        "tests/integration/categorization-rule-repositories.test.ts",
-        "tests/integration/categorization-rules-http.test.ts",
-        "tests/unit/categorization-rules.test.ts",
-        "tests/unit/transactions.test.ts",
-        "--testNamePattern",
-        "(?:INT|UNIT)-FF-(?:TXN-00[56]|CAT-002)",
-      );
-    }
-    await run("pnpm", vitestArguments, environment);
-    if (receivedSignal) return;
+async function loadEvidencePlan(operation: string | undefined): Promise<EvidencePlan> {
+  if (operation === undefined) return defaultEvidencePlan;
+  let source: string;
+  try {
+    source = await readFile(
+      new URL(`./postgres-test-operations/${operation}.json`, import.meta.url),
+      "utf8",
+    );
+  } catch {
+    throw new Error(`Unsupported PostgreSQL operation: ${operation}`);
   }
-  if (operation === "OPS-FF-CAT-002-01") {
-    await run(
-      "pnpm",
-      [
-        "exec",
-        "playwright",
-        "test",
-        "tests/e2e/categorization-rules.test.ts",
-        "--grep",
-        "E2E-FF-CAT-(?:001|002|004|005)",
-        "--workers=1",
-      ],
-      environment,
-    );
-  } else if (operation === "OPS-FF-TXN-005-01") {
-    await run(
-      "pnpm",
-      [
-        "exec",
-        "playwright",
-        "test",
-        "tests/e2e/transactions.test.ts",
-        "tests/e2e/internal-transfers.test.ts",
-        "tests/e2e/categorization-rules.test.ts",
-        "tests/e2e/csv-import.test.ts",
-        "--grep",
-        "E2E-FF-(?:TXN-005|CAT-002)",
-        "--workers=1",
-      ],
-      environment,
-    );
-  } else if (operation !== "OPS-FF-AUTH-006-01") {
-    await run(
-      "pnpm",
-      ["exec", "playwright", "test", "tests/e2e/restore-smoke.test.ts", "--workers=1"],
-      environment,
-    );
+  const plan: unknown = JSON.parse(source);
+  if (!isEvidencePlan(plan)) {
+    throw new Error(`Invalid PostgreSQL evidence plan: ${operation}`);
+  }
+  return plan;
+}
+
+function isEvidencePlan(value: unknown): value is EvidencePlan {
+  if (typeof value !== "object" || value === null || !("commands" in value)) return false;
+  return (
+    Array.isArray(value.commands) &&
+    value.commands.every(
+      (command) =>
+        Array.isArray(command) && command.every((argument) => typeof argument === "string"),
+    )
+  );
+}
+
+async function runEvidence(plan: EvidencePlan, environment: NodeJS.ProcessEnv): Promise<void> {
+  for (const command of plan.commands) {
+    await run("pnpm", [...command], environment);
+    if (receivedSignal) return;
   }
 }
 
@@ -167,6 +115,7 @@ async function main(): Promise<void> {
   let failure: unknown;
   try {
     const operation = requestedOperation(process.argv.slice(2));
+    const evidencePlan = await loadEvidencePlan(operation);
     await run("docker", [...compose, "up", "-d", "--wait", "postgres"]);
     const address = await run("docker", [...compose, "port", "postgres", "5432"]);
     const match = /(?:127\.0\.0\.1|0\.0\.0\.0|\[::\]):([0-9]+)$/.exec(address);
@@ -175,7 +124,7 @@ async function main(): Promise<void> {
       ...process.env,
       TEST_DATABASE_URL: `postgres://family_flow_test:family_flow_test@127.0.0.1:${match[1]}/family_flow_test`,
     };
-    await runEvidence(operation, testEnvironment);
+    await runEvidence(evidencePlan, testEnvironment);
   } catch (error) {
     failure = error;
   } finally {

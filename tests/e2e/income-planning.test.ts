@@ -84,6 +84,55 @@ test("monthly income override can be captured", async ({ page }) => {
   }
 });
 
+test("E2E-FF-INC-001-01 E2E-FF-INC-001-02 E2E-FF-INC-003-01 E2E-FF-INC-005-01 deactivation excludes a plan and reactivation preserves its override", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/income`);
+    const incomeForm = page.locator("#income-form");
+    await incomeForm.getByLabel("Bezeichnung").fill("Retained salary");
+    await incomeForm.getByLabel("Eigentümer").selectOption("person_a");
+    await incomeForm.getByLabel("Betrag").fill("3.500,00");
+    await incomeForm.getByLabel("Startmonat").fill("01.2026");
+    await incomeForm.getByRole("button", { name: "Einnahme hinzufügen" }).click();
+
+    const overrideForm = page.locator("#income-override-form");
+    await overrideForm.getByLabel("Einnahme").selectOption({ label: "Retained salary" });
+    await overrideForm.getByLabel("Monat").fill("08.2026");
+    await overrideForm.getByLabel("Abweichender Betrag").fill("0,00");
+    await overrideForm.getByRole("button", { name: "Abweichung speichern" }).click();
+    await page.getByLabel("Berechnungsmonat").fill("08.2026");
+    await page.getByRole("button", { name: "Berechnung aktualisieren" }).click();
+
+    await expect(page.getByText("Geplante Monatseinnahmen: 0,00")).toBeVisible();
+    await expect(
+      page
+        .locator("section[aria-labelledby='income-list-heading']")
+        .getByRole("cell", { name: "Retained salary", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Deaktivieren" })).toBeVisible();
+    await page.getByRole("button", { name: "Deaktivieren" }).click();
+    await page.getByLabel("Berechnungsmonat").fill("01.2026");
+    await page.getByRole("button", { name: "Berechnung aktualisieren" }).click();
+    await expect(page.getByText("Geplante Monatseinnahmen: 0,00")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Aktivieren" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Aktivieren" }).click();
+    await page.getByLabel("Berechnungsmonat").fill("01.2026");
+    await page.getByRole("button", { name: "Berechnung aktualisieren" }).click();
+    await expect(page.getByText("Geplante Monatseinnahmen: 3.500,00")).toBeVisible();
+    await page.getByLabel("Berechnungsmonat").fill("08.2026");
+    await page.getByRole("button", { name: "Berechnung aktualisieren" }).click();
+    await expect(page.getByText("Geplante Monatseinnahmen: 0,00")).toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
 test("income can be filtered by owner context", async ({ page }) => {
   const server = buildServer();
 

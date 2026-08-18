@@ -78,6 +78,8 @@ function incomeText(localization: Localization) {
     end: text("income.end"),
     actions: text("common.actions"),
     edit: text("common.edit"),
+    activate: text("income.activate"),
+    deactivate: text("income.deactivate"),
     overridesHeading: text("income.overrides"),
     noOverrides: text("income.noOverrides"),
     month: text("common.month"),
@@ -120,6 +122,8 @@ export function prepareIncomeViewModel(input: IncomeViewInput, localization: Loc
       startMonth: localization.formatMonth(plan.startMonth),
       endMonth: plan.endMonth === null ? "" : localization.formatMonth(plan.endMonth),
       editUrl: `/income/${encodeURIComponent(plan.id)}/edit`,
+      activationUrl: `/income/${encodeURIComponent(plan.id)}/${plan.active ? "deactivate" : "activate"}`,
+      activationLabel: localization.text(plan.active ? "income.deactivate" : "income.activate"),
     })),
     overridesEmpty: input.overrides.length === 0,
     overrides: input.overrides.map((override) => ({

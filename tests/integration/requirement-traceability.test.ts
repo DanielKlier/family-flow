@@ -34,6 +34,20 @@ describe("INT-FF-QUA-004-01 PostgreSQL quality gate", () => {
     }
   });
 
+  it.each([
+    ["OPS-FF-CAT-002-01", "categorization-rule-migration.test.ts", "categorization-rules.test.ts"],
+    ["OPS-FF-DASH-001-01", "drizzle-dashboard-repositories.test.ts", undefined],
+  ])("runs the isolated evidence plan for %s", async (operation, vitestFile, e2eFile) => {
+    const harness = await createHarness("success");
+    const result = await run(harness.environment, ["--operation", operation]);
+    const calls = await readFile(harness.log, "utf8");
+
+    expect(result.code, result.stderr).toBe(0);
+    expect(calls).toContain(vitestFile);
+    if (e2eFile === undefined) expect(calls).not.toContain("playwright test");
+    else expect(calls).toContain(e2eFile);
+  });
+
   it("preserves SIGTERM semantics and still cleans up", async () => {
     const harness = await createHarness("signal");
     const child = spawn(process.execPath, ["--import", "tsx", "scripts/run-postgres-tests.ts"], {
@@ -54,13 +68,18 @@ describe("INT-FF-QUA-004-01 PostgreSQL quality gate", () => {
 
 async function run(
   environment: NodeJS.ProcessEnv,
+  arguments_: string[] = [],
 ): Promise<{ code: number | null; stderr: string }> {
   return await new Promise((resolvePromise, reject) => {
-    const child = spawn(resolve("node_modules/.bin/tsx"), ["scripts/run-postgres-tests.ts"], {
-      cwd: repositoryRoot,
-      env: environment,
-      stdio: ["ignore", "ignore", "pipe"],
-    });
+    const child = spawn(
+      resolve("node_modules/.bin/tsx"),
+      ["scripts/run-postgres-tests.ts", ...arguments_],
+      {
+        cwd: repositoryRoot,
+        env: environment,
+        stdio: ["ignore", "ignore", "pipe"],
+      },
+    );
     let stderr = "";
     child.stderr.on("data", (chunk: Buffer) => (stderr += chunk.toString()));
     child.on("error", reject);
