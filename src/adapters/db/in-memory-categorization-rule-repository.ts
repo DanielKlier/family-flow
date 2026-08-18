@@ -1,5 +1,7 @@
-import type { CategorizationRule } from "../../core/categorization/categorization-rule.js";
-import { compareCodePoints } from "../../core/shared/compare-code-points.js";
+import {
+  type CategorizationRule,
+  compareCategorizationRules,
+} from "../../core/categorization/categorization-rule.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
 
 export class InMemoryCategorizationRuleRepository implements CategorizationRuleRepository {
@@ -12,7 +14,7 @@ export class InMemoryCategorizationRuleRepository implements CategorizationRuleR
   }
 
   async list(): Promise<CategorizationRule[]> {
-    return [...this.#rules.values()].sort(compareRules);
+    return [...this.#rules.values()].sort(compareCategorizationRules);
   }
 
   async get(id: string): Promise<CategorizationRule | null> {
@@ -26,8 +28,4 @@ export class InMemoryCategorizationRuleRepository implements CategorizationRuleR
   async delete(id: string): Promise<void> {
     this.#rules.delete(id);
   }
-}
-
-function compareRules(left: CategorizationRule, right: CategorizationRule): number {
-  return left.priority - right.priority || compareCodePoints(left.name, right.name);
 }

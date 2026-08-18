@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
-
-import { createGermanLocalization } from "../../src/adapters/localization/german.js";
-
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
 import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
@@ -151,6 +149,19 @@ describe("Drizzle master data repositories", () => {
         await expect(repositories.categories.listActive()).resolves.not.toContainEqual(
           expect.objectContaining({ id: "category-test-active" }),
         );
+
+        await repositories.categories.save({
+          id: "category-normalized-a",
+          name: " Ｆｏｏ  Bar ",
+          active: true,
+        });
+        await expect(
+          repositories.categories.save({
+            id: "category-normalized-b",
+            name: "foo bar",
+            active: true,
+          }),
+        ).rejects.toThrow("Category name already exists"); // INT-FF-CAT-004-02
       } finally {
         await connection.client.end();
       }

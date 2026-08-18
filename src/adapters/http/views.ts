@@ -64,6 +64,7 @@ type RulesInput = {
   categories: Category[];
   rules: CategorizationRule[];
   formError?: string;
+  applicationResult?: { changed: number; unchanged: number };
 };
 
 function mainNavigation(localization: Localization) {

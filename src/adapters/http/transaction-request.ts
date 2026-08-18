@@ -1,5 +1,6 @@
 import { parseOwnerContext } from "../../core/shared/owner-context.js";
 import {
+  categoryOriginAfterEdit,
   createManualExpense,
   createTransaction,
   type Transaction,
@@ -81,6 +82,11 @@ export function createTransactionFromForm(
   if (existing === undefined) return manual;
   return createTransaction({
     ...manual,
+    categoryOrigin: categoryOriginAfterEdit(
+      existing.categoryId,
+      existing.categoryOrigin,
+      manual.categoryId,
+    ),
     source: existing.source,
     purpose: form.purpose ?? existing.purpose,
     importHash: existing.importHash,

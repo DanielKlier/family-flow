@@ -5,6 +5,7 @@ export type ConfirmableImportTransaction = Pick<
   | "id"
   | "accountId"
   | "categoryId"
+  | "categoryOrigin"
   | "date"
   | "amountCents"
   | "description"

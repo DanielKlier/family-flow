@@ -44,6 +44,7 @@ function verifyVitestOperation(id: string, file: string): OperationVerifier {
 export const operationRegistry: OperationRegistry = {
   "OPS-FF-AUTH-006-01": verifyPostgresOperation("OPS-FF-AUTH-006-01"),
   "OPS-FF-AUTH-009-01": verifyPostgresOperation("OPS-FF-AUTH-009-01"),
+  "OPS-FF-CAT-002-01": verifyPostgresOperation("OPS-FF-CAT-002-01"),
   "OPS-FF-TXN-005-01": verifyPostgresOperation("OPS-FF-TXN-005-01"),
   "OPS-FF-LOC-002-01": verifyVitestOperation(
     "OPS-FF-LOC-002-01",

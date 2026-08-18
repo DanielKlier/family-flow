@@ -1,10 +1,12 @@
 export type TransactionStatus = "booked" | "planned";
 export type TransactionSource = "manual" | "csv";
+export type CategoryOrigin = "manual" | "csv_mapped" | "rule" | "fallback" | "legacy_preserved";
 
 export type TransactionErrorCode =
   | "required_id"
   | "required_account"
   | "required_category"
+  | "invalid_category_origin"
   | "invalid_date"
   | "invalid_amount"
   | "non_expense_amount"
@@ -23,6 +25,7 @@ export type Transaction = {
   id: string;
   accountId: string;
   categoryId: string;
+  categoryOrigin: CategoryOrigin;
   date: string;
   amountCents: number;
   description: string;
@@ -60,6 +63,7 @@ export function createManualExpense(input: ManualExpenseInput): Transaction {
     id: input.id,
     accountId: input.accountId,
     categoryId: input.categoryId,
+    categoryOrigin: "manual",
     date: input.date,
     amountCents: input.amountCents,
     description: input.description,
@@ -69,6 +73,14 @@ export function createManualExpense(input: ManualExpenseInput): Transaction {
     fixedCost: input.fixedCost ?? false,
     note: input.note ?? null,
   });
+}
+
+export function categoryOriginAfterEdit(
+  existingCategoryId: string,
+  existingOrigin: CategoryOrigin,
+  editedCategoryId: string,
+): CategoryOrigin {
+  return editedCategoryId === existingCategoryId ? existingOrigin : "manual";
 }
 
 export function createTransaction(input: TransactionInput): Transaction {
@@ -89,6 +101,9 @@ export function createTransaction(input: TransactionInput): Transaction {
   }
   if (categoryId === "") {
     throw new TransactionValidationError("required_category");
+  }
+  if (!isCategoryOrigin(input.categoryOrigin)) {
+    throw new TransactionValidationError("invalid_category_origin");
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
     throw new TransactionValidationError("invalid_date");
@@ -113,6 +128,7 @@ export function createTransaction(input: TransactionInput): Transaction {
     id,
     accountId,
     categoryId,
+    categoryOrigin: input.categoryOrigin,
     date: input.date,
     amountCents: input.amountCents,
     description,
@@ -132,6 +148,16 @@ export function expenseTotalCents(transactions: Transaction[]): number {
     (total, transaction) =>
       transaction.internalTransfer ? total : total + transaction.amountCents,
     0,
+  );
+}
+
+function isCategoryOrigin(value: unknown): value is CategoryOrigin {
+  return (
+    value === "manual" ||
+    value === "csv_mapped" ||
+    value === "rule" ||
+    value === "fallback" ||
+    value === "legacy_preserved"
   );
 }
 

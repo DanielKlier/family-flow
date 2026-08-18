@@ -40,11 +40,16 @@ export const ownerContextLabels = pgTable("owner_context_labels", {
   label: text("label").notNull(),
 });
 
-export const categories = pgTable("categories", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  active: boolean("active").notNull().default(true),
-});
+export const categories = pgTable(
+  "categories",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    normalizedName: text("normalized_name").notNull(),
+    active: boolean("active").notNull().default(true),
+  },
+  (table) => [uniqueIndex("categories_normalized_name_unique_idx").on(table.normalizedName)],
+);
 
 export const transactions = pgTable(
   "transactions",
@@ -56,6 +61,9 @@ export const transactions = pgTable(
     categoryId: text("category_id")
       .notNull()
       .references(() => categories.id),
+    categoryOrigin: text("category_origin")
+      .notNull()
+      .$type<"manual" | "csv_mapped" | "rule" | "fallback" | "legacy_preserved">(),
     date: text("date").notNull(),
     amountCents: integer("amount_cents").notNull(),
     description: text("description").notNull(),

@@ -55,7 +55,11 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
   });
 }
 
-type PostgresOperation = "OPS-FF-AUTH-006-01" | "OPS-FF-AUTH-009-01" | "OPS-FF-TXN-005-01";
+type PostgresOperation =
+  | "OPS-FF-AUTH-006-01"
+  | "OPS-FF-AUTH-009-01"
+  | "OPS-FF-CAT-002-01"
+  | "OPS-FF-TXN-005-01";
 
 function requestedOperation(arguments_: string[]): PostgresOperation | undefined {
   if (arguments_.length === 0) return undefined;
@@ -63,7 +67,12 @@ function requestedOperation(arguments_: string[]): PostgresOperation | undefined
     throw new Error("Usage: tsx scripts/run-postgres-tests.ts [--operation <OPS-ID>]");
   }
   const id = arguments_[1];
-  if (id !== "OPS-FF-AUTH-006-01" && id !== "OPS-FF-AUTH-009-01" && id !== "OPS-FF-TXN-005-01") {
+  if (
+    id !== "OPS-FF-AUTH-006-01" &&
+    id !== "OPS-FF-AUTH-009-01" &&
+    id !== "OPS-FF-CAT-002-01" &&
+    id !== "OPS-FF-TXN-005-01"
+  ) {
     throw new Error(`Unsupported PostgreSQL operation: ${id}`);
   }
   return id;
@@ -82,6 +91,22 @@ async function runEvidence(
         "INT-FF-AUTH-006",
       );
     }
+    if (operation === "OPS-FF-CAT-002-01") {
+      vitestArguments.push(
+        "tests/integration/categorization-rule-migration.test.ts",
+        "tests/integration/categorization-rule-repositories.test.ts",
+        "tests/integration/drizzle-categorization-rule-repository.test.ts",
+        "tests/integration/drizzle-master-data-repositories.test.ts",
+        "tests/integration/drizzle-transaction-repository.test.ts",
+        "tests/integration/categorization-rules-http.test.ts",
+        "tests/integration/transaction-http.test.ts",
+        "tests/integration/category-normalization-http.test.ts",
+        "tests/unit/categorization-correction.test.ts",
+        "tests/unit/categorization-rules.test.ts",
+        "--testNamePattern",
+        "(?:INT|UNIT)-FF-(?:CAT-00[1-5]|TXN-001-0[45])",
+      );
+    }
     if (operation === "OPS-FF-TXN-005-01") {
       vitestArguments.push(
         "tests/integration/drizzle-transaction-repository.test.ts",
@@ -98,7 +123,21 @@ async function runEvidence(
     await run("pnpm", vitestArguments, environment);
     if (receivedSignal) return;
   }
-  if (operation === "OPS-FF-TXN-005-01") {
+  if (operation === "OPS-FF-CAT-002-01") {
+    await run(
+      "pnpm",
+      [
+        "exec",
+        "playwright",
+        "test",
+        "tests/e2e/categorization-rules.test.ts",
+        "--grep",
+        "E2E-FF-CAT-(?:001|002|004|005)",
+        "--workers=1",
+      ],
+      environment,
+    );
+  } else if (operation === "OPS-FF-TXN-005-01") {
     await run(
       "pnpm",
       [

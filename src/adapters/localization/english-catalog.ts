@@ -173,6 +173,7 @@ export const messages: Readonly<Record<string, string>> = {
   "rules.priority": "Priority",
   "rules.list": "Rule list",
   "rules.apply": "Apply rules to existing transactions",
+  "rules.applyResult": "{changed} changed, {unchanged} unchanged",
   "rules.empty": "No categorization rules found.",
   "rules.fixedColumn": "Fixed costs",
   "rules.transferColumn": "Internal transfer",

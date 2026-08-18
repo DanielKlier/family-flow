@@ -2,10 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
-import {
-  applyCategorizationRules,
-  createCategorizationRule,
-} from "../../core/categorization/categorization-rule.js";
+import { createCategorizationRule } from "../../core/categorization/categorization-rule.js";
+import { reapplyCategorizationRules } from "../../core/categorization/reapply-categorization-rules.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
@@ -139,30 +137,17 @@ async function handleApplyRules(
   repositories: CategorizationRuleRouteRepositories,
   reply: FastifyReply,
 ) {
-  const [rules, transactions] = await Promise.all([
-    repositories.categorizationRules.list(),
-    repositories.transactions.list({}),
-  ]);
-  const updatedTransactions = applyCategorizationRules(rules, transactions);
+  const rules = await repositories.categorizationRules.list();
+  const applicationResult = await reapplyCategorizationRules(rules, repositories.transactions);
 
-  await Promise.all(
-    updatedTransactions
-      .filter(
-        (transaction, index) =>
-          transaction.categoryId !== transactions[index]?.categoryId ||
-          transaction.fixedCost !== transactions[index]?.fixedCost ||
-          transaction.internalTransfer !== transactions[index]?.internalTransfer,
-      )
-      .map((transaction) => repositories.transactions.save(transaction)),
-  );
-
-  return reply.redirect("/categorization-rules");
+  return renderRulePage(repositories, reply, undefined, applicationResult);
 }
 
 async function renderRulePage(
   repositories: CategorizationRuleRouteRepositories,
   reply: FastifyReply,
   formError?: string,
+  applicationResult?: { changed: number; unchanged: number },
 ) {
   const [accounts, categories, rules] = await Promise.all([
     repositories.accounts.list(),
@@ -176,6 +161,7 @@ async function renderRulePage(
       categories,
       rules,
       formError,
+      applicationResult,
     }),
   );
 }

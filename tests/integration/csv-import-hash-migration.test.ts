@@ -1,14 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-
-import { createGermanLocalization } from "../../src/adapters/localization/german.js";
-
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
 import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
 
@@ -17,7 +15,7 @@ async function insertImported(
   id: string,
   hash: string,
 ) {
-  await sql`insert into transactions (id, account_id, category_id, date, amount_cents, description, source, status, fixed_cost, import_hash) values (${id}, 'account-shared-checking', 'category-other', '2026-07-15', -100, ${id}, 'csv', 'booked', false, ${hash})`;
+  await sql`insert into transactions (id, account_id, category_id, category_origin, date, amount_cents, description, source, status, fixed_cost, import_hash) values (${id}, 'account-shared-checking', 'category-other', 'legacy_preserved', '2026-07-15', -100, ${id}, 'csv', 'booked', false, ${hash})`;
 }
 
 describe("CSV import hash migration", () => {

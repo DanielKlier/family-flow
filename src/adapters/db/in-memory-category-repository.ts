@@ -1,4 +1,4 @@
-import type { Category } from "../../core/categories/category.js";
+import { assertUniqueCategoryName, type Category } from "../../core/categories/category.js";
 import { compareCodePoints } from "../../core/shared/compare-code-points.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 
@@ -24,6 +24,7 @@ export class InMemoryCategoryRepository implements CategoryRepository {
   }
 
   async save(category: Category): Promise<void> {
+    assertUniqueCategoryName([...this.#categories.values()], category);
     this.#categories.set(category.id, category);
   }
 }
