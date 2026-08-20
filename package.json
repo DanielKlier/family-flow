@@ -34,7 +34,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.5",
     "@playwright/test": "^1.54.2",
-    "@types/node": "^24.1.0",
+    "@types/node": "^26.2.0",
     "@types/nunjucks": "^3.2.6",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.12",
