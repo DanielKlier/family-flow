@@ -4,6 +4,29 @@ All notable changes to FamilyFlow are documented in this file.
 
 FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tags use the `vMAJOR.MINOR.PATCH` format.
 
+## [0.11.0] - 2026-08-21
+
+### Added
+
+- Add a monthly dashboard with reconciled planned income, actual expenses, balance, category and account breakdowns, historical averages, and current-month forecasts.
+- Add German and English localization with per-request language negotiation and locale-specific date, month, and amount input formats.
+- Add explicit internal-transfer classification, filtering, and categorization-rule actions so transfers are excluded from expense aggregates and forecasts.
+- Add category-decision provenance for manual, CSV-mapped, rule-based, fallback, and legacy-preserved classifications.
+- Add pull-request verification and weekly dependency monitoring.
+
+### Fixed
+
+- Preserve transaction purpose in lists and across categorization changes.
+- Preserve manual and CSV category decisions when categorization rules are reapplied while still applying fixed-cost and internal-transfer actions.
+- Keep transfer updates atomic and aligned with active transaction filters.
+- Make the Docker build gate independent of local OIDC secrets.
+
+### Database migrations
+
+- Migration `0014_internal_transfers.sql` adds explicit internal-transfer state to transactions and leaves existing transactions unmarked.
+- Migration `0015_categorization_rule_internal_transfer.sql` adds the optional internal-transfer action to categorization rules without changing existing rules.
+- Migration `0016_category_origin_and_normalized_names.sql` validates normalized category uniqueness, records category-decision provenance, and invalidates unconsumed previews that predate provenance tracking. Pending CSV previews must be uploaded again after deployment.
+
 ## [0.10.0] - 2026-08-14
 
 ### Added
