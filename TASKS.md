@@ -603,20 +603,20 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-07-R01 — Complete Categorization Behavior
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-CAT-001`, `FF-CAT-003`, `FF-CAT-004`, `FF-CAT-005`
 **Verifies:** `FF-CAT-002`
 **Operations:** `OPS-FF-CAT-002-01`
 
-- [ ] Add `E2E-FF-CAT-001-01` and observe red because persisted purpose is not included in matching.
-- [ ] Add purpose matching after the red result.
-- [ ] Add category origin to transaction core/schema/repositories; migrate manual rows to `manual` and CSV rows to `legacy_preserved` without changing categories.
-- [ ] Implement origin-aware reapplication plus ascending priority then ascending ASCII rule-ID tie-breaking and verify identical core outcomes across adapters.
-- [ ] Cover description, payee, purpose, account restrictions, origin policy, and no-match behavior.
-- [ ] Cover mapped category, rule category, fallback category, and fixed-cost interaction.
-- [ ] Verify import preview and reapplication to existing transactions produce the same decision.
-- [ ] Add mandatory HTTP and PostgreSQL integration tests for create, edit, delete, ordered lookup, reapplication, and friendly validation.
+- [x] Add `E2E-FF-CAT-001-01` and observe red because persisted purpose is not included in matching.
+- [x] Add purpose matching after the red result.
+- [x] Add category origin to transaction core/schema/repositories; migrate manual rows to `manual` and CSV rows to `legacy_preserved` without changing categories.
+- [x] Implement origin-aware reapplication plus ascending priority then ascending ASCII rule-ID tie-breaking and verify identical core outcomes across adapters.
+- [x] Cover description, payee, purpose, account restrictions, origin policy, and no-match behavior.
+- [x] Cover mapped category, rule category, fallback category, and fixed-cost interaction.
+- [x] Verify import preview and reapplication to existing transactions produce the same decision.
+- [x] Add mandatory HTTP and PostgreSQL integration tests for create, edit, delete, ordered lookup, reapplication, and friendly validation.
 
 **Tests:** `E2E-FF-CAT-001-01`, `UNIT-FF-CAT-001-01`, `UNIT-FF-CAT-002-01` (origin-aware decisions), `UNIT-FF-CAT-003-01`, `UNIT-FF-CAT-004-01` (normalized uniqueness), `E2E-FF-CAT-004-01`, `INT-FF-CAT-004-02` (normalized category migration), `E2E-FF-CAT-005-01`, `E2E-FF-CAT-005-02`, `UNIT-FF-CAT-005-02` (stable order, origin decisions, changed/unchanged counts), `INT-FF-CAT-005-01` (HTTP), `INT-FF-CAT-005-02` (PostgreSQL), `INT-FF-CAT-005-03` (origin migration), and `INT-FF-TXN-001-04` (PostgreSQL round-trip).
 

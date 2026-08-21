@@ -1,3 +1,5 @@
+import { normalizeCanonicalText } from "../shared/normalize-canonical-text.js";
+
 export type Category = {
   id: string;
   name: string;
@@ -28,6 +30,22 @@ export function createCategory(input: CategoryInput): Category {
   }
 
   return { id, name, active: input.active ?? true };
+}
+
+export function normalizeCategoryName(value: string): string {
+  return normalizeCanonicalText(value);
+}
+
+export function assertUniqueCategoryName(categories: Category[], candidate: Category): void {
+  const normalized = normalizeCategoryName(candidate.name);
+  if (
+    categories.some(
+      (category) =>
+        category.id !== candidate.id && normalizeCategoryName(category.name) === normalized,
+    )
+  ) {
+    throw new Error("Category name already exists");
+  }
 }
 
 export function updateCategory(category: Category, input: CategoryUpdateInput): Category {

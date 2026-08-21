@@ -43,6 +43,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
         set: {
           accountId: transaction.accountId,
           categoryId: transaction.categoryId,
+          categoryOrigin: transaction.categoryOrigin,
           date: transaction.date,
           amountCents: transaction.amountCents,
           description: transaction.description,
@@ -116,6 +117,7 @@ function mapTransaction(row: typeof transactions.$inferSelect): Transaction {
     id: row.id,
     accountId: row.accountId,
     categoryId: row.categoryId,
+    categoryOrigin: row.categoryOrigin,
     date: row.date,
     amountCents: row.amountCents,
     description: row.description,

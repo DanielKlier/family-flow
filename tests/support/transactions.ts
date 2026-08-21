@@ -9,6 +9,7 @@ export function aTransaction(overrides: Partial<TransactionInput> = {}): Transac
     id: "transaction-1",
     accountId: "account-person-a-checking",
     categoryId: "category-groceries",
+    categoryOrigin: "manual",
     date: "2026-07-15",
     amountCents: -4299,
     description: "Groceries",

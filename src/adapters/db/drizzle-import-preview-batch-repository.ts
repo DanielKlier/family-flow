@@ -129,6 +129,7 @@ function parseImportTransaction(value: unknown): ConfirmableImportTransaction {
     !isNonEmptyString(value.id) ||
     !isNonEmptyString(value.accountId) ||
     !isNonEmptyString(value.categoryId) ||
+    !isCategoryOrigin(value.categoryOrigin) ||
     !isNonEmptyString(value.date) ||
     typeof value.amountCents !== "number" ||
     !Number.isSafeInteger(value.amountCents) ||
@@ -145,6 +146,7 @@ function parseImportTransaction(value: unknown): ConfirmableImportTransaction {
     id: value.id,
     accountId: value.accountId,
     categoryId: value.categoryId,
+    categoryOrigin: value.categoryOrigin,
     date: value.date,
     amountCents: value.amountCents,
     description: value.description,
@@ -154,6 +156,10 @@ function parseImportTransaction(value: unknown): ConfirmableImportTransaction {
     ...(value.fixedCost === undefined ? {} : { fixedCost: value.fixedCost }),
     ...(value.internalTransfer === undefined ? {} : { internalTransfer: value.internalTransfer }),
   };
+}
+
+function isCategoryOrigin(value: unknown): value is ConfirmableImportTransaction["categoryOrigin"] {
+  return value === "csv_mapped" || value === "rule" || value === "fallback";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

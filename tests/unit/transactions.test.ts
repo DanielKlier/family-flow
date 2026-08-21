@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import * as transactionCore from "../../src/core/transactions/transaction.js";
-import { createManualExpense, createTransaction } from "../../src/core/transactions/transaction.js";
+import {
+  categoryOriginAfterEdit,
+  createManualExpense,
+  createTransaction,
+} from "../../src/core/transactions/transaction.js";
 import { aTransaction } from "../support/transactions.js";
 
 describe("transactions", () => {
@@ -58,6 +62,7 @@ describe("transactions", () => {
       description: "Card payment",
       payee: "Shop",
       purpose: "  Weekly groceries  ",
+      categoryOrigin: "legacy_preserved" as const,
       source: "csv" as const,
       status: "booked" as const,
       fixedCost: false,
@@ -67,9 +72,19 @@ describe("transactions", () => {
 
     expect(createTransaction(importedInput)).toMatchObject({
       purpose: "Weekly groceries",
+      categoryOrigin: "legacy_preserved",
       source: "csv",
       importHash: "v2:immutable-import-hash",
     });
+  });
+
+  it("UNIT-FF-TXN-001-04: preserves origin unless the user changes the category", () => {
+    expect(categoryOriginAfterEdit("category-other", "fallback", "category-other")).toBe(
+      "fallback",
+    );
+    expect(categoryOriginAfterEdit("category-other", "fallback", "category-groceries")).toBe(
+      "manual",
+    );
   });
 
   it("UNIT-FF-TXN-005-01: defaults internal transfers to false and preserves explicit transfer state", () => {

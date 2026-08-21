@@ -1,7 +1,8 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 
 import {
   type CategorizationRule,
+  compareCategorizationRules,
   createCategorizationRule,
 } from "../../core/categorization/categorization-rule.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
@@ -15,9 +16,9 @@ export class DrizzleCategorizationRuleRepository implements CategorizationRuleRe
     const rows = await this.db
       .select()
       .from(categorizationRules)
-      .orderBy(asc(categorizationRules.priority), asc(categorizationRules.name));
+      .orderBy(asc(categorizationRules.priority), sql`${categorizationRules.id} COLLATE "C"`);
 
-    return rows.map(mapCategorizationRuleRow);
+    return rows.map(mapCategorizationRuleRow).sort(compareCategorizationRules);
   }
 
   async get(id: string): Promise<CategorizationRule | null> {

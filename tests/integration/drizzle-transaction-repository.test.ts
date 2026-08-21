@@ -1,6 +1,4 @@
 import { describe, expect, it } from "vitest";
-
-import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
 import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
@@ -9,6 +7,9 @@ import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { transactions as transactionRows } from "../../src/adapters/db/schema.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
+import { createCategorizationRule } from "../../src/core/categorization/categorization-rule.js";
+import { reapplyCategorizationRules } from "../../src/core/categorization/reapply-categorization-rules.js";
 import { expectTransactionFilterContract } from "../support/transaction-repository-contract.js";
 import { aTransaction } from "../support/transactions.js";
 
@@ -16,7 +17,7 @@ const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
 describe("Drizzle transaction repository", () => {
   it.runIf(testDatabaseUrl !== undefined)(
-    "INT-FF-TXN-001-01 INT-FF-TXN-001-03 INT-FF-TXN-004-01 INT-FF-TXN-005-01 INT-FF-TXN-005-03: persists transfer state atomically without overwriting concurrent edits",
+    "INT-FF-CAT-005-02 INT-FF-TXN-001-01 INT-FF-TXN-001-03 INT-FF-TXN-001-04 INT-FF-TXN-004-01 INT-FF-TXN-005-01 INT-FF-TXN-005-03: reapplies through PostgreSQL and round-trips origin without overwriting concurrent edits",
     async () => {
       if (testDatabaseUrl === undefined) {
         throw new Error("TEST_DATABASE_URL is required");
@@ -41,6 +42,7 @@ describe("Drizzle transaction repository", () => {
           id: "transaction-drizzle-default-transfer",
           accountId: "account-person-a-checking",
           categoryId: "category-groceries",
+          categoryOrigin: "manual",
           date: "2026-07-15",
           amountCents: -100,
           description: "Database default transfer state",
@@ -55,6 +57,7 @@ describe("Drizzle transaction repository", () => {
           id: "transaction-drizzle-rent",
           accountId: "account-shared-checking",
           categoryId: "category-housing-rent",
+          categoryOrigin: "rule",
           date: "2026-07-01",
           amountCents: -120000,
           description: "Drizzle rent",
@@ -66,6 +69,9 @@ describe("Drizzle transaction repository", () => {
         });
 
         await transactions.save(rent);
+        await expect(transactions.get(rent.id)).resolves.toMatchObject({
+          categoryOrigin: "rule",
+        });
 
         const markedRent = { ...rent, internalTransfer: true };
         await transactions.save(markedRent);
@@ -109,10 +115,51 @@ describe("Drizzle transaction repository", () => {
         await expect(transactions.get(rent.id)).resolves.toBeNull();
         await transactions.delete("transaction-drizzle-default-transfer");
 
+        const reapplicationFixtures = [
+          aTransaction({
+            id: "transaction-reapply-a",
+            description: "Reapply market planned",
+            categoryId: "category-other",
+            categoryOrigin: "fallback",
+            status: "planned",
+          }),
+          aTransaction({
+            id: "transaction-reapply-z",
+            description: "Reapply market booked",
+            categoryId: "category-other",
+            categoryOrigin: "fallback",
+          }),
+        ];
+        for (const fixture of reapplicationFixtures) await transactions.save(fixture);
+        await expect(
+          reapplyCategorizationRules(
+            [
+              createCategorizationRule({
+                id: "rule-reapply-market",
+                name: "Reapply market",
+                searchText: "reapply market",
+                categoryId: "category-groceries",
+                priority: 1,
+                enabled: true,
+              }),
+            ],
+            transactions,
+          ),
+        ).resolves.toEqual({ changed: 2, unchanged: 0 });
+        await expect(transactions.get("transaction-reapply-a")).resolves.toMatchObject({
+          categoryId: "category-groceries",
+          categoryOrigin: "rule",
+          status: "planned",
+        });
+        await transactions.delete("transaction-reapply-a");
+        await transactions.delete("transaction-reapply-z");
+
         await expectTransactionFilterContract(transactions);
       } finally {
         await transactions.delete("transaction-drizzle-default-transfer");
         await transactions.delete("transaction-drizzle-rent");
+        await transactions.delete("transaction-reapply-a");
+        await transactions.delete("transaction-reapply-z");
         await transactions.delete("transaction-filter-groceries");
         await transactions.delete("transaction-filter-rent");
         await connection.client.end();

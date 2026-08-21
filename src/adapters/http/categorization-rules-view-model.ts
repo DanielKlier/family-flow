@@ -8,6 +8,7 @@ type RulesInput = {
   categories: Category[];
   rules: CategorizationRule[];
   formError?: string;
+  applicationResult?: { changed: number; unchanged: number };
 };
 
 function actionValue(value: boolean | null, truthy: string, falsy: string): string {
@@ -102,6 +103,13 @@ export function prepareCategorizationRulesViewModel(input: RulesInput, localizat
     heading: localization.text("rules.heading"),
     text: ruleText(localization),
     formError: input.formError,
+    applicationResult:
+      input.applicationResult === undefined
+        ? undefined
+        : localization.text("rules.applyResult", {
+            changed: input.applicationResult.changed,
+            unchanged: input.applicationResult.unchanged,
+          }),
     form: prepareForm(input, localization),
     empty: input.rules.length === 0,
     rows: input.rules.map((rule) => ({

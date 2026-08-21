@@ -1,4 +1,7 @@
-import type { Transaction } from "../transactions/transaction.js";
+import { type Category, normalizeCategoryName } from "../categories/category.js";
+import { compareCodePoints } from "../shared/compare-code-points.js";
+import { normalizeCanonicalText } from "../shared/normalize-canonical-text.js";
+import type { CategoryOrigin, Transaction } from "../transactions/transaction.js";
 
 export type CategorizationRule = {
   id: string;
@@ -80,7 +83,38 @@ export function findCategorizationMatch(
     );
   });
 
-  return [...matches].sort((left, right) => left.priority - right.priority)[0] ?? null;
+  return [...matches].sort((left, right) => compareCategorizationRules(left, right))[0] ?? null;
+}
+
+export type ImportCategorizationDecision = Pick<Category, "id" | "name"> & {
+  origin: Extract<CategoryOrigin, "csv_mapped" | "rule" | "fallback">;
+  fixedCost: boolean;
+  internalTransfer: boolean;
+};
+
+export function decideImportCategorization(
+  categories: Category[],
+  rules: CategorizationRule[],
+  candidate: CategorizationCandidate,
+  csvCategoryName: string,
+): ImportCategorizationDecision {
+  const matchedRule = findCategorizationMatch(rules, candidate);
+  const actions = {
+    fixedCost: matchedRule?.fixedCost ?? false,
+    internalTransfer: matchedRule?.internalTransfer ?? false,
+  };
+  const normalizedCsvName = normalizeCategoryName(csvCategoryName);
+  const csvCategory = categories.find(
+    (category) => normalizeCategoryName(category.name) === normalizedCsvName,
+  );
+  if (csvCategory !== undefined && normalizedCsvName !== "") {
+    return { ...csvCategory, origin: "csv_mapped", ...actions };
+  }
+  const ruleCategory = categories.find((category) => category.id === matchedRule?.categoryId);
+  if (ruleCategory !== undefined) return { ...ruleCategory, origin: "rule", ...actions };
+  const fallback = categories.find((category) => category.id === "category-other");
+  if (fallback === undefined) throw new Error("Fallback category is required");
+  return { ...fallback, origin: "fallback", ...actions };
 }
 
 export function applyCategorizationRules(
@@ -95,14 +129,14 @@ export function applyCategorizationRules(
       purpose: transaction.purpose,
     });
 
-    return match === null
-      ? transaction
-      : {
-          ...transaction,
-          categoryId: match.categoryId,
-          fixedCost: match.fixedCost ?? transaction.fixedCost,
-          internalTransfer: match.internalTransfer ?? transaction.internalTransfer,
-        };
+    if (match === null) return transaction;
+
+    return {
+      ...transaction,
+      ...categoryUpdate(transaction, match.categoryId),
+      fixedCost: match.fixedCost ?? transaction.fixedCost,
+      internalTransfer: match.internalTransfer ?? transaction.internalTransfer,
+    };
   });
 }
 
@@ -125,6 +159,31 @@ function normalizeOptionalText(value: string | null): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+export function normalizeCategorizationText(value: string): string {
+  return normalizeCanonicalText(value);
+}
+
 function normalizeForMatch(value: string): string {
-  return value.trim().toLowerCase();
+  return normalizeCategorizationText(value);
+}
+
+export function compareCategorizationRules(
+  left: Pick<CategorizationRule, "id" | "priority">,
+  right: Pick<CategorizationRule, "id" | "priority">,
+): number {
+  return left.priority - right.priority || compareCodePoints(left.id, right.id);
+}
+
+function categoryUpdate(
+  transaction: Transaction,
+  categoryId: string,
+): Partial<Pick<Transaction, "categoryId" | "categoryOrigin">> {
+  if (
+    transaction.categoryOrigin === "manual" ||
+    transaction.categoryOrigin === "csv_mapped" ||
+    transaction.categoryOrigin === "legacy_preserved"
+  ) {
+    return {};
+  }
+  return { categoryId, categoryOrigin: "rule" };
 }

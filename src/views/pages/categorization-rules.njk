@@ -17,6 +17,7 @@
 <section class="panel" aria-labelledby="categorization-rules-list-heading">
   <h2 id="categorization-rules-list-heading">{{ text.listHeading }}</h2>
   <form class="inline-form" method="post" action="/categorization-rules/apply"><button type="submit">{{ text.apply }}</button></form>
+  {% if applicationResult %}<p role="status">{{ applicationResult }}</p>{% endif %}
   {% if empty %}<p class="empty-state">{{ text.empty }}</p>{% else %}<div class="table-wrap"><table>
     <thead><tr><th>{{ text.name }}</th><th>{{ text.searchText }}</th><th>{{ text.categoryColumn }}</th><th>{{ text.accountColumn }}</th><th>{{ text.fixedCostColumn }}</th><th>{{ text.internalTransferColumn }}</th><th>{{ text.priority }}</th><th>{{ text.status }}</th><th>{{ text.actions }}</th></tr></thead><tbody>
     {% for row in rows %}<tr><td>{{ row.name }}</td><td>{{ row.searchText }}</td><td>{{ row.category }}</td><td>{{ row.account }}</td><td>{{ row.fixedCostLabel }}</td><td>{{ row.internalTransferLabel }}</td><td>{{ row.priority }}</td><td>{{ row.statusLabel }}</td><td class="actions-cell"><a class="action-link" href="{{ row.editUrl }}">{{ text.edit }}</a><form class="inline-form" method="post" action="{{ row.deleteUrl }}"><button class="link-button" type="submit">{{ text.delete }}</button></form></td></tr>{% endfor %}

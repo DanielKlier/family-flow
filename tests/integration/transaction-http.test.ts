@@ -5,7 +5,65 @@ import { createGermanLocalization } from "../../src/adapters/localization/german
 import { buildServer } from "../../src/app/server.js";
 import { aTransaction } from "../support/transactions.js";
 
-describe("transaction transfer HTTP adapter", () => {
+describe("transaction HTTP adapter", () => {
+  it("INT-FF-TXN-001-05: preserves origin for description edits and marks actual category changes manual", async () => {
+    const repositories = createSeededInMemoryRepositories(createGermanLocalization());
+    const imported = aTransaction({
+      id: "transaction-origin-edit",
+      accountId: "account-shared-checking",
+      categoryId: "category-other",
+      categoryOrigin: "fallback",
+      date: "2026-07-15",
+      description: "Original description",
+      source: "csv",
+      importHash: "v3:transaction-origin-edit",
+    });
+    await repositories.transactions.save(imported);
+    const server = buildServer({ repositories });
+
+    try {
+      const login = await server.inject({ method: "GET", url: "/auth/test-login" });
+      const session = login.cookies.find(({ name }) => name === "ff_session");
+      if (session === undefined) throw new Error("Test login must establish a session");
+      const headers = { cookie: `ff_session=${session.value}` };
+      const payload = {
+        accountId: imported.accountId,
+        categoryId: imported.categoryId,
+        date: "15.07.2026",
+        amount: "42,99",
+        description: "Edited description",
+        status: imported.status,
+      };
+
+      const descriptionEdit = await server.inject({
+        method: "POST",
+        url: `/transactions/${imported.id}`,
+        headers,
+        payload,
+      });
+      expect(descriptionEdit.statusCode).toBe(302);
+      await expect(repositories.transactions.get(imported.id)).resolves.toMatchObject({
+        description: "Edited description",
+        categoryId: "category-other",
+        categoryOrigin: "fallback",
+      });
+
+      const categoryEdit = await server.inject({
+        method: "POST",
+        url: `/transactions/${imported.id}`,
+        headers,
+        payload: { ...payload, categoryId: "category-groceries" },
+      });
+      expect(categoryEdit.statusCode).toBe(302);
+      await expect(repositories.transactions.get(imported.id)).resolves.toMatchObject({
+        categoryId: "category-groceries",
+        categoryOrigin: "manual",
+      });
+    } finally {
+      await server.close();
+    }
+  });
+
   it("INT-FF-TXN-005-02: mark and unmark preserve imported transaction identity fields", async () => {
     const repositories = createSeededInMemoryRepositories(createGermanLocalization());
     const imported = aTransaction({

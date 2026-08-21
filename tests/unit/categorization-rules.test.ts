@@ -73,6 +73,53 @@ describe("categorization rules", () => {
     ).toThrow("Categorization rule search text is required");
   });
 
+  it("UNIT-FF-CAT-001-01: matches normalized description, payee, and purpose only for enabled account-compatible rules", () => {
+    const rule = createCategorizationRule({
+      id: "rule-normalized",
+      name: "Normalized",
+      searchText: "straße markt",
+      categoryId: "category-groceries",
+      accountId: "account-shared-checking",
+      priority: 1,
+      enabled: true,
+    });
+
+    for (const candidate of [
+      { description: "Die STRAẞE   MARKT Bestellung", payee: null, purpose: null },
+      { description: "Card payment", payee: "STRAẞE   MARKT", purpose: null },
+      { description: "Card payment", payee: null, purpose: "ＳＴＲＡẞＥ   MARKT" },
+    ]) {
+      expect(
+        findCategorizationMatch([rule], { accountId: "account-shared-checking", ...candidate }),
+      ).toBe(rule);
+    }
+
+    expect(
+      findCategorizationMatch([rule], {
+        accountId: "account-other",
+        description: "STRAẞE MARKT",
+        payee: null,
+        purpose: null,
+      }),
+    ).toBeNull();
+    expect(
+      findCategorizationMatch([{ ...rule, enabled: false }], {
+        accountId: "account-shared-checking",
+        description: "STRAẞE MARKT",
+        payee: null,
+        purpose: null,
+      }),
+    ).toBeNull();
+    expect(
+      findCategorizationMatch([rule], {
+        accountId: "account-shared-checking",
+        description: "Unrelated",
+        payee: null,
+        purpose: null,
+      }),
+    ).toBeNull();
+  });
+
   it("matches enabled rules case-insensitively against description and payee", () => {
     const match = findCategorizationMatch(
       [
@@ -133,6 +180,115 @@ describe("categorization rules", () => {
     expect(match?.id).toBe("rule-high");
   });
 
+  it("UNIT-FF-CAT-003-01: selects the lowest numeric priority and then ASCII rule ID regardless of candidate order", () => {
+    const rules = [
+      createCategorizationRule({
+        id: "rule-B",
+        name: "Aardvark",
+        searchText: "market",
+        categoryId: "category-b",
+        priority: 1,
+        enabled: true,
+      }),
+      createCategorizationRule({
+        id: "rule-low-priority",
+        name: "First by name",
+        searchText: "market",
+        categoryId: "category-low-priority",
+        priority: 2,
+        enabled: true,
+      }),
+      createCategorizationRule({
+        id: "rule-A",
+        name: "Zebra",
+        searchText: "market",
+        categoryId: "category-a",
+        priority: 1,
+        enabled: true,
+      }),
+    ];
+    const candidate = { accountId: "account-shared-checking", description: "Market", payee: null };
+
+    expect(findCategorizationMatch(rules, candidate)?.id).toBe("rule-A");
+    expect(findCategorizationMatch([...rules].reverse(), candidate)?.id).toBe("rule-A");
+  });
+
+  it("UNIT-FF-CAT-002-01: protects manual, CSV-mapped, and legacy categories while applying rule actions", () => {
+    const rule = createCategorizationRule({
+      id: "rule-market",
+      name: "Market actions",
+      searchText: "market",
+      categoryId: "category-groceries",
+      fixedCost: true,
+      internalTransfer: true,
+      priority: 1,
+      enabled: true,
+    });
+    const protectedTransaction = Object.assign(
+      createTransaction({
+        id: "transaction-csv-mapped",
+        accountId: "account-shared-checking",
+        categoryId: "category-housing-rent",
+        date: "2026-07-15",
+        amountCents: -4299,
+        description: "Market payment",
+        payee: null,
+        categoryOrigin: "fallback",
+        source: "csv",
+        status: "booked",
+        fixedCost: false,
+        internalTransfer: false,
+        note: null,
+      }),
+      { categoryOrigin: "csv_mapped" },
+    );
+
+    const protectedTransactions = [
+      protectedTransaction,
+      Object.assign(
+        { ...protectedTransaction, id: "transaction-manual" },
+        { categoryOrigin: "manual" },
+      ),
+      Object.assign(
+        { ...protectedTransaction, id: "transaction-legacy" },
+        { categoryOrigin: "legacy_preserved" },
+      ),
+    ];
+    const recalculableTransactions = [
+      Object.assign(
+        { ...protectedTransaction, id: "transaction-rule", categoryId: "category-other" },
+        { categoryOrigin: "rule" },
+      ),
+      Object.assign(
+        { ...protectedTransaction, id: "transaction-fallback", categoryId: "category-other" },
+        { categoryOrigin: "fallback" },
+      ),
+    ];
+
+    expect(
+      applyCategorizationRules([rule], [...protectedTransactions, ...recalculableTransactions]),
+    ).toEqual([
+      ...protectedTransactions.map((transaction) => ({
+        ...transaction,
+        fixedCost: true,
+        internalTransfer: true,
+      })),
+      ...recalculableTransactions.map((transaction) => ({
+        ...transaction,
+        categoryId: "category-groceries",
+        categoryOrigin: "rule",
+        fixedCost: true,
+        internalTransfer: true,
+      })),
+    ]);
+    expect(
+      applyCategorizationRules(
+        [rule],
+        [{ ...protectedTransaction, description: "No matching rule" }],
+      ),
+    ).toEqual([{ ...protectedTransaction, description: "No matching rule" }]);
+  });
+
   it("applies matching rules to existing transactions", () => {
     const transaction = createTransaction({
       id: "transaction-supermarket",
@@ -142,6 +298,7 @@ describe("categorization rules", () => {
       amountCents: -4299,
       description: "Supermarket purchase",
       payee: "Shop",
+      categoryOrigin: "rule",
       source: "manual",
       status: "booked",
       fixedCost: false,
@@ -174,6 +331,7 @@ describe("categorization rules", () => {
       amountCents: -4200,
       description: "Monthly settlement",
       payee: "Bank",
+      categoryOrigin: "rule",
       source: "manual",
       status: "booked",
       fixedCost: false,
@@ -207,6 +365,7 @@ describe("categorization rules", () => {
       amountCents: -4200,
       description: "Monthly settlement",
       payee: "Bank",
+      categoryOrigin: "rule",
       source: "manual",
       status: "booked",
       fixedCost: false,
@@ -241,6 +400,7 @@ describe("categorization rules", () => {
       amountCents: -4200,
       description: "Monthly settlement",
       payee: "Bank",
+      categoryOrigin: "rule",
       source: "manual",
       status: "booked",
       fixedCost: false,
@@ -274,6 +434,7 @@ describe("categorization rules", () => {
       amountCents: -4200,
       description: "Monthly settlement",
       payee: "Bank",
+      categoryOrigin: "rule",
       source: "manual",
       status: "booked",
       fixedCost: false,
@@ -317,6 +478,7 @@ describe("categorization rules", () => {
       amountCents: -120000,
       description: "Monthly landlord payment",
       payee: "Landlord",
+      categoryOrigin: "rule",
       source: "manual",
       status: "booked",
       fixedCost: false,

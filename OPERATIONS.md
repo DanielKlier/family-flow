@@ -264,18 +264,20 @@ Authenticated users can maintain automatic transaction categorization rules at `
 Supported maintenance actions:
 
 - Create text rules with a name, search text, target category, optional account restriction, optional fixed-cost action, optional internal-transfer action, and numeric priority.
-- Use a lower priority number for more specific rules when multiple rules match the same transaction.
+- Use a lower priority number for more specific rules when multiple rules match the same transaction. Rules with the same priority are evaluated by ascending ASCII rule ID.
 - Leave the account restriction as `All accounts` for household-wide rules, or select one account when the same text should only apply to a specific account.
 - Use `Apply rules to existing transactions` after creating or changing rules to re-categorize already stored transactions and apply fixed-cost or internal-transfer actions.
 
 Operational notes:
 
-- Rules match case-insensitively against transaction description and payee.
+- Rules match transaction description, payee, and imported purpose after NFKC normalization, trimming, whitespace collapse, and German case folding.
 - Disabled rule support is represented in the data model; the current UI creates enabled rules only.
-- Migration `0015_categorization_rule_internal_transfer.sql` additively introduces the nullable rule action. Existing rules remain `unchanged`; no transaction is reclassified during migration. After deployment, create one minimized rule for a temporary fixture, verify mark and unmark through reapplication, then remove both fixtures.
-- CSV import preview applies exact CSV category-name matching first, then categorization rules, then the `Sonstiges` fallback. Matching rules can still set fixed-cost and internal-transfer actions when the category comes from the CSV file. The preview stores the resolved transfer state, so confirmation does not reevaluate changed rules. Legacy preview snapshots without this field confirm as unmarked; malformed non-boolean values abort confirmation atomically.
-- Re-applying rules can overwrite a transaction category, fixed-cost flag, and transfer state when a rule matches. A transfer-only change is persisted without changing CSV source, purpose, or import hash. Review broad search text, both optional actions, and priority before applying rules to existing data.
-- If rule application gives unexpected results, capture the visible `X-Request-Id`, inspect the matching request log entry, and verify the affected transaction with a minimized example instead of exporting broad financial data.
+- Migration `0015_categorization_rule_internal_transfer.sql` additively introduces the nullable rule action. Existing rules remain `unchanged`; no transaction is reclassified during migration.
+- Migration `0016_category_origin_and_normalized_names.sql` validates normalized category uniqueness before mutation, adds the mandatory category origin, marks historical manual rows `manual` and CSV rows `legacy_preserved`, and invalidates only unconsumed pre-origin previews. It never guesses historical rule or mapping provenance and never changes a transaction category. If it reports a normalized collision, keep the application stopped, use the reported category IDs to choose distinct canonical names, update only the intended master-data rows, and rerun the unchanged migration. Restore the pre-deployment backup if the intended correction cannot be established safely.
+- CSV import preview applies normalized mapped-category matching first, then categorization rules, then the `Sonstiges` fallback. It stores `csv_mapped`, `rule`, or `fallback` origin with the category decision. Matching rules can still set fixed-cost and internal-transfer actions when the category comes from the CSV file. Confirmation validates that authoritative snapshot; malformed origin or non-boolean action values abort atomically.
+- Reapplication processes booked and planned transactions in stable ID order and displays changed and unchanged counts. It preserves categories with `manual`, `csv_mapped`, or `legacy_preserved` origin while still applying matching state actions; only `rule` and `fallback` categories are recalculated. Source, purpose, import hash, and unmatched transactions remain unchanged.
+- Run `pnpm ops:verify --id OPS-FF-CAT-002-01` before deployment. A passing `Operation OPS-FF-CAT-002-01 passed` result verifies PostgreSQL origin persistence, origin-preserving description edits, manual category-change provenance, migration diagnostics, normalization, collation-independent code-point ordering, import precedence, and reapplication counts. If it fails, do not apply rules in production; retain the backup, inspect the bounded failing test, and roll back the image if deployment has started.
+- If rule application gives unexpected results, capture the visible `X-Request-Id`, inspect the matching request log entry, compare the displayed counts with the intended scope, and verify only minimized affected transactions instead of exporting broad financial data.
 
 ## Income Planning Maintenance
 

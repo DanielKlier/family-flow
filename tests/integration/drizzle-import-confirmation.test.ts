@@ -1,8 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-
-import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
 import { DrizzleImportPreviewBatchRepository } from "../../src/adapters/db/drizzle-import-preview-batch-repository.js";
@@ -12,6 +10,7 @@ import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { importPreviewBatches, transactions } from "../../src/adapters/db/schema.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { confirmCsvImportBatch } from "../../src/core/imports/confirm-csv-import.js";
 import {
   createImportHash,
@@ -48,6 +47,7 @@ function outcome(
       id,
       accountId: "account-shared-checking",
       categoryId,
+      categoryOrigin: "fallback" as const,
       date: "2026-07-15",
       amountCents: -100,
       description,
@@ -203,6 +203,7 @@ describe("PostgreSQL CSV confirmation", () => {
             id: randomUUID(),
             accountId: "account-shared-checking",
             categoryId: "category-other",
+            categoryOrigin: "fallback",
             date: "2026-07-15",
             amountCents: -100,
             description: "Same payment",
@@ -308,6 +309,7 @@ describe("PostgreSQL CSV confirmation", () => {
           id: "existing-import-conflict",
           accountId: "account-shared-checking",
           categoryId: "category-other",
+          categoryOrigin: "legacy_preserved",
           date: "2026-07-15",
           amountCents: -100,
           description: "Existing",

@@ -1,6 +1,11 @@
 import { asc, eq } from "drizzle-orm";
 
-import { createCategory, type Category } from "../../core/categories/category.js";
+import {
+  assertUniqueCategoryName,
+  type Category,
+  createCategory,
+  normalizeCategoryName,
+} from "../../core/categories/category.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type { PostgresDatabase } from "./postgres.js";
 import { categories } from "./schema.js";
@@ -31,13 +36,15 @@ export class DrizzleCategoryRepository implements CategoryRepository {
   }
 
   async save(category: Category): Promise<void> {
+    assertUniqueCategoryName(await this.list(), category);
     await this.db
       .insert(categories)
-      .values(category)
+      .values({ ...category, normalizedName: normalizeCategoryName(category.name) })
       .onConflictDoUpdate({
         target: categories.id,
         set: {
           name: category.name,
+          normalizedName: normalizeCategoryName(category.name),
           active: category.active,
         },
       });

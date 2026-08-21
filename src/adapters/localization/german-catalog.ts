@@ -174,6 +174,7 @@ export const messages: Record<string, string> = {
   "rules.priority": "Priorität",
   "rules.list": "Regelliste",
   "rules.apply": "Regeln auf bestehende Transaktionen anwenden",
+  "rules.applyResult": "{changed} geändert, {unchanged} unverändert",
   "rules.empty": "Keine Kategorisierungsregeln gefunden.",
   "rules.fixedColumn": "Fixkosten",
   "rules.transferColumn": "Interne Umbuchung",

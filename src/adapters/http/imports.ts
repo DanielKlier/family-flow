@@ -2,26 +2,15 @@ import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
-import {
-  type CategorizationRule,
-  findCategorizationMatch,
-} from "../../core/categorization/categorization-rule.js";
+import { decideImportCategorization } from "../../core/categorization/categorization-rule.js";
 import {
   confirmCsvImportBatch,
   type StoredImportOutcome,
 } from "../../core/imports/confirm-csv-import.js";
-import {
-  type CsvTransactionImportRow,
-  detectDuplicateImportRows,
-} from "../../core/imports/csv-import.js";
+import { detectDuplicateImportRows } from "../../core/imports/csv-import.js";
 import type { UserContext } from "../../ports/auth/user-context.js";
 import type { Clock } from "../../ports/clock/clock.js";
-import type {
-  CsvParser,
-  CsvRowOutcome,
-  ParsedCsvTransactionRow,
-} from "../../ports/csv/csv-parser.js";
-import type { Localization } from "../../ports/localization/localization.js";
+import type { CsvParser, CsvRowOutcome } from "../../ports/csv/csv-parser.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategorizationRuleRepository } from "../../ports/repositories/categorization-rule-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
@@ -144,7 +133,6 @@ async function handleCsvImportPreview(
       parsedOutcomes,
       categories,
       repositories,
-      reply.request.localization,
     );
     const createdAt = clock.now();
     const batchId = randomUUID();
@@ -183,9 +171,8 @@ async function handleCsvImportPreview(
 
 async function prepareOutcomes(
   outcomes: CsvRowOutcome[],
-  categories: { id: string; name: string }[],
+  categories: { id: string; name: string; active: boolean }[],
   repositories: CsvImportRouteRepositories,
-  localization: Localization,
 ): Promise<{ previewRows: CsvImportPreviewRow[]; storedOutcomes: StoredImportOutcome[] }> {
   const parsedRows = outcomes.flatMap((outcome) =>
     outcome.outcome === "importable" ? [outcome.row] : [],
@@ -207,7 +194,12 @@ async function prepareOutcomes(
     }
     const row = importRows[importableIndex++];
     if (row === undefined) throw new Error("CSV preview outcome is inconsistent");
-    const category = matchCategory(categories, rules, row, outcome.row, localization);
+    const category = decideImportCategorization(
+      categories,
+      rules,
+      row,
+      outcome.row.categoryName ?? "",
+    );
     const preview = {
       ...row,
       line: outcome.line,
@@ -231,6 +223,7 @@ async function prepareOutcomes(
               id: randomUUID(),
               ...row,
               categoryId: category.id,
+              categoryOrigin: category.origin,
               fixedCost: category.fixedCost,
               internalTransfer: category.internalTransfer,
             },
@@ -238,37 +231,6 @@ async function prepareOutcomes(
     );
   }
   return { previewRows, storedOutcomes };
-}
-
-function matchCategory(
-  categories: { id: string; name: string }[],
-  rules: CategorizationRule[],
-  row: CsvTransactionImportRow,
-  parsedRow: ParsedCsvTransactionRow,
-  localization: Localization,
-): { id: string; name: string; fixedCost: boolean; internalTransfer: boolean } {
-  const matchedRule = findCategorizationMatch(rules, row);
-  const actions = {
-    fixedCost: matchedRule?.fixedCost ?? false,
-    internalTransfer: matchedRule?.internalTransfer ?? false,
-  };
-  const csvName = normalizeMatchText(parsedRow.categoryName ?? "", localization);
-  const csvCategory = categories.find(
-    (category) => normalizeMatchText(category.name, localization) === csvName,
-  );
-  if (csvCategory !== undefined) return { ...csvCategory, ...actions };
-  const ruleCategory = categories.find((category) => category.id === matchedRule?.categoryId);
-  if (ruleCategory !== undefined) return { ...ruleCategory, ...actions };
-  const fallback = categories.find((category) => category.id === "category-other") ??
-    categories[0] ?? {
-      id: "category-other",
-      name: localization.seedName("category", "category-other"),
-    };
-  return { ...fallback, fixedCost: false, internalTransfer: false };
-}
-
-function normalizeMatchText(value: string, localization: Localization): string {
-  return localization.caseFold(value.trim().replace(/\s+/g, " "));
 }
 
 function requireUserId(request: FastifyRequest): string {

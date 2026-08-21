@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
-
-import { compareCodePoints } from "../../src/core/shared/compare-code-points.js";
-
 import { InMemoryCategorizationRuleRepository } from "../../src/adapters/db/in-memory-categorization-rule-repository.js";
 import { createCategorizationRule } from "../../src/core/categorization/categorization-rule.js";
+import { compareCodePoints } from "../../src/core/shared/compare-code-points.js";
 
 describe("categorization rule repositories", () => {
   it("stores, lists, gets, and deletes categorization rules", async () => {
@@ -35,6 +33,30 @@ describe("categorization rule repositories", () => {
     await repository.delete("rule-rent");
 
     await expect(repository.list()).resolves.toEqual([groceries]);
+  });
+
+  it("INT-FF-CAT-005-02: lists equal-priority rules by stable code-point ID order", async () => {
+    const ids = ["rule-a", "rule-A", "rule-!", "rule-_", "rule-b"];
+    const repository = new InMemoryCategorizationRuleRepository(
+      ids.map((id) =>
+        createCategorizationRule({
+          id,
+          name: `${id} display name`,
+          searchText: "market",
+          categoryId: "category-other",
+          priority: 1,
+          enabled: true,
+        }),
+      ),
+    );
+
+    expect((await repository.list()).map(({ id }) => id)).toEqual([
+      "rule-!",
+      "rule-A",
+      "rule-_",
+      "rule-a",
+      "rule-b",
+    ]);
   });
 
   it("INT-FF-CAT-002-01: round-trips mark, unmark, and unchanged transfer actions", async () => {

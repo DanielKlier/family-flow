@@ -1,7 +1,4 @@
 import { describe, expect, it } from "vitest";
-
-import { createGermanLocalization } from "../../src/adapters/localization/german.js";
-
 import { DrizzleAccountRepository } from "../../src/adapters/db/drizzle-account-repository.js";
 import { DrizzleCategorizationRuleRepository } from "../../src/adapters/db/drizzle-categorization-rule-repository.js";
 import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-category-repository.js";
@@ -9,6 +6,7 @@ import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-own
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
 import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { createCategorizationRule } from "../../src/core/categorization/categorization-rule.js";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
@@ -19,46 +17,65 @@ const transferRuleIds = [
 ] as const;
 
 describe("Drizzle categorization rule repository", () => {
-  it.runIf(testDatabaseUrl !== undefined)("stores and lists categorization rules", async () => {
-    if (testDatabaseUrl === undefined) {
-      throw new Error("TEST_DATABASE_URL is required");
-    }
-
-    await migrate(testDatabaseUrl);
-
-    const connection = createPostgresConnection(testDatabaseUrl);
-    const repositories = {
-      accounts: new DrizzleAccountRepository(connection.db),
-      categories: new DrizzleCategoryRepository(connection.db),
-      ownerContexts: new DrizzleOwnerContextRepository(connection.db),
-      rules: new DrizzleCategorizationRuleRepository(connection.db),
-    };
-
-    try {
-      await seedMasterData(repositories, createGermanLocalization());
-      await repositories.rules.delete("rule-groceries");
-      const rule = createCategorizationRule({
-        id: "rule-groceries",
-        name: "Groceries",
-        searchText: "supermarket",
-        categoryId: "category-groceries",
-        accountId: "account-shared-checking",
-        fixedCost: true,
-        priority: 10,
-        enabled: true,
-      });
-
-      await repositories.rules.save(rule);
-
-      await expect(repositories.rules.get(rule.id)).resolves.toEqual(rule);
-    } finally {
-      try {
-        await repositories.rules.delete("rule-groceries");
-      } finally {
-        await connection.client.end();
+  it.runIf(testDatabaseUrl !== undefined)(
+    "INT-FF-CAT-003-01: stores and lists equal-priority rules in code-point ID order",
+    async () => {
+      if (testDatabaseUrl === undefined) {
+        throw new Error("TEST_DATABASE_URL is required");
       }
-    }
-  });
+
+      await migrate(testDatabaseUrl);
+
+      const connection = createPostgresConnection(testDatabaseUrl);
+      const repositories = {
+        accounts: new DrizzleAccountRepository(connection.db),
+        categories: new DrizzleCategoryRepository(connection.db),
+        ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+        rules: new DrizzleCategorizationRuleRepository(connection.db),
+      };
+      const tieIds = ["rule-a", "rule-A", "rule-!", "rule-_", "rule-groceries"];
+
+      try {
+        await seedMasterData(repositories, createGermanLocalization());
+        await Promise.all(tieIds.map((id) => repositories.rules.delete(id)));
+        const rule = createCategorizationRule({
+          id: "rule-groceries",
+          name: "Groceries",
+          searchText: "supermarket",
+          categoryId: "category-groceries",
+          accountId: "account-shared-checking",
+          fixedCost: true,
+          priority: 10,
+          enabled: true,
+        });
+
+        for (const id of tieIds) {
+          await repositories.rules.save(
+            id === rule.id
+              ? rule
+              : createCategorizationRule({
+                  ...rule,
+                  id,
+                  name: `${id} display name`,
+                }),
+          );
+        }
+
+        await expect(repositories.rules.get(rule.id)).resolves.toEqual(rule);
+        expect(
+          (await repositories.rules.list())
+            .filter(({ id }) => tieIds.includes(id))
+            .map(({ id }) => id),
+        ).toEqual(["rule-!", "rule-A", "rule-_", "rule-a", "rule-groceries"]);
+      } finally {
+        try {
+          await Promise.all(tieIds.map((id) => repositories.rules.delete(id)));
+        } finally {
+          await connection.client.end();
+        }
+      }
+    },
+  );
 
   it.runIf(testDatabaseUrl !== undefined)(
     "INT-FF-CAT-002-02: round-trips mark, unmark, and unchanged transfer actions",
