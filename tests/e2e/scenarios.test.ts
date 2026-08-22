@@ -80,6 +80,7 @@ test("E2E-FF-SCN-001-01 E2E-FF-SCN-001-02 E2E-FF-SCN-003-01 E2E-FF-SCN-004-01 E2
     }
     await expect(panel).toContainText("Elternzeit");
     await expect(panel).toContainText("Kita-Kosten");
+    await expect(panel).toContainText("−1.000,00");
     await expect(panel).not.toContainText(/Steuer|gesetzlich/i);
 
     const baselineBeforeMutation = await panel.getByText("Ausgabenbasis").textContent();
