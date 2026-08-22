@@ -71,21 +71,26 @@ export function prepareScenarioViewModel(input: ScenarioViewInput, l: Localizati
             baseline: l.text("scenario.baselineValue", {
               amount: l.formatAmount(selected.scenario.baseline.expenseCents),
             }),
-            lowestBuffer: l.formatAmount(result.lowestBufferCents),
+            lowestBuffer: formatSignedAmount(result.lowestBufferCents, l),
             requiredIncome: l.formatAmount(result.requiredAdditionalNetIncomeCents),
             adjustments: selected.adjustments.map((adjustment) => ({
               name: adjustment.name,
-              amount: l.formatAmount(adjustment.deltaCents),
+              amount: formatSignedAmount(adjustment.deltaCents, l),
             })),
             months: result.months.map((month) => ({
               month: l.formatMonth(month.month),
               income: l.formatAmount(month.incomeCents),
               expense: l.formatAmount(month.expenseCents),
-              balance: l.formatAmount(month.balanceCents),
-              buffer: l.formatAmount(month.bufferCents),
+              balance: formatSignedAmount(month.balanceCents, l),
+              buffer: formatSignedAmount(month.bufferCents, l),
             })),
           },
   };
+}
+
+function formatSignedAmount(cents: number, localization: Localization): string {
+  const sign = cents < 0 ? "−" : "";
+  return `${sign}${localization.formatAmount(cents)}`;
 }
 
 export function prepareCalculatorViewModel(l: Localization) {
