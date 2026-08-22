@@ -33,6 +33,21 @@ describe("import profiles", () => {
     });
   });
 
+  it("preserves the tab delimiter instead of trimming it as whitespace", () => {
+    const profile = createImportProfile({
+      id: "profile-tab-delimited",
+      name: "Tab-delimited bank",
+      kind: "custom",
+      delimiter: "\t",
+      encoding: "utf8",
+      dateColumn: "Date",
+      amountColumn: "Amount",
+      descriptionColumn: "Description",
+    });
+
+    expect(profile.delimiter).toBe("\t");
+  });
+
   it("rejects incomplete import profile mappings", () => {
     expect(() =>
       createImportProfile({
