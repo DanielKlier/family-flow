@@ -122,7 +122,7 @@ Additionally:
 
 **Existing evidence:** `tests/integration/request-logging.test.ts`, request-log normalization unit coverage, and E2E response-header coverage.
 
-**Pending gap:** `PH-01-R01` covers redirects, 404s, validation, authentication, exceptions, visible error-page IDs, and comprehensive redaction.
+**Remediation:** `PH-01-R01` completed redirects, 404s, validation, authentication, exceptions, visible error-page IDs, canonical UUID validation, and allowlist-only log context.
 
 ### PH-02 — Database, Migrations, And Initial Master Data
 
@@ -493,16 +493,17 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-01-R01 — Complete Request-Lifecycle Behavior
 
-**Status:** Pending
+**Status:** Completed
+**Evidence refs:** `12bf449 fix: validate request ids and redact logs`.
 **Classification:** Behavior change
 **Implements:** `FF-OBS-001`, `FF-OBS-003`, `FF-OBS-004`
 **Verifies:** `FF-OBS-002`, `FF-OBS-005`
 **Operations:** `OPS-FF-OBS-003-01`
 
-- [ ] Add `E2E-FF-OBS-001-01`: valid canonical UUID is propagated to response and log. Expected red: UUID policy is not enforced.
-- [ ] Add `E2E-FF-OBS-001-02`: missing, repeated, and malformed IDs generate UUIDv4 values across success, redirect, 404, validation, authentication, and exception paths. Expected red: malformed values are currently propagated.
-- [ ] Display the same ID on finite error-page paths and assert exactly one matching log.
-- [ ] Implement the explicit denylist and allowlisted aggregate-count/stable-ID policy.
+- [x] Add `E2E-FF-OBS-001-01`: valid canonical UUID is propagated to response and log.
+- [x] Add `E2E-FF-OBS-001-02`: missing, repeated, and malformed IDs generate UUIDv4 values across success, redirect, 404, validation, authentication, and exception paths.
+- [x] Display the same ID on finite error-page paths and assert exactly one matching log.
+- [x] Implement allowlist-only aggregate-count/stable-ID query logging and safe structured failures.
 
 **Tests:** `E2E-FF-OBS-001-01`, `E2E-FF-OBS-001-02`, `INT-FF-OBS-002-01`, `INT-FF-OBS-003-01`, `INT-FF-OBS-004-01`, `INT-FF-OBS-005-01`.
 

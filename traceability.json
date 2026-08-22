@@ -492,7 +492,7 @@
     },
     {
       "id": "PH-01-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Request-ID validation, error-page IDs, lifecycle logs, and redaction.",
       "classification": "Behavior change"
     },
@@ -714,7 +714,7 @@
     },
     {
       "id": "FF-OBS-001-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-01-R01",
       "test": "E2E-FF-OBS-001-01",
       "file": "tests/e2e/request-id.test.ts",
@@ -722,7 +722,7 @@
     },
     {
       "id": "FF-OBS-001-AC02",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-01-R01",
       "test": "E2E-FF-OBS-001-02",
       "file": "tests/e2e/request-id.test.ts",
@@ -730,7 +730,7 @@
     },
     {
       "id": "FF-OBS-002-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-01-R01",
       "test": "INT-FF-OBS-002-01",
       "file": "tests/integration/request-logging.test.ts",
@@ -738,7 +738,7 @@
     },
     {
       "id": "FF-OBS-003-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-01-R01",
       "test": "INT-FF-OBS-003-01",
       "file": "tests/integration/request-logging.test.ts",
@@ -746,7 +746,7 @@
     },
     {
       "id": "FF-OBS-004-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-01-R01",
       "test": "INT-FF-OBS-004-01",
       "file": "tests/integration/request-logging.test.ts",
@@ -754,7 +754,7 @@
     },
     {
       "id": "FF-OBS-005-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-01-R01",
       "test": "INT-FF-OBS-005-01",
       "file": "tests/integration/request-logging.test.ts",
@@ -2048,7 +2048,7 @@
       "phase": "PH-01-R01",
       "file": "tests/e2e/request-id.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "E2E-FF-OBS-001-02",
@@ -2056,7 +2056,7 @@
       "phase": "PH-01-R01",
       "file": "tests/e2e/request-id.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "E2E-FF-SCN-001-01",
@@ -2744,7 +2744,7 @@
       "phase": "PH-01-R01",
       "file": "tests/integration/request-logging.test.ts",
       "boundary": "Integration",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-OBS-003-01",
@@ -2752,7 +2752,7 @@
       "phase": "PH-01-R01",
       "file": "tests/integration/request-logging.test.ts",
       "boundary": "Integration",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-OBS-004-01",
@@ -2760,7 +2760,7 @@
       "phase": "PH-01-R01",
       "file": "tests/integration/request-logging.test.ts",
       "boundary": "Integration",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-OBS-005-01",
@@ -2768,7 +2768,7 @@
       "phase": "PH-01-R01",
       "file": "tests/integration/request-logging.test.ts",
       "boundary": "Integration",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-QUA-001-01",
