@@ -186,19 +186,16 @@ function stopOidcProvider(environment: SmokeEnvironment): void {
   }
 }
 
-async function preparePriorMigrationSet(environment: SmokeEnvironment): Promise<string> {
-  const names = await migrationNames();
-  const latest = names.at(-1);
-  if (latest === undefined) throw new Error("Expected at least one bundled migration");
-  const fixtureMigrations = join(environment.directory, "prior-migrations");
+async function prepareOldestMigrationSet(environment: SmokeEnvironment): Promise<string> {
+  const oldest = (await migrationNames()).at(0);
+  if (oldest === undefined) throw new Error("Expected at least one bundled migration");
+  const fixtureMigrations = join(environment.directory, "oldest-migration");
   await mkdir(fixtureMigrations);
-  await Promise.all(
-    names.slice(0, -1).map(async (name) => {
-      const sql = await readFile(join(migrationDirectory, name));
-      await writeFile(join(fixtureMigrations, name), sql);
-    }),
+  await writeFile(
+    join(fixtureMigrations, oldest),
+    await readFile(join(migrationDirectory, oldest)),
   );
-  return latest;
+  return oldest;
 }
 
 test("SMOKE-FF-SCP-001-01 empty Compose DB becomes healthy only after all bundled migrations", async () => {
@@ -217,13 +214,13 @@ test("SMOKE-FF-SCP-001-01 empty Compose DB becomes healthy only after all bundle
   }
 });
 
-test("SMOKE-FF-DEP-002-01 normal Compose startup applies the one pending bundled migration before health", async () => {
-  const environment = await createEnvironment("update");
+test("SMOKE-FF-DEP-002-01 normal Compose startup upgrades the earliest supported schema before health", async () => {
+  const environment = await createEnvironment("historical-update");
   try {
-    const latest = await preparePriorMigrationSet(environment);
+    const oldest = await prepareOldestMigrationSet(environment);
     compose(environment, ["up", "--build", "--detach", "postgres"]);
     await waitForPostgres(environment);
-    const migrationsPath = join(environment.directory, "prior-migrations");
+    const migrationsPath = join(environment.directory, "oldest-migration");
     compose(environment, [
       "run",
       "--rm",
@@ -237,12 +234,12 @@ test("SMOKE-FF-DEP-002-01 normal Compose startup applies the one pending bundled
       "--eval",
       "import { migrate } from './dist/adapters/db/migrate.js'; await migrate(process.env.DATABASE_URL, '/migrations');",
     ]);
-    expect(recordedMigrations(environment)).not.toContain(latest);
+    expect(recordedMigrations(environment)).toEqual([oldest]);
 
     await startOidcProvider(environment);
     compose(environment, ["up", "--detach", "app"]);
     await waitForHealth(appBaseUrl(environment));
-    expect(recordedMigrations(environment)).toContain(latest);
+    expect(recordedMigrations(environment)).toEqual(await migrationNames());
   } finally {
     stopOidcProvider(environment);
     await cleanup(environment);

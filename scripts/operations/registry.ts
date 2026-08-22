@@ -100,6 +100,28 @@ export const operationRegistry: OperationRegistry = {
     "tests/unit/income-plans.test.ts",
     "tests/integration/income-http.test.ts",
   ]),
+  "OPS-FF-OPS-002-01": verifyTestCommands("OPS-FF-OPS-002-01", [
+    [
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/backup-restore-smoke.test.ts",
+      "--grep",
+      "SMOKE-FF-OPS-002-01",
+      "--workers=1",
+    ],
+  ]),
+  "OPS-FF-OPS-003-01": verifyTestCommands("OPS-FF-OPS-003-01", [
+    [
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/backup-restore-smoke.test.ts",
+      "--grep",
+      "SMOKE-FF-OPS-003-01",
+      "--workers=1",
+    ],
+  ]),
   "OPS-FF-OBS-003-01": verifyTestCommands("OPS-FF-OBS-003-01", [
     [
       "exec",

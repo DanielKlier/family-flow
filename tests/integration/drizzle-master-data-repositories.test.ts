@@ -4,12 +4,73 @@ import { DrizzleCategoryRepository } from "../../src/adapters/db/drizzle-categor
 import { DrizzleOwnerContextRepository } from "../../src/adapters/db/drizzle-owner-context-repository.js";
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
-import { seedMasterData } from "../../src/adapters/db/seeds/master-data.js";
+import {
+  createInitialAccounts,
+  createInitialCategories,
+  createInitialOwnerContexts,
+  seedMasterData,
+} from "../../src/adapters/db/seeds/master-data.js";
 import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
 describe("Drizzle master data repositories", () => {
+  it.runIf(testDatabaseUrl !== undefined)(
+    "INT-FF-MDM-002-01 migrates an empty schema and preserves user-edited German master data on reseed",
+    async () => {
+      if (testDatabaseUrl === undefined) {
+        throw new Error("TEST_DATABASE_URL is required");
+      }
+
+      const connection = createPostgresConnection(testDatabaseUrl);
+      const repositories = {
+        accounts: new DrizzleAccountRepository(connection.db),
+        categories: new DrizzleCategoryRepository(connection.db),
+        ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+      };
+      const localization = createGermanLocalization();
+
+      try {
+        await connection.client.unsafe("drop schema public cascade; create schema public;");
+        await migrate(testDatabaseUrl);
+        await seedMasterData(repositories, localization);
+
+        const account = await repositories.accounts.get("account-person-a-checking");
+        if (account === null) throw new Error("Seeded account must exist");
+        await repositories.accounts.save({ ...account, name: "User-defined account name" });
+        await repositories.ownerContexts.save({
+          ownerContext: "shared",
+          label: "User-defined owner label",
+        });
+
+        await migrate(testDatabaseUrl);
+        await seedMasterData(repositories, localization);
+
+        await expect(repositories.accounts.list()).resolves.toEqual(
+          expect.arrayContaining(
+            createInitialAccounts(localization).map((seed) =>
+              seed.id === account.id ? { ...seed, name: "User-defined account name" } : seed,
+            ),
+          ),
+        );
+        await expect(repositories.categories.list()).resolves.toEqual(
+          expect.arrayContaining(createInitialCategories(localization)),
+        );
+        await expect(repositories.ownerContexts.list()).resolves.toEqual(
+          expect.arrayContaining(
+            createInitialOwnerContexts(localization).map((seed) =>
+              seed.ownerContext === "shared"
+                ? { ...seed, label: "User-defined owner label" }
+                : seed,
+            ),
+          ),
+        );
+      } finally {
+        await connection.client.end();
+      }
+    },
+  );
+
   it.runIf(testDatabaseUrl !== undefined)(
     "INT-FF-MDM-002-02 stores German fresh seeds without renaming existing master data",
     async () => {
