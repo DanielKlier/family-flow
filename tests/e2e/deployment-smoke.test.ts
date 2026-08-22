@@ -44,7 +44,7 @@ function compose(environment: SmokeEnvironment, arguments_: string[]): string {
 
 async function createEnvironment(
   name: string,
-  baseUrl = "http://127.0.0.1:3000",
+  baseUrl = "https://finances.home.arpa",
 ): Promise<SmokeEnvironment> {
   const directory = await mkdtemp(join(tmpdir(), `${projectPrefix}-${name}-`));
   const project = `${projectPrefix}-${name}`;
@@ -59,14 +59,23 @@ async function createEnvironment(
     [
       `BASE_URL=${baseUrl}`,
       "AUTH_MODE=oidc",
-      "OIDC_ISSUER_URL=http://oidc:8080",
+      "OIDC_ISSUER_URL=https://oidc:8080",
       "OIDC_CLIENT_ID=smoke-client",
       "OIDC_CLIENT_SECRET=synthetic-placeholder",
     ].join("\n"),
   );
   await writeFile(
     overrideFile,
-    ["services:", "  app:", "    ports:", '      - "127.0.0.1::3000"'].join("\n"),
+    [
+      "services:",
+      "  app:",
+      "    environment:",
+      "      NODE_EXTRA_CA_CERTS: /app/test-ca/fake-oidc.crt",
+      "    volumes:",
+      `      - "${join(fixtureDirectory, "fake-oidc.crt")}:/app/test-ca/fake-oidc.crt:ro"`,
+      "    ports:",
+      '      - "127.0.0.1::3000"',
+    ].join("\n"),
   );
   return { project, directory, envFile, overrideFile, ownsProxyNetwork };
 }
@@ -172,6 +181,12 @@ async function startOidcProvider(environment: SmokeEnvironment): Promise<void> {
     "oidc",
     "--mount",
     `type=bind,src=${join(fixtureDirectory, "fake-oidc-server.mjs")},dst=/app/server.mjs,readonly`,
+    "--mount",
+    `type=bind,src=${join(fixtureDirectory, "fake-oidc.crt")},dst=/app/tls/oidc.crt,readonly`,
+    "--mount",
+    `type=bind,src=${join(fixtureDirectory, "fake-oidc.key")},dst=/app/tls/oidc.key,readonly`,
+    "--env",
+    "ISSUER_URL=https://oidc:8080",
     "node:24-alpine",
     "node",
     "/app/server.mjs",
@@ -246,7 +261,7 @@ test("SMOKE-FF-DEP-002-01 normal Compose startup upgrades the earliest supported
   }
 });
 
-test("SMOKE-FF-SCP-001-02 external BASE_URL makes the OIDC callback and state cookie secure", async () => {
+test("SMOKE-FF-SCP-001-02 external BASE_URL keeps the OIDC callback HTTPS and state server-side", async () => {
   const environment = await createEnvironment("external-login", "https://finances.home.arpa");
   try {
     await startOidcProvider(environment);
@@ -262,8 +277,7 @@ test("SMOKE-FF-SCP-001-02 external BASE_URL makes the OIDC callback and state co
     expect(new URL(location ?? "http://invalid").searchParams.get("redirect_uri")).toBe(
       "https://finances.home.arpa/auth/callback",
     );
-    expect(stateCookie).toContain("ff_oidc_state=");
-    expect(stateCookie).toContain("Secure");
+    expect(stateCookie).toBeNull();
   } finally {
     stopOidcProvider(environment);
     await cleanup(environment);
@@ -279,15 +293,13 @@ test("SMOKE-FF-DEP-003-01 external HTTPS links, logout, and session use the exte
     const baseUrl = appBaseUrl(environment);
     await waitForHealth(baseUrl);
     const login = await fetch(`${baseUrl}/auth/login`, { redirect: "manual" });
-    const stateCookie = login.headers.get("set-cookie")?.split(";", 1)[0];
-    const state = new URL(login.headers.get("location") ?? "http://invalid").searchParams.get(
-      "state",
-    );
-    expect(stateCookie).toBeTruthy();
+    const authorizationUrl = new URL(login.headers.get("location") ?? "http://invalid");
+    const state = authorizationUrl.searchParams.get("state");
+    const nonce = authorizationUrl.searchParams.get("nonce");
     expect(state).toBeTruthy();
+    expect(nonce).toBeTruthy();
 
-    const callback = await fetch(`${baseUrl}/auth/callback?code=synthetic-code&state=${state}`, {
-      headers: { Cookie: stateCookie ?? "" },
+    const callback = await fetch(`${baseUrl}/auth/callback?code=${nonce}&state=${state}`, {
       redirect: "manual",
     });
     const sessionCookie = callback.headers
