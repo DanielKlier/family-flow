@@ -1,5 +1,6 @@
-import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -12,6 +13,7 @@ const composeFile = resolve("compose.yaml");
 const smokeTimeoutMs = 180_000;
 const projectPrefix = `family-flow-backup-restore-${process.pid}`;
 const proxyNetwork = "proxy";
+const recoveryEvidenceSql = readFileSync(resolve("scripts/recovery-evidence.sql"), "utf8");
 
 test.describe.configure({ mode: "serial" });
 test.setTimeout(smokeTimeoutMs);
@@ -24,10 +26,20 @@ type Environment = {
   ownsProxyNetwork: boolean;
 };
 
+type RecoveryEvidence = {
+  schema_migrations: unknown;
+  counts: Record<string, number>;
+  monetary_totals: unknown;
+  references: unknown;
+  orphan_counts: unknown;
+  seed_inventory: unknown;
+  active_states: unknown;
+  ids: Record<string, unknown>;
+};
+
 type RecoveryFixture = {
   environment: Environment;
-  baseUrl: string;
-  manifest: string;
+  evidence: RecoveryEvidence;
   sessionCookie: string;
   dumpPath: string;
 };
@@ -78,7 +90,7 @@ async function createEnvironment(name: string): Promise<Environment> {
   );
   await writeFile(
     environment.overrideFile,
-    ["services:", "  app:", "    ports:", '      - "127.0.0.1::3000"'].join("\n"),
+    ["services:", "  app:", "    ports: !override", '      - "127.0.0.1::3000"'].join("\n"),
   );
   return environment;
 }
@@ -101,16 +113,22 @@ async function cleanup(environment: Environment | undefined): Promise<void> {
 }
 
 function appBaseUrl(environment: Environment): string {
-  const address = compose(environment, ["port", "app", "3000"]).trim().split("\n")[0];
-  if (!address) throw new Error("The disposable app did not publish its HTTP port");
+  const containerId = compose(environment, ["ps", "--quiet", "app"]).trim();
+  const address = docker([
+    "inspect",
+    "--format",
+    '{{range (index .NetworkSettings.Ports "3000/tcp")}}{{if eq .HostIp "127.0.0.1"}}{{.HostIp}}:{{.HostPort}}{{end}}{{end}}',
+    containerId,
+  ]).trim();
+  if (!address) throw new Error("The disposable app did not publish its loopback HTTP port");
   return `http://${address}`;
 }
 
-async function waitForHealth(baseUrl: string): Promise<void> {
+async function waitForHealth(environment: Environment, baseUrl: string): Promise<void> {
   const deadline = Date.now() + 60_000;
   while (Date.now() < deadline) {
     try {
-      const response = await fetch(`${baseUrl}/health`);
+      const response = await fetch(`${baseUrl}/health`, { signal: AbortSignal.timeout(2_000) });
       if (response.ok) {
         expect(response.headers.get("x-request-id")).toBeTruthy();
         return;
@@ -120,7 +138,9 @@ async function waitForHealth(baseUrl: string): Promise<void> {
     }
     await new Promise((resolve_) => setTimeout(resolve_, 1_000));
   }
-  throw new Error("The disposable app did not become healthy");
+  const diagnostics = compose(environment, ["ps", "--all"]);
+  const appLogs = compose(environment, ["logs", "--no-color", "app"]);
+  throw new Error(`The disposable app did not become healthy\n${diagnostics}\n${appLogs}`);
 }
 
 function database(environment: Environment, sql: string): string {
@@ -139,38 +159,45 @@ function database(environment: Environment, sql: string): string {
   ]).trim();
 }
 
-function manifest(environment: Environment): string {
-  // The manifest deliberately contains IDs, relationship columns, and signed totals, not dump data.
-  return database(
-    environment,
-    `select json_build_object(
-      'counts', json_build_object(
-        'accounts', (select count(*) from accounts),
-        'owner_context_labels', (select count(*) from owner_context_labels),
-        'categories', (select count(*) from categories),
-        'transactions', (select count(*) from transactions),
-        'import_profiles', (select count(*) from import_profiles),
-        'import_preview_batches', (select count(*) from import_preview_batches),
-        'categorization_rules', (select count(*) from categorization_rules),
-        'income_plans', (select count(*) from income_plans),
-        'monthly_income_overrides', (select count(*) from monthly_income_overrides),
-        'sessions', (select count(*) from sessions)),
-      'transaction_total_cents', (select coalesce(sum(amount_cents), 0) from transactions),
-      'income_total_cents', (select coalesce(sum(amount_cents), 0) from income_plans),
-      'references', json_build_object(
-        'transaction', (select json_agg(json_build_array(id, account_id, category_id) order by id) from transactions),
-        'preview', (select json_agg(json_build_array(id, account_id) order by id) from import_preview_batches),
-        'rule', (select json_agg(json_build_array(id, category_id, account_id) order by id) from categorization_rules),
-        'override', (select json_agg(json_build_array(id, income_plan_id) order by id) from monthly_income_overrides)),
-      'seed_edits', json_build_object(
-        'account', (select name from accounts where id = 'account-person-a-checking'),
-        'owner', (select label from owner_context_labels where owner_context = 'shared')),
-      'ids', json_build_object(
-        'accounts', (select json_agg(id order by id) from accounts),
-        'categories', (select json_agg(id order by id) from categories),
-        'profiles', (select json_agg(id order by id) from import_profiles),
-        'sessions', (select json_agg(id order by id) from sessions)))::text;`,
-  );
+function recoveryEvidence(environment: Environment): RecoveryEvidence {
+  return JSON.parse(database(environment, recoveryEvidenceSql)) as RecoveryEvidence;
+}
+
+function durableEvidence(evidence: RecoveryEvidence): Omit<RecoveryEvidence, "counts" | "ids"> & {
+  counts: Record<string, number>;
+  ids: Record<string, unknown>;
+} {
+  const { sessions: _sessionCount, ...counts } = evidence.counts;
+  const { sessions: _sessionIds, ...ids } = evidence.ids;
+  return { ...evidence, counts, ids };
+}
+
+async function startRestoredApp(environment: Environment): Promise<string> {
+  compose(environment, ["up", "--detach", "--no-deps", "--force-recreate", "app"]);
+  const baseUrl = appBaseUrl(environment);
+  await waitForHealth(environment, baseUrl);
+  return baseUrl;
+}
+
+function invalidateRestoredSessions(environment: Environment): void {
+  compose(environment, [
+    "run",
+    "--rm",
+    "--no-deps",
+    "app",
+    "node",
+    "dist/app/session-invalidate.js",
+  ]);
+  compose(environment, [
+    "run",
+    "--rm",
+    "--no-deps",
+    "app",
+    "node",
+    "dist/app/session-cleanup.js",
+    "--limit",
+    "1000",
+  ]);
 }
 
 function seedRecoveryFixture(environment: Environment, token: string): void {
@@ -205,7 +232,7 @@ async function restoreFixture(name: string): Promise<RecoveryFixture> {
   try {
     compose(environment, ["up", "--build", "--detach"]);
     const baseUrl = appBaseUrl(environment);
-    await waitForHealth(baseUrl);
+    await waitForHealth(environment, baseUrl);
     seedRecoveryFixture(environment, token);
     const sessionBeforeBackup = await fetch(`${baseUrl}/transactions`, {
       headers: { Cookie: `ff_session=${token}` },
@@ -213,7 +240,7 @@ async function restoreFixture(name: string): Promise<RecoveryFixture> {
     });
     expect(sessionBeforeBackup.status).toBe(200);
 
-    const beforeRestore = manifest(environment);
+    const beforeRestore = recoveryEvidence(environment);
     const dumpPath = join(environment.directory, "recovery.dump");
     compose(environment, [
       "exec",
@@ -247,11 +274,10 @@ async function restoreFixture(name: string): Promise<RecoveryFixture> {
       "--if-exists",
       "/tmp/recovery.dump",
     ]);
-    expect(manifest(environment)).toBe(beforeRestore);
+    expect(recoveryEvidence(environment)).toEqual(beforeRestore);
     return {
       environment,
-      baseUrl,
-      manifest: beforeRestore,
+      evidence: beforeRestore,
       sessionCookie: `ff_session=${token}`,
       dumpPath,
     };
@@ -267,7 +293,12 @@ test("SMOKE-FF-OPS-002-01 restores a complete PostgreSQL recovery manifest", asy
 
   const fixture = await restoreFixture("full");
   try {
-    expect(fixture.manifest).toBe(manifest(fixture.environment));
+    expect(recoveryEvidence(fixture.environment)).toEqual(fixture.evidence);
+    invalidateRestoredSessions(fixture.environment);
+    await startRestoredApp(fixture.environment);
+    const afterStartup = recoveryEvidence(fixture.environment);
+    expect(durableEvidence(afterStartup)).toEqual(durableEvidence(fixture.evidence));
+    expect(afterStartup.counts.sessions).toBe(0);
     expect(fixture.dumpPath).toMatch(/recovery\.dump$/);
   } finally {
     await cleanup(fixture.environment);
@@ -279,27 +310,12 @@ test("SMOKE-FF-OPS-003-01 invalidates restored sessions before reopening traffic
 
   const fixture = await restoreFixture("safe");
   try {
-    compose(fixture.environment, [
-      "run",
-      "--rm",
-      "--no-deps",
-      "app",
-      "node",
-      "dist/app/session-invalidate.js",
-    ]);
-    compose(fixture.environment, [
-      "run",
-      "--rm",
-      "--no-deps",
-      "app",
-      "node",
-      "dist/app/session-cleanup.js",
-      "--limit",
-      "1000",
-    ]);
-    compose(fixture.environment, ["start", "app"]);
-    await waitForHealth(fixture.baseUrl);
-    const replay = await fetch(`${fixture.baseUrl}/transactions`, {
+    invalidateRestoredSessions(fixture.environment);
+    const baseUrl = await startRestoredApp(fixture.environment);
+    const afterStartup = recoveryEvidence(fixture.environment);
+    expect(durableEvidence(afterStartup)).toEqual(durableEvidence(fixture.evidence));
+    expect(afterStartup.counts.sessions).toBe(0);
+    const replay = await fetch(`${baseUrl}/transactions`, {
       headers: { Cookie: fixture.sessionCookie },
       redirect: "manual",
     });

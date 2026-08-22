@@ -20,13 +20,22 @@ describe("operations manual", () => {
   });
 
   it("documents an executable PostgreSQL backup and safe restore reconciliation runbook", async () => {
-    const manual = await readFile("OPERATIONS.md", "utf8");
+    const [manual, recoveryEvidence] = await Promise.all([
+      readFile("OPERATIONS.md", "utf8"),
+      readFile("scripts/recovery-evidence.sql", "utf8"),
+    ]);
     const backup = manual.slice(manual.indexOf("## Backup "), manual.indexOf("## Restore "));
     const restore = manual.slice(manual.indexOf("## Restore "), manual.indexOf("## Debugging"));
 
     expect(backup).toMatch(/pg_dump/i);
+    expect(backup).toContain("scripts/recovery-evidence.sql");
     expect(backup).toMatch(/manifest/i);
     expect(backup).toMatch(/sha256|checksum/i);
+    expect(recoveryEvidence).toContain("monthly_override_total_cents");
+    expect(recoveryEvidence).toContain("schema_migrations");
+    expect(recoveryEvidence).toContain("seed_inventory");
+    expect(recoveryEvidence).toContain("active_states");
+    expect(recoveryEvidence).toContain("orphan_counts");
     expect(restore).toMatch(
       /stop[\s\S]*restore[\s\S]*session-invalidate\.js[\s\S]*session-cleanup\.js[\s\S]*start/i,
     );
