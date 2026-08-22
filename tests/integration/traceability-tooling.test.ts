@@ -161,6 +161,34 @@ describe("INT-FF-QUA-004-01 bounded quality tooling", () => {
     ]);
   });
 
+  it("selects exact request lifecycle and sanitized logging evidence", async () => {
+    spawnMock.mockClear();
+    spawnMock.mockImplementation(() => ({
+      on(event: string, listener: (code: number | null, signal: NodeJS.Signals | null) => void) {
+        if (event === "close") queueMicrotask(() => listener(0, null));
+        return this;
+      },
+    }));
+
+    await expect(
+      verifyOperation("OPS-FF-OBS-003-01", operationRegistry, {
+        PATH: "/controlled/path",
+        HOME: "/controlled/home",
+      }),
+    ).resolves.toEqual({ operationId: "OPS-FF-OBS-003-01", status: "passed" });
+
+    expect(spawnMock.mock.calls.map(([, arguments_]) => arguments_)).toEqual([
+      [
+        "exec",
+        "vitest",
+        "run",
+        "tests/unit/request-log-context.test.ts",
+        "tests/integration/request-logging.test.ts",
+      ],
+      ["exec", "playwright", "test", "tests/e2e/request-id.test.ts", "--workers=1"],
+    ]);
+  });
+
   it("registers the completed bounded operation verifiers", () => {
     expect(Object.keys(operationRegistry)).toEqual(
       expect.arrayContaining([
@@ -171,6 +199,7 @@ describe("INT-FF-QUA-004-01 bounded quality tooling", () => {
         "OPS-FF-DEP-003-01",
         "OPS-FF-FOR-001-01",
         "OPS-FF-INC-001-01",
+        "OPS-FF-OBS-003-01",
         "OPS-FF-TXN-005-01",
       ]),
     );
