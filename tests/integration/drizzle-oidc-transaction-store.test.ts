@@ -8,7 +8,7 @@ import { oidcTransactions } from "../../src/adapters/db/schema.js";
 const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
 describe("Drizzle OIDC transaction store", () => {
-  it("INT-FF-AUTH-002-01 atomically consumes an unexpired state exactly once", async () => {
+  it("INT-FF-AUTH-002-02 atomically consumes an unexpired state exactly once", async () => {
     if (testDatabaseUrl === undefined) return;
     await migrate(testDatabaseUrl);
     const connection = createPostgresConnection(testDatabaseUrl);

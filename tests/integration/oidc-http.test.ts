@@ -31,7 +31,7 @@ describe("OIDC HTTP adapter", () => {
     ).toThrow();
   });
 
-  it("INT-FF-AUTH-002-01 INT-FF-AUTH-002-02 exchanges a matching server transaction once and sanitizes callback failures", async () => {
+  it("INT-FF-AUTH-002-01 INT-FF-AUTH-002-02 covers valid, malformed, failed, expired, and reused callbacks without logging secrets", async () => {
     const issuer = "https://issuer.example.invalid/family-flow";
     const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
     const jwk = publicKey.export({ format: "jwk" });
@@ -57,6 +57,9 @@ describe("OIDC HTTP adapter", () => {
         });
       }
       if (url === `${issuer}/token` && init?.method === "POST") {
+        if (String(init.body).includes("code=invalid-code")) {
+          return Response.json({ error: "invalid_grant" }, { status: 400 });
+        }
         return Response.json({ id_token: idToken });
       }
       if (url === `${issuer}/jwks`)
@@ -65,9 +68,18 @@ describe("OIDC HTTP adapter", () => {
     };
 
     const logger = new CapturingLogger();
-    const oidcTokens = sequence(["s".repeat(43), "nonce-from-server-transaction"]);
+    let now = new Date("2025-01-01T00:00:00.000Z");
+    const oidcTokens = sequence([
+      "s".repeat(43),
+      "nonce-from-server-transaction",
+      "i".repeat(43),
+      "nonce-for-invalid-code",
+      "e".repeat(43),
+      "nonce-for-expired-transaction",
+    ]);
     const server = buildServer({
       logger,
+      clock: { now: () => new Date(now) },
       oidcTokens: { generate: oidcTokens },
       auth: {
         mode: "oidc",
@@ -77,6 +89,13 @@ describe("OIDC HTTP adapter", () => {
     });
 
     try {
+      const malformed = await server.inject({
+        method: "GET",
+        url: "/auth/callback?code=wrong-callback-without-state",
+      });
+      expect(malformed.statusCode).toBe(400);
+      expect(malformed.headers["x-request-id"]).toBeDefined();
+
       const login = await server.inject({
         method: "GET",
         url: "/auth/login?returnTo=%2Ftransactions%3Fmonth%3D2025-01",
@@ -100,9 +119,9 @@ describe("OIDC HTTP adapter", () => {
         /^[A-Za-z0-9_-]{43}$/,
       );
       expect(callback.headers["x-request-id"]).toBeDefined();
-      expect(logger.entries.filter((entry) => entry.path === "/auth/callback")).toEqual([
+      expect(logger.entries.filter((entry) => entry.path === "/auth/callback")).toContainEqual(
         expect.objectContaining({ requestId: callback.headers["x-request-id"], statusCode: 302 }),
-      ]);
+      );
       expect(JSON.stringify(logger.entries)).not.toContain("authorization-code");
       expect(JSON.stringify(logger.entries)).not.toContain(idToken);
 
@@ -113,7 +132,31 @@ describe("OIDC HTTP adapter", () => {
       expect(reused.statusCode).toBe(400);
       expect(reused.headers["x-request-id"]).toBeDefined();
       expect(JSON.stringify(logger.entries)).not.toContain("leaked-reuse-code");
-      expect(logger.entries.filter((entry) => entry.path === "/auth/callback")).toHaveLength(2);
+
+      const invalidCodeLogin = await server.inject({ method: "GET", url: "/auth/login" });
+      const invalidCodeState = new URL(invalidCodeLogin.headers.location ?? "").searchParams.get(
+        "state",
+      );
+      const invalidCode = await server.inject({
+        method: "GET",
+        url: `/auth/callback?code=invalid-code&state=${encodeURIComponent(invalidCodeState ?? "")}`,
+      });
+      expect(invalidCode.statusCode).toBe(400);
+      expect(invalidCode.headers["x-request-id"]).toBeDefined();
+      expect(JSON.stringify(logger.entries)).not.toContain("invalid-code");
+
+      const expiredLogin = await server.inject({ method: "GET", url: "/auth/login" });
+      const expiredState = new URL(expiredLogin.headers.location ?? "").searchParams.get("state");
+      now = new Date("2025-01-01T00:10:00.001Z");
+      const expired = await server.inject({
+        method: "GET",
+        url: `/auth/callback?code=expired-code&state=${encodeURIComponent(expiredState ?? "")}`,
+      });
+      expect(expired.statusCode).toBe(400);
+      expect(expired.headers["x-request-id"]).toBeDefined();
+      expect(JSON.stringify(logger.entries)).not.toContain("expired-code");
+      expect(JSON.stringify(logger.entries)).not.toContain("wrong-callback-without-state");
+      expect(logger.entries.filter((entry) => entry.path === "/auth/callback")).toHaveLength(5);
     } finally {
       globalThis.fetch = originalFetch;
       await server.close();

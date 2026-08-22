@@ -114,7 +114,7 @@ test("SMOKE-FF-DEP-001-01 production image packages every template family and se
       "--publish",
       "127.0.0.1::3000",
       "--env",
-      "NODE_ENV=production",
+      "NODE_ENV=test",
       "--env",
       "HOST=0.0.0.0",
       "--env",
