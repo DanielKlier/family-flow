@@ -9,6 +9,7 @@ export type MissingResource =
 
 export function prepareMissingResourceViewModel(
   resource: MissingResource,
+  requestId: string,
   localization: Localization,
 ) {
   const heading = localization.text(`missing.${resource}.heading`);
@@ -16,6 +17,8 @@ export function prepareMissingResourceViewModel(
     title: heading,
     heading,
     message: localization.text(`missing.${resource}.message`),
+    requestIdLabel: localization.text("error.requestId"),
+    requestId,
   };
 }
 

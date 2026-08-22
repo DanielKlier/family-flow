@@ -21,11 +21,17 @@ export function prepareDashboardViewModel(user: UserContext, localization: Local
   };
 }
 
-export function prepareAuthErrorViewModel(message: string, localization: Localization) {
+export function prepareAuthErrorViewModel(
+  message: string,
+  requestId: string,
+  localization: Localization,
+) {
   return {
     title: localization.text("auth.errorTitle"),
     heading: localization.text("auth.errorHeading"),
     message,
+    requestIdLabel: localization.text("error.requestId"),
+    requestId,
     loginUrl: "/auth/login",
     loginLabel: localization.text("auth.backToLogin"),
   };
