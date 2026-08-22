@@ -446,11 +446,11 @@ Migration `0013_csv_import_purpose_identity.sql` introduces the purpose-aware v3
 
 Authenticated users maintain 18- through 24-month family-finance plans at `/scenarios`. Values entered in German human format are persisted as integer cents. Historical baselines use the selected 3-, 6-, or 12-month completed-month window, include zero-expense months, and exclude planned transactions and internal transfers.
 
-A historical baseline is a snapshot. Renaming a scenario or changing its range, starting buffer, or base income must retain the stored baseline. Select an explicit historical window or manual baseline in the edit form only when the snapshot should be replaced. Range changes are rejected when they would exclude an existing adjustment; correct or remove the adjustment deliberately rather than clipping it.
+A historical baseline is a snapshot. Renaming a scenario or changing its range, starting buffer, or base income must retain the stored baseline. Select an explicit historical window or manual baseline in the edit form only when the snapshot should be replaced. Range changes are rejected when they would exclude an existing adjustment; use the adjustment's edit or delete control to correct or remove it deliberately rather than clipping it.
 
 To verify migration and snapshot behavior, run `pnpm ops:verify --id OPS-FF-SCN-001-01`. The verifier provisions isolated PostgreSQL, applies all migrations, and checks scenario snapshot and adjustment round trips, including ordinary and explicit baseline updates. If it fails, preserve a database backup, use the request ID to inspect the matching request log, and compare the scenario's stored baseline fields before changing financial source data. Remove only the deterministic test scenario after verification; do not recalculate production snapshots in bulk.
 
-Scenario results use signed adjustments with non-negative monthly income and expense totals. A negative month-end buffer produces a funding gap; the required additional net income is the largest displayed gap. External calculator links are planning aids only: FamilyFlow never imports their output or calculates statutory benefits or taxes.
+Scenario results use signed adjustments with non-negative monthly income and expense totals. Each month's funding gap is `fundingGap = max(0, -balance)`; it is not derived from the month-end buffer. The required additional net income is the largest displayed gap. External calculator links are planning aids only: FamilyFlow never imports their output or calculates statutory benefits or taxes.
 
 ## Log Analysis
 
