@@ -33,6 +33,7 @@ describe("dashboard HTTP adapter", () => {
       const login = await server.inject({ method: "GET", url: "/auth/test-login" });
       const session = login.cookies.find(({ name }) => name === "ff_session");
       if (session === undefined) throw new Error("Test login must establish a session");
+      const requestId = "10000000-0000-4000-8000-000000000001";
       const response = await server.inject({
         method: "GET",
         url: "/?month=01.2099",
@@ -40,13 +41,13 @@ describe("dashboard HTTP adapter", () => {
           cookie: `ff_session=${session.value}`,
           "accept-language": "de",
           "hx-request": "true",
-          "x-request-id": "dashboard-future-month",
+          "x-request-id": requestId,
         },
       });
 
       expect(response.statusCode).toBe(400);
-      expect(response.headers["x-request-id"]).toBe("dashboard-future-month");
-      expect(response.body).toContain("dashboard-future-month");
+      expect(response.headers["x-request-id"]).toBe(requestId);
+      expect(response.body).toContain(requestId);
       expect(response.body).toContain("Zukünftige Monate");
     } finally {
       await server.close();

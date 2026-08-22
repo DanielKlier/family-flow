@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { createSeededInMemoryRepositories as createRepositories } from "../../src/adapters/db/default-repositories.js";
-import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { readTransactionFilters } from "../../src/adapters/http/transaction-request.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { buildServer } from "../../src/app/server.js";
 import type { RequestLogEntry, RequestLogger } from "../../src/ports/logging/logger.js";
 
@@ -51,7 +51,10 @@ describe("German localization HTTP adapter", () => {
       try {
         const headers = await authenticatedHeaders(server);
         logger.entries = [];
-        const requestId = `localized-error-${status}`;
+        const requestId =
+          status === "404"
+            ? "10000000-0000-4000-8000-000000000006"
+            : "10000000-0000-4000-8000-000000000007";
         const response = await server.inject({
           method: "GET",
           url: path,

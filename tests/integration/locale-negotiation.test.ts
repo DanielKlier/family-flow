@@ -97,17 +97,19 @@ describe("request-scoped HTTP localization", () => {
       expectLocalizedHtml(htmx, "en");
       expect(htmx.body).toContain("Transactions");
 
+      const invalidRequestId = "10000000-0000-4000-8000-000000000002";
       const invalid = await server.inject({
         method: "POST",
         url: "/transactions",
-        headers: { ...english, "x-request-id": "english-invalid-transaction" },
+        headers: { ...english, "x-request-id": invalidRequestId },
         payload: { description: "Broken", amount: "not-a-number", date: "12/31/2026" },
       });
       expect(invalid.statusCode).toBe(400);
-      expect(invalid.headers["x-request-id"]).toBe("english-invalid-transaction");
+      expect(invalid.headers["x-request-id"]).toBe(invalidRequestId);
       expectLocalizedHtml(invalid, "en");
       expect(invalid.body).toContain("The transaction could not be saved.");
 
+      const unauthorizedRequestId = "10000000-0000-4000-8000-000000000003";
       const unauthorized = await server.inject({
         method: "POST",
         url: "/auth/logout",
@@ -115,11 +117,11 @@ describe("request-scoped HTTP localization", () => {
           ...englishHeaders,
           origin: "http://127.0.0.1:3000",
           cookie: "ff_session=unknown",
-          "x-request-id": "english-unauthorized",
+          "x-request-id": unauthorizedRequestId,
         },
       });
       expect(unauthorized.statusCode).toBe(401);
-      expect(unauthorized.headers["x-request-id"]).toBe("english-unauthorized");
+      expect(unauthorized.headers["x-request-id"]).toBe(unauthorizedRequestId);
       expectLocalizedHtml(unauthorized, "en");
       expect(unauthorized.body).toContain("Invalid session.");
 
@@ -132,13 +134,14 @@ describe("request-scoped HTTP localization", () => {
       expectLocalizedHtml(missing, "en");
       expect(missing.body).toContain("Page not found");
 
+      const unexpectedRequestId = "10000000-0000-4000-8000-000000000004";
       const unexpected = await server.inject({
         method: "GET",
         url: "/test/locale-error",
-        headers: { ...english, "x-request-id": "english-unexpected" },
+        headers: { ...english, "x-request-id": unexpectedRequestId },
       });
       expect(unexpected.statusCode).toBe(500);
-      expect(unexpected.headers["x-request-id"]).toBe("english-unexpected");
+      expect(unexpected.headers["x-request-id"]).toBe(unexpectedRequestId);
       expectLocalizedHtml(unexpected, "en");
       expect(unexpected.body).toContain("Internal server error");
     } finally {
@@ -150,13 +153,14 @@ describe("request-scoped HTTP localization", () => {
     const server = buildServer();
 
     try {
+      const requestId = "10000000-0000-4000-8000-000000000005";
       const redirect = await server.inject({
         method: "GET",
         url: "/transactions",
-        headers: { ...englishHeaders, "x-request-id": "english-redirect" },
+        headers: { ...englishHeaders, "x-request-id": requestId },
       });
       expect(redirect.statusCode).toBe(302);
-      expect(redirect.headers["x-request-id"]).toBe("english-redirect");
+      expect(redirect.headers["x-request-id"]).toBe(requestId);
       expect(redirect.headers["content-language"]).toBeUndefined();
       expect(redirect.headers.vary ?? "").not.toContain("Accept-Language");
 
