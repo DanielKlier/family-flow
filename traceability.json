@@ -486,9 +486,9 @@
     },
     {
       "id": "PH-00-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Deployment and reverse-proxy smoke evidence.",
-      "classification": "Evidence-only; expected green after prerequisite phases"
+      "classification": "Evidence-only; verified green after prerequisite phases"
     },
     {
       "id": "PH-01-R01",
@@ -762,7 +762,7 @@
     },
     {
       "id": "FF-SCP-001-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-00-R01",
       "test": "SMOKE-FF-SCP-001-01",
       "file": "tests/e2e/deployment-smoke.test.ts",
@@ -770,7 +770,7 @@
     },
     {
       "id": "FF-SCP-001-AC02",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-00-R01",
       "test": "SMOKE-FF-SCP-001-02",
       "file": "tests/e2e/deployment-smoke.test.ts",
@@ -1610,7 +1610,7 @@
     },
     {
       "id": "FF-DEP-002-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-00-R01",
       "test": "SMOKE-FF-DEP-002-01",
       "file": "tests/e2e/deployment-smoke.test.ts",
@@ -1618,7 +1618,7 @@
     },
     {
       "id": "FF-DEP-003-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-00-R01",
       "test": "SMOKE-FF-DEP-003-01",
       "file": "tests/e2e/deployment-smoke.test.ts",
@@ -3518,14 +3518,14 @@
       "procedure": "**Deployment And Migrations**: run empty-database and update Compose smoke.",
       "outcome": "Migrations complete before readiness and healthchecks pass.",
       "rollback": "Stop deployment and restore the pre-migration backup/image pair.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-DEP-002-01"
     },
     {
       "id": "OPS-FF-DEP-003-01",
       "procedure": "**Reverse Proxy**: smoke with `BASE_URL=https://finances.home.arpa`.",
       "outcome": "Links, secure cookies, callback, and redirects use external HTTPS URL.",
       "rollback": "Remove new route from proxy and restore prior config/image.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-DEP-003-01"
     },
     {
       "id": "OPS-FF-DEP-005-01",

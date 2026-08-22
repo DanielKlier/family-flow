@@ -47,6 +47,18 @@ Rollback:
 4. Restart services with `docker compose -f compose.prod.yaml up -d`.
 5. Verify the app with `curl http://127.0.0.1:3000/health`.
 
+### Deployment smoke evidence
+
+Docker Engine and Docker Compose are prerequisites. The smoke verifiers build the current image, create isolated Compose projects and disposable PostgreSQL volumes, and clean them up after each scenario.
+
+- Run `pnpm ops:verify --id OPS-FF-DEP-002-01` for empty-database and N-1 update evidence. Success means `/health` returns 2xx only after startup migrations complete, PostgreSQL is healthy, and `schema_migrations` contains every bundled migration.
+- Run `pnpm ops:verify --id OPS-FF-DEP-003-01` for external-URL evidence. Success means rendered links resolve to `https://finances.home.arpa` without exposing the Compose-published address, the callback and post-logout URLs use HTTPS, and OIDC state, session, and cleared session cookies are `Secure`.
+- For a direct focused run of all four scenarios, use `pnpm exec playwright test tests/e2e/deployment-smoke.test.ts --workers=1`.
+
+A failure before readiness usually indicates an image build, PostgreSQL startup, migration, seed, session-cleanup, or synthetic OIDC discovery problem. Inspect the failing Playwright assertion and captured Docker command output; the verifier removes its disposable project even on failure. For a production deployment, inspect `docker compose -f compose.prod.yaml logs app postgres`. A URL or cookie assertion failure indicates that `BASE_URL`, OIDC provider redirect registration, or reverse-proxy HTTPS routing differs from the external origin. Never work around a failed migration by marking it complete manually.
+
+After a failed production update, stop traffic and the updated deployment. Restore the pre-update database backup and its compatible prior image when the migration is not backward-compatible; otherwise restart the prior known-good image against the current database. After a reverse-proxy failure, restore the prior proxy route and image/configuration pair, then verify `/health` locally before reopening traffic.
+
 Image distribution alternatives:
 
 - Current production default: build locally or in CI, push a versioned image to GHCR, Docker Hub, or a LAN registry, and let the target server pull images by tag.
