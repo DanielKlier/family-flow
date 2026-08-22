@@ -498,7 +498,7 @@
     },
     {
       "id": "PH-02-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Executable migration, backup, and restore behavior.",
       "classification": "Behavior change"
     },
@@ -898,7 +898,7 @@
     },
     {
       "id": "FF-MDM-002-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-02-R01",
       "test": "INT-FF-MDM-002-01",
       "file": "tests/integration/drizzle-master-data-repositories.test.ts",
@@ -1586,7 +1586,7 @@
     },
     {
       "id": "FF-OPS-002-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-02-R01",
       "test": "SMOKE-FF-OPS-002-01",
       "file": "tests/e2e/backup-restore-smoke.test.ts",
@@ -1594,7 +1594,7 @@
     },
     {
       "id": "FF-OPS-003-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-02-R01",
       "test": "SMOKE-FF-OPS-003-01",
       "file": "tests/e2e/backup-restore-smoke.test.ts",
@@ -2680,7 +2680,7 @@
       "phase": "PH-02-R01",
       "file": "tests/integration/drizzle-master-data-repositories.test.ts",
       "boundary": "PostgreSQL adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-MDM-002-02",
@@ -2992,7 +2992,7 @@
       "phase": "PH-02-R01",
       "file": "tests/e2e/backup-restore-smoke.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "SMOKE-FF-OPS-003-01",
@@ -3000,7 +3000,7 @@
       "phase": "PH-02-R01",
       "file": "tests/e2e/backup-restore-smoke.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "SMOKE-FF-REL-001-01",
@@ -3588,14 +3588,14 @@
       "procedure": "**Backup**: back up deterministic record/count/minor-unit fixture.",
       "outcome": "Backup completes and manifest records counts/totals.",
       "rollback": "Keep prior verified backup and diagnose before deployment.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-OPS-002-01"
     },
     {
       "id": "OPS-FF-OPS-003-01",
       "procedure": "**Restore**: restore fixture, reconcile IDs/counts/totals, invalidate sessions, and verify health.",
       "outcome": "Financial records match and old sessions fail.",
       "rollback": "Keep traffic closed and restore the previous verified database/image pair.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-OPS-003-01"
     },
     {
       "id": "OPS-FF-REL-001-01",
