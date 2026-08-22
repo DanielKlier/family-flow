@@ -41,6 +41,11 @@ import {
   prepareTransactionListViewModel,
   prepareTransactionsViewModel,
 } from "./transaction-view-model.js";
+import {
+  prepareCalculatorViewModel,
+  prepareScenarioViewModel,
+  type ScenarioViewInput,
+} from "./scenario-view-model.js";
 
 type ViewRenderer = Pick<FastifyReply, "viewAsync"> & {
   request?: { localization?: Localization };
@@ -72,6 +77,8 @@ function mainNavigation(localization: Localization) {
     { href: "/income", label: localization.text("nav.income") },
     { href: "/imports/csv", label: localization.text("nav.csvImport") },
     { href: "/categorization-rules", label: localization.text("nav.rules") },
+    { href: "/scenarios", label: localization.text("nav.scenarios") },
+    { href: "/calculators", label: localization.text("nav.calculators") },
   ];
 }
 
@@ -199,6 +206,24 @@ export function createFamilyFlowViews(renderer: ViewRenderer, configured?: Local
       return renderer.viewAsync(
         "pages/csv-import.njk",
         page(prepareCsvImportViewModel(input, localization), mainNavigation(localization)),
+      );
+    },
+    scenarioPage(input: ScenarioViewInput): Promise<string> {
+      return renderer.viewAsync(
+        "pages/scenarios.njk",
+        page(prepareScenarioViewModel(input, localization), mainNavigation(localization), true),
+      );
+    },
+    scenarioPanel(input: ScenarioViewInput): Promise<string> {
+      return renderer.viewAsync(
+        "partials/scenario-panel.njk",
+        prepareScenarioViewModel(input, localization),
+      );
+    },
+    calculatorPage(): Promise<string> {
+      return renderer.viewAsync(
+        "pages/calculators.njk",
+        page(prepareCalculatorViewModel(localization), mainNavigation(localization)),
       );
     },
     incomePage(input: IncomeViewInput): Promise<string> {
