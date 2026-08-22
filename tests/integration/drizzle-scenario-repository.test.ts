@@ -110,7 +110,44 @@ describe("Drizzle scenario repository", () => {
   );
 
   it.runIf(testDatabaseUrl !== undefined)(
-    "INT-FF-SCN-001-02 preserves a snapshot on ordinary updates and replaces it only explicitly",
+    "INT-FF-SCN-001-02 rolls back deletion when retained adjustments invalidate the scenario",
+    async () => {
+      if (testDatabaseUrl === undefined) throw new Error("TEST_DATABASE_URL is required");
+      await migrate(testDatabaseUrl);
+      const connection = createPostgresConnection(testDatabaseUrl);
+      const repository = new DrizzleScenarioRepository(connection.db);
+      const positive = createScenarioAdjustment({
+        ...adjustment,
+        id: "scenario-offsetting-positive",
+        deltaCents: 100_000,
+      });
+      const negative = createScenarioAdjustment({
+        ...adjustment,
+        id: "scenario-offsetting-negative",
+        deltaCents: -400_000,
+      });
+      try {
+        await repository.save(scenario, [positive, negative]);
+
+        await expect(repository.deleteAdjustment(scenario.id, positive.id)).rejects.toThrow(
+          "Monthly income must be non-negative",
+        );
+        await expect(repository.get(scenario.id)).resolves.toEqual({
+          scenario,
+          adjustments: [negative, positive],
+        });
+      } finally {
+        await connection.db
+          .delete(scenarioAdjustments)
+          .where(eq(scenarioAdjustments.scenarioId, scenario.id));
+        await connection.db.delete(scenarios).where(eq(scenarios.id, scenario.id));
+        await connection.client.end();
+      }
+    },
+  );
+
+  it.runIf(testDatabaseUrl !== undefined)(
+    "INT-FF-SCN-001-03 preserves a snapshot on ordinary updates and replaces it only explicitly",
     async () => {
       if (testDatabaseUrl === undefined) throw new Error("TEST_DATABASE_URL is required");
       await migrate(testDatabaseUrl);
