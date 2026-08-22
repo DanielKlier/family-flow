@@ -360,6 +360,132 @@ describe("INT-FF-CSV-003-01 INT-FF-CSV-003-02 CSV parser", () => {
     ).rejects.toThrow("quote is malformed");
   });
 
+  it("INT-FF-CSV-002-01 parses all configured CSV formats, mappings, and row outcomes", async () => {
+    const parser = new SimpleCsvParser();
+    const fixtures = [
+      {
+        profile: createImportProfile({
+          id: "profile-comma-utf8",
+          name: "Comma UTF-8",
+          kind: "custom",
+          delimiter: ",",
+          encoding: "utf8",
+          dateFormat: "DD.MM.YY",
+          decimalFormat: "comma-decimal",
+          dateColumn: "Booked",
+          amountColumn: "Amount",
+          descriptionColumn: "Description",
+          payeeColumn: "Payee",
+          purposeColumn: "Purpose",
+          categoryColumn: "Category",
+        }),
+        csv: [
+          "Booked,Amount,Description,Payee,Purpose,Category",
+          '31.12.26,"-1.234,56",Market shopping,Café,Weekly groceries,Food',
+          '01.01.27,"0,00",Zero amount,,,',
+          '02.01.27,"12,00",Refund,,,',
+          '31.02.27,"-5,00",Impossible date,,,',
+          "03.01.27,invalid,Invalid amount,,,",
+          '04.01.27,"-5,00", ,,,',
+        ].join("\n"),
+        expected: [
+          {
+            line: 2,
+            outcome: "importable",
+            row: {
+              accountId: "account-csv-evidence",
+              date: "2026-12-31",
+              amountCents: -123456,
+              description: "Market shopping",
+              payee: "Café",
+              purpose: "Weekly groceries",
+              categoryName: "Food",
+            },
+          },
+          { line: 3, outcome: "ignored", reason: "amount-not-negative" },
+          { line: 4, outcome: "ignored", reason: "amount-not-negative" },
+          { line: 5, outcome: "invalid", reason: "invalid-date" },
+          { line: 6, outcome: "invalid", reason: "invalid-amount" },
+          { line: 7, outcome: "invalid", reason: "missing-description" },
+        ],
+      },
+      {
+        profile: createImportProfile({
+          id: "profile-semicolon-latin1",
+          name: "Semicolon Latin1",
+          kind: "custom",
+          delimiter: ";",
+          encoding: "latin1",
+          dateFormat: "DD.MM.YYYY",
+          decimalFormat: "comma-decimal",
+          dateColumn: "Date",
+          amountColumn: "Amount",
+          descriptionColumn: "Description",
+        }),
+        csv: ["Date;Amount;Description", "15.07.2026;-1.234,56;Überweisung"].join("\n"),
+        encoding: "latin1" as const,
+        expected: [
+          {
+            line: 2,
+            outcome: "importable",
+            row: {
+              accountId: "account-csv-evidence",
+              date: "2026-07-15",
+              amountCents: -123456,
+              description: "Überweisung",
+              payee: null,
+              purpose: null,
+              categoryName: null,
+            },
+          },
+        ],
+      },
+      {
+        profile: createImportProfile({
+          id: "profile-tab-utf8",
+          name: "Tab UTF-8",
+          kind: "custom",
+          delimiter: "\t",
+          encoding: "utf8",
+          dateFormat: "YYYY-MM-DD",
+          decimalFormat: "dot-decimal",
+          dateColumn: "Date",
+          amountColumn: "Amount",
+          descriptionColumn: "Description",
+          purposeColumn: "Purpose",
+        }),
+        csv: [
+          "Date\tAmount\tDescription\tPurpose",
+          "2026-08-16\t-1,234.56\tInvoice\tUtilities",
+        ].join("\n"),
+        expected: [
+          {
+            line: 2,
+            outcome: "importable",
+            row: {
+              accountId: "account-csv-evidence",
+              date: "2026-08-16",
+              amountCents: -123456,
+              description: "Invoice",
+              payee: null,
+              purpose: "Utilities",
+              categoryName: null,
+            },
+          },
+        ],
+      },
+    ];
+
+    for (const fixture of fixtures) {
+      await expect(
+        parser.parse(Buffer.from(fixture.csv, fixture.encoding ?? "utf8"), {
+          accountId: "account-csv-evidence",
+          profile: fixture.profile,
+        }),
+      ).resolves.toEqual(fixture.expected);
+    }
+  });
+
   it("reports missing mapped columns with a human-readable error", async () => {
     const parser = new SimpleCsvParser();
     const csv = ["Date;Description", "15.07.2026;Card payment"].join("\n");
