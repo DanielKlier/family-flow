@@ -515,18 +515,18 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-02-R01 — Migration, Backup, And Restore Behavior
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-OPS-002`, `FF-OPS-003`
 **Verifies:** `FF-MDM-002`, `FF-MDM-005`, `FF-OPS-002`, `FF-OPS-003`, `FF-DEP-002`
 **Operations:** `OPS-FF-OPS-002-01`, `OPS-FF-OPS-003-01`
 
-- [ ] Add `SMOKE-FF-OPS-002-01` and observe red because no executable backup/restore reconciliation procedure exists.
-- [ ] Test all migrations against an empty PostgreSQL database.
-- [ ] Test update from the oldest supported schema state.
-- [ ] Execute backup and restore against deterministic financial fixtures.
-- [ ] Verify record counts, monetary totals, references, seeds, and user edits after restore.
-- [ ] Integrate restored-session invalidation after `PH-10A`.
+- [x] Add `SMOKE-FF-OPS-002-01` and observe red because no executable backup/restore reconciliation procedure exists.
+- [x] Test all migrations against an empty PostgreSQL database.
+- [x] Test update from the oldest supported schema state.
+- [x] Execute backup and restore against deterministic financial fixtures.
+- [x] Verify record counts, monetary totals, references, seeds, and user edits after restore.
+- [x] Integrate restored-session invalidation after `PH-10A`.
 
 **Tests:** `INT-FF-MDM-002-01`, `SMOKE-FF-OPS-002-01`, `SMOKE-FF-OPS-003-01`.
 

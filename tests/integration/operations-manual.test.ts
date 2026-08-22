@@ -19,6 +19,23 @@ describe("operations manual", () => {
     expect(manual).toContain("Monthly overrides replace the recurring amount");
   });
 
+  it("documents an executable PostgreSQL backup and safe restore reconciliation runbook", async () => {
+    const manual = await readFile("OPERATIONS.md", "utf8");
+    const backup = manual.slice(manual.indexOf("## Backup "), manual.indexOf("## Restore "));
+    const restore = manual.slice(manual.indexOf("## Restore "), manual.indexOf("## Debugging"));
+
+    expect(backup).toMatch(/pg_dump/i);
+    expect(backup).toMatch(/manifest/i);
+    expect(backup).toMatch(/sha256|checksum/i);
+    expect(restore).toMatch(
+      /stop[\s\S]*restore[\s\S]*session-invalidate\.js[\s\S]*session-cleanup\.js[\s\S]*start/i,
+    );
+    expect(restore).toMatch(/reconcil/i);
+    expect(restore).toMatch(/foreign.key|reference/i);
+    expect(restore).toMatch(/rollback/i);
+    expect(restore).toMatch(/retention/i);
+  });
+
   it("requires restored-session invalidation before application startup", async () => {
     const manual = await readFile("OPERATIONS.md", "utf8");
     const restore = manual.slice(manual.indexOf("## Restore "), manual.indexOf("## Debugging"));
