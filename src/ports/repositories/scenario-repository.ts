@@ -8,4 +8,6 @@ export interface ScenarioRepository {
   save(scenario: Scenario, adjustments: ScenarioAdjustment[]): Promise<void>;
   saveScenario(scenario: Scenario): Promise<void>;
   addAdjustment(adjustment: ScenarioAdjustment): Promise<void>;
+  updateAdjustment(adjustment: ScenarioAdjustment): Promise<void>;
+  deleteAdjustment(scenarioId: string, adjustmentId: string): Promise<void>;
 }

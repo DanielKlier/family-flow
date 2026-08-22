@@ -272,6 +272,8 @@ export const messages: Record<string, string> = {
   "scenario.from": "Von Monat",
   "scenario.to": "Bis Monat",
   "scenario.add": "Anpassung hinzufügen",
+  "scenario.editAdjustment": "Anpassung bearbeiten",
+  "scenario.deleteAdjustment": "Anpassung löschen",
   "scenario.lowestBuffer": "Niedrigster Puffer",
   "scenario.requiredIncome": "Zusätzlich benötigtes Nettoeinkommen",
   "scenario.balance": "Saldo",

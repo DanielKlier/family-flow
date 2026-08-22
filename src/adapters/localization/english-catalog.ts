@@ -271,6 +271,8 @@ export const messages: Readonly<Record<string, string>> = {
   "scenario.from": "From month",
   "scenario.to": "To month",
   "scenario.add": "Add adjustment",
+  "scenario.editAdjustment": "Edit adjustment",
+  "scenario.deleteAdjustment": "Delete adjustment",
   "scenario.lowestBuffer": "Lowest buffer",
   "scenario.requiredIncome": "Required additional net income",
   "scenario.balance": "Balance",

@@ -69,6 +69,83 @@ describe("scenario HTTP adapter", () => {
     }
   });
 
+  it("updates and deletes adjustments with full-page and HTMX response parity", async () => {
+    const { server, repositories, headers } = await authenticatedServer();
+    try {
+      await server.inject({
+        method: "POST",
+        url: "/scenarios",
+        headers,
+        payload: {
+          name: "Maintenance",
+          startMonth: "08.2026",
+          endMonth: "01.2028",
+          startingBuffer: "0,00",
+          baseIncome: "100,00",
+          baselineMode: "manual",
+          manualBaseline: "50,00",
+        },
+      });
+      const stored = (await repositories.scenarios.list())[0];
+      if (stored === undefined) throw new Error("Scenario fixture must be persisted");
+      await server.inject({
+        method: "POST",
+        url: `/scenarios/${stored.scenario.id}/adjustments`,
+        headers,
+        payload: {
+          name: "Original",
+          type: "income",
+          direction: "increase",
+          amount: "10,00",
+          startMonth: "08.2026",
+          endMonth: "08.2026",
+        },
+      });
+      const adjustment = (await repositories.scenarios.get(stored.scenario.id))?.adjustments[0];
+      if (adjustment === undefined) throw new Error("Adjustment fixture must be persisted");
+
+      const updated = await server.inject({
+        method: "POST",
+        url: `/scenarios/${stored.scenario.id}/adjustments/${adjustment.id}`,
+        headers: { ...headers, "hx-request": "true" },
+        payload: {
+          name: "Corrected",
+          type: "expense",
+          direction: "decrease",
+          amount: "5,00",
+          startMonth: "09.2026",
+          endMonth: "10.2026",
+        },
+      });
+      expect(updated.statusCode).toBe(200);
+      expect(updated.body).toContain('id="scenario-panel"');
+      await expect(repositories.scenarios.get(stored.scenario.id)).resolves.toMatchObject({
+        adjustments: [
+          {
+            id: adjustment.id,
+            name: "Corrected",
+            type: "expense",
+            deltaCents: -500,
+            startMonth: "2026-09",
+            endMonth: "2026-10",
+          },
+        ],
+      });
+
+      const removed = await server.inject({
+        method: "POST",
+        url: `/scenarios/${stored.scenario.id}/adjustments/${adjustment.id}/delete`,
+        headers,
+      });
+      expect(removed.statusCode).toBe(302);
+      await expect(repositories.scenarios.get(stored.scenario.id)).resolves.toMatchObject({
+        adjustments: [],
+      });
+    } finally {
+      await server.close();
+    }
+  });
+
   it("returns localized 400 errors without persistence mutation for malformed, orphaning, out-of-range, and negative-derived inputs", async () => {
     const { server, repositories, headers } = await authenticatedServer();
     try {

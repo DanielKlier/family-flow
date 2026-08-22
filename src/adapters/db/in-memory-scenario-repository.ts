@@ -1,10 +1,10 @@
-import { compareCodePoints } from "../../core/shared/compare-code-points.js";
-import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
 import {
   assertAdjustmentWithinScenario,
   type Scenario,
   type ScenarioAdjustment,
 } from "../../core/scenarios/scenario.js";
+import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
+import { compareCodePoints } from "../../core/shared/compare-code-points.js";
 import type {
   ScenarioRepository,
   StoredScenario,
@@ -40,5 +40,25 @@ export class InMemoryScenarioRepository implements ScenarioRepository {
     if (existing === undefined) throw new Error("Scenario does not exist");
     assertAdjustmentWithinScenario(existing.scenario, adjustment);
     await this.save(existing.scenario, [...existing.adjustments, adjustment]);
+  }
+  async updateAdjustment(adjustment: ScenarioAdjustment): Promise<void> {
+    const existing = this.#items.get(adjustment.scenarioId);
+    if (existing === undefined) throw new Error("Scenario does not exist");
+    const index = existing.adjustments.findIndex(({ id }) => id === adjustment.id);
+    if (index === -1) throw new Error("Adjustment does not exist");
+    const adjustments = existing.adjustments.map((item, itemIndex) =>
+      itemIndex === index ? adjustment : item,
+    );
+    await this.save(existing.scenario, adjustments);
+  }
+  async deleteAdjustment(scenarioId: string, adjustmentId: string): Promise<void> {
+    const existing = this.#items.get(scenarioId);
+    if (existing === undefined) throw new Error("Scenario does not exist");
+    if (!existing.adjustments.some(({ id }) => id === adjustmentId))
+      throw new Error("Adjustment does not exist");
+    await this.save(
+      existing.scenario,
+      existing.adjustments.filter(({ id }) => id !== adjustmentId),
+    );
   }
 }
