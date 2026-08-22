@@ -259,9 +259,12 @@ Supported maintenance actions:
 
 Operational notes:
 
-- Amounts are entered as positive expense amounts in the UI and stored as negative cents in PostgreSQL.
+- Amounts are entered as positive expense amounts in the UI and stored as negative cents in PostgreSQL. Stored values must fit PostgreSQL's signed `integer` range; invalid, fractional-cent, zero, or negative human inputs are rejected without mutation.
+- Dates must be real Gregorian calendar dates. Native month filters submit canonical `YYYY-MM` values and can be combined with the other transaction filters.
+- Transaction creation and editing reject account or category IDs that do not exist. Inactive referenced master data remains valid for existing transactions because deactivation does not delete it.
 - Owner-context filtering is derived from the selected account, not from a separate transaction field.
-- Use `/admin/master-data` to verify account and category status if transaction forms have missing options.
+- Run `pnpm ops:verify --id OPS-FF-TXN-002-01` to verify calendar and cent boundaries, reference validation, localized HTTP behavior, PostgreSQL round trips and filters, and the full-page filter scenarios. The verifier starts an isolated PostgreSQL service and removes it afterward.
+- Use `/admin/master-data` to verify account and category status if transaction forms have missing options. A missing reference response includes the request ID and must not create or update a transaction.
 - For manual correction issues, capture the visible `X-Request-Id` and inspect the matching request log entry. Do not log or paste broad financial exports when a single minimized transaction example is enough.
 
 ## Internal Transfer Classification

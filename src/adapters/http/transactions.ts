@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
+import { maintainTransaction } from "../../core/transactions/transaction-maintenance.js";
 import type { AccountRepository } from "../../ports/repositories/account-repository.js";
 import type { CategoryRepository } from "../../ports/repositories/category-repository.js";
 import type { OwnerContextRepository } from "../../ports/repositories/owner-context-repository.js";
@@ -84,9 +85,14 @@ async function handleCreateTransaction(
   reply: FastifyReply,
 ) {
   try {
-    await repositories.transactions.save(
-      createTransactionFromForm(readForm(request.body), randomUUID(), reply.request.localization),
-    );
+    await maintainTransaction({
+      transaction: createTransactionFromForm(
+        readForm(request.body),
+        randomUUID(),
+        reply.request.localization,
+      ),
+      persistence: repositories,
+    });
   } catch (error: unknown) {
     const formError = localizedRequestError(reply, error, "transaction.saveFailed");
     const state = await readTransactionsState(repositories, formError);
@@ -152,9 +158,15 @@ async function handleUpdateTransaction(
   }
 
   try {
-    await repositories.transactions.save(
-      createTransactionFromForm(readForm(request.body), id, reply.request.localization, existing),
-    );
+    await maintainTransaction({
+      transaction: createTransactionFromForm(
+        readForm(request.body),
+        id,
+        reply.request.localization,
+        existing,
+      ),
+      persistence: repositories,
+    });
   } catch (error: unknown) {
     const [accounts, categories] = await Promise.all([
       repositories.accounts.listActive(),

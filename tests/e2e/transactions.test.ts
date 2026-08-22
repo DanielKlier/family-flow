@@ -4,7 +4,9 @@ import { buildServer } from "../../src/app/server.js";
 import { loginAsTestUserPage } from "../support/auth.js";
 import { listen } from "../support/server.js";
 
-test("manual booked expense can be created", async ({ page }) => {
+test("E2E-FF-TXN-002-01: a manual booked expense displays its localized one-time amount", async ({
+  page,
+}) => {
   const server = buildServer();
 
   try {
@@ -32,6 +34,203 @@ test("manual booked expense can be created", async ({ page }) => {
     await expect(row.getByRole("button", { name: "Löschen", exact: true })).toBeVisible();
     await expect(row.getByRole("link", { name: "Edit Groceries" })).not.toBeVisible();
     await expect(row.getByRole("button", { name: "Delete Groceries" })).not.toBeVisible();
+  } finally {
+    await server.close();
+  }
+});
+
+test("E2E-FF-TXN-002-02: forged account and category references are rejected without mutation", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/transactions`);
+
+    for (const [field, value, error] of [
+      ["Datum", "30.02.2026", "Das Datum ist ungültig."],
+      ["Betrag", "-1,00", "Der Betrag ist ungültig."],
+      ["Betrag", "0", "Der Betrag ist ungültig."],
+      ["Betrag", "1,234", "Der Betrag ist ungültig."],
+      ["Betrag", "90.071.992.547.409,92", "Der Betrag ist ungültig."],
+    ]) {
+      await page.goto(`${baseUrl}/transactions`);
+      await page.getByLabel("Beschreibung").fill(`Invalid ${value}`);
+      await page.getByLabel("Betrag").fill(field === "Betrag" ? value : "1,00");
+      await page.getByLabel("Datum").fill(field === "Datum" ? value : "15.07.2026");
+
+      const responsePromise = page.waitForResponse(
+        (response) =>
+          response.url() === `${baseUrl}/transactions` && response.request().method() === "POST",
+      );
+      await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
+      const response = await responsePromise;
+
+      expect(response.status()).toBe(400);
+      expect(response.headers()["x-request-id"]).toBeTruthy();
+      await expect(page.getByText(error, { exact: false })).toBeVisible();
+      await expect(
+        page.getByText(response.headers()["x-request-id"], { exact: false }),
+      ).toBeVisible();
+      await expect(page.getByRole("cell", { name: `Invalid ${value}`, exact: true })).toHaveCount(
+        0,
+      );
+    }
+
+    for (const [field, value, error] of [
+      ["Konto", "account-does-not-exist", "Das Konto ist nicht vorhanden."],
+      ["Kategorie", "category-does-not-exist", "Die Kategorie ist nicht vorhanden."],
+    ]) {
+      await page.goto(`${baseUrl}/transactions`);
+      const select = page.locator("#transaction-form").getByLabel(field);
+      await select.evaluate((element, unknownValue) => {
+        const option = document.createElement("option");
+        option.value = unknownValue;
+        option.text = unknownValue;
+        element.append(option);
+      }, value);
+      await select.selectOption(value);
+      await page.getByLabel("Beschreibung").fill(`Forged ${field}`);
+      await page.getByLabel("Betrag").fill("1,00");
+      await page.getByLabel("Datum").fill("15.07.2026");
+
+      const responsePromise = page.waitForResponse(
+        (response) =>
+          response.url() === `${baseUrl}/transactions` && response.request().method() === "POST",
+      );
+      await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
+      const response = await responsePromise;
+
+      expect(response.status()).toBe(400);
+      expect(response.headers()["x-request-id"]).toBeTruthy();
+      await expect(page.getByText(error, { exact: false })).toBeVisible();
+      await expect(
+        page.getByText(response.headers()["x-request-id"], { exact: false }),
+      ).toBeVisible();
+      await expect(page.getByRole("cell", { name: `Forged ${field}`, exact: true })).toHaveCount(0);
+    }
+  } finally {
+    await server.close();
+  }
+});
+
+test("E2E-FF-TXN-003-01: every transaction filter and required filter pair excludes nonmatches", async ({
+  page,
+}) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/transactions`);
+    for (const transaction of [
+      {
+        description: "July personal groceries",
+        accountId: "account-person-a-checking",
+        categoryId: "category-groceries",
+        date: "15.07.2026",
+        status: "booked",
+        fixedCost: false,
+      },
+      {
+        description: "August shared rent",
+        accountId: "account-shared-checking",
+        categoryId: "category-housing-rent",
+        date: "01.08.2026",
+        status: "planned",
+        fixedCost: true,
+      },
+    ]) {
+      await page
+        .locator("#transaction-form")
+        .getByLabel("Konto")
+        .selectOption(transaction.accountId);
+      await page
+        .locator("#transaction-form")
+        .getByLabel("Kategorie")
+        .selectOption(transaction.categoryId);
+      await page.getByLabel("Beschreibung").fill(transaction.description);
+      await page.getByLabel("Betrag").fill("1,00");
+      await page.getByLabel("Datum").fill(transaction.date.split("-").reverse().join("."));
+      await page.locator("#transaction-form").getByLabel("Status").selectOption(transaction.status);
+      if (transaction.fixedCost)
+        await page.locator("#transaction-form").getByLabel("Fixkosten").check();
+      await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
+    }
+
+    const filters = [
+      {
+        values: { Monat: "2026-07" },
+        expected: "July personal groceries",
+        excluded: "August shared rent",
+      },
+      {
+        values: { Konto: "account-person-a-checking" },
+        expected: "July personal groceries",
+        excluded: "August shared rent",
+      },
+      {
+        values: { Eigentümer: "shared" },
+        expected: "August shared rent",
+        excluded: "July personal groceries",
+      },
+      {
+        values: { Kategorie: "category-groceries" },
+        expected: "July personal groceries",
+        excluded: "August shared rent",
+      },
+      {
+        values: { Status: "planned" },
+        expected: "August shared rent",
+        excluded: "July personal groceries",
+      },
+      {
+        values: { Kostenart: "fixed" },
+        expected: "August shared rent",
+        excluded: "July personal groceries",
+      },
+      {
+        values: { Monat: "2026-08", Konto: "account-shared-checking" },
+        expected: "August shared rent",
+        excluded: "July personal groceries",
+      },
+      {
+        values: { Eigentümer: "person_a", Kategorie: "category-groceries" },
+        expected: "July personal groceries",
+        excluded: "August shared rent",
+      },
+      {
+        values: { Status: "planned", Kostenart: "fixed" },
+        expected: "August shared rent",
+        excluded: "July personal groceries",
+      },
+    ];
+
+    for (const filter of filters) {
+      await page.goto(`${baseUrl}/transactions`);
+      for (const [label, value] of Object.entries(filter.values)) {
+        const filtersForm = page.locator("#transaction-filters");
+        const control =
+          label === "Status"
+            ? filtersForm.locator('select[name="status"]')
+            : filtersForm.getByLabel(label);
+        if (label === "Monat") {
+          await control.fill(value);
+        } else {
+          await control.selectOption(value);
+        }
+      }
+      const responsePromise = page.waitForResponse(
+        (response) =>
+          response.url().startsWith(`${baseUrl}/transactions?`) && response.status() === 200,
+      );
+      await page.getByRole("button", { name: "Filter anwenden" }).click();
+      await responsePromise;
+      await expect(page.getByRole("cell", { name: filter.expected, exact: true })).toBeVisible();
+      await expect(page.getByRole("cell", { name: filter.excluded, exact: true })).toHaveCount(0);
+    }
   } finally {
     await server.close();
   }
@@ -149,7 +348,9 @@ test("purpose is visible in the transaction list after CSV import", async ({ pag
   }
 });
 
-test("planned expense can be created", async ({ page }) => {
+test("E2E-FF-TXN-002-01: a planned expense displays its localized one-time amount", async ({
+  page,
+}) => {
   const server = buildServer();
 
   try {
@@ -164,6 +365,7 @@ test("planned expense can be created", async ({ page }) => {
     await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
 
     await expect(page.getByRole("cell", { name: "Planned rent", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "1.200,00", exact: true })).toBeVisible();
     await expect(page.getByRole("cell", { name: "geplant", exact: true })).toBeVisible();
     await expect(page.getByRole("cell", { name: "fix", exact: true })).toBeVisible();
   } finally {

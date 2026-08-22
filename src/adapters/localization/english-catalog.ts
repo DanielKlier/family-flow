@@ -126,6 +126,8 @@ export const messages: Readonly<Record<string, string>> = {
   "transaction.amountPlaceholder": "1,234.56",
   "transaction.monthPlaceholder": "MM/YYYY",
   "transaction.saveFailed": "The transaction could not be saved.",
+  "transaction.unknownAccount": "The account does not exist.",
+  "transaction.unknownCategory": "The category does not exist.",
   "transaction.invalidTransferStatus": "The transfer status must be exactly true or false.",
   "income.title": "FamilyFlow income",
   "income.heading": "Income",
