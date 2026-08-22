@@ -62,6 +62,7 @@ const defaultEvidencePlan: EvidencePlan = {
   commands: [
     ["exec", "vitest", "run", "--no-file-parallelism"],
     ["exec", "playwright", "test", "tests/e2e/restore-smoke.test.ts", "--workers=1"],
+    ["exec", "playwright", "test", "tests/e2e/backup-restore-smoke.test.ts", "--workers=1"],
   ],
 };
 
