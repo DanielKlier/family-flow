@@ -510,7 +510,7 @@
     },
     {
       "id": "PH-04-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Transaction validation, filter, and HTTP/PostgreSQL acceptance.",
       "classification": "Behavior change"
     },
@@ -858,7 +858,7 @@
     },
     {
       "id": "FF-ARC-006-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-04-R01",
       "test": "UNIT-FF-ARC-006-01",
       "file": "tests/unit/financial-boundaries.test.ts",
@@ -866,7 +866,7 @@
     },
     {
       "id": "FF-ARC-006-AC02",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-04-R01",
       "test": "UNIT-FF-ARC-006-02",
       "file": "tests/unit/financial-boundaries.test.ts",
@@ -970,7 +970,7 @@
     },
     {
       "id": "FF-TXN-002-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-04-R01",
       "test": "E2E-FF-TXN-002-01",
       "file": "tests/e2e/transactions.test.ts",
@@ -978,7 +978,7 @@
     },
     {
       "id": "FF-TXN-002-AC02",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-04-R01",
       "test": "E2E-FF-TXN-002-02",
       "file": "tests/e2e/transactions.test.ts",
@@ -986,7 +986,7 @@
     },
     {
       "id": "FF-TXN-003-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-04-R01",
       "test": "E2E-FF-TXN-003-01",
       "file": "tests/e2e/transactions.test.ts",
@@ -3620,10 +3620,10 @@
     },
     {
       "id": "OPS-FF-TXN-002-01",
-      "procedure": "**Transaction Maintenance**: create/edit/delete signed-amount fixture through UI.",
-      "outcome": "Positive UI amount maps once to negative persisted minor units.",
-      "rollback": "Correct by stable transaction ID or restore backup.",
-      "verifier": null
+      "procedure": "**Transaction Boundaries**: run isolated core calendar, cent, and reference validation; localized HTTP behavior; PostgreSQL round trips and filters; and full-page filter scenarios.",
+      "outcome": "Invalid input is rejected without mutation; valid values round trip and individual and combined filters return the expected transactions.",
+      "rollback": "Remove the isolated PostgreSQL resources after every run; do not deploy and diagnose any failed boundary or filter evidence.",
+      "verifier": "scripts/operations/registry.ts#OPS-FF-TXN-002-01"
     },
     {
       "id": "OPS-FF-TXN-005-01",
