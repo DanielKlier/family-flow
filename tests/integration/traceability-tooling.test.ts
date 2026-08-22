@@ -199,6 +199,7 @@ describe("INT-FF-QUA-004-01 bounded quality tooling", () => {
         "OPS-FF-DEP-003-01",
         "OPS-FF-FOR-001-01",
         "OPS-FF-INC-001-01",
+        "OPS-FF-MDM-001-01",
         "OPS-FF-OBS-003-01",
         "OPS-FF-TXN-005-01",
       ]),

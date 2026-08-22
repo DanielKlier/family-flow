@@ -540,7 +540,7 @@
     },
     {
       "id": "PH-10-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Owner-label and authenticated-user independence evidence.",
       "classification": "Evidence-only; expected green"
     },
@@ -690,11 +690,11 @@
     },
     {
       "id": "FF-AUTH-008-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-10-R01",
       "test": "INT-FF-AUTH-008-01",
       "file": "tests/integration/oidc-http.test.ts",
-      "operation": null
+      "operation": "OPS-FF-MDM-001-01"
     },
     {
       "id": "FF-AUTH-009-AC01",
@@ -786,11 +786,11 @@
     },
     {
       "id": "FF-SCP-003-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-10-R01",
       "test": "SMOKE-FF-SCP-003-01",
       "file": "tests/e2e/deployment-smoke.test.ts",
-      "operation": null
+      "operation": "OPS-FF-MDM-001-01"
     },
     {
       "id": "FF-SCP-004-AC01",
@@ -882,7 +882,7 @@
     },
     {
       "id": "FF-MDM-001-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-10-R01",
       "test": "E2E-FF-MDM-001-01",
       "file": "tests/e2e/master-data.test.ts",
@@ -3567,7 +3567,7 @@
       "procedure": "**Owner Labels**: edit labels and inspect authenticated identity plus filters.",
       "outcome": "Labels change; stable owner keys/user identity do not.",
       "rollback": "Restore labels by stable key.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-MDM-001-01"
     },
     {
       "id": "OPS-FF-MDM-003-01",
