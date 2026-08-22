@@ -121,12 +121,54 @@ describe("INT-FF-QUA-004-01 bounded quality tooling", () => {
     ]);
   });
 
-  it("registers the completed bounded session operation verifiers", () => {
+  it("selects deployment and reverse-proxy smoke evidence", async () => {
+    spawnMock.mockClear();
+    spawnMock.mockImplementation(() => ({
+      on(event: string, listener: (code: number | null, signal: NodeJS.Signals | null) => void) {
+        if (event === "close") queueMicrotask(() => listener(0, null));
+        return this;
+      },
+    }));
+
+    for (const id of ["OPS-FF-DEP-002-01", "OPS-FF-DEP-003-01"]) {
+      await expect(
+        verifyOperation(id, operationRegistry, {
+          PATH: "/controlled/path",
+          HOME: "/controlled/home",
+        }),
+      ).resolves.toEqual({ operationId: id, status: "passed" });
+    }
+
+    expect(spawnMock.mock.calls.map(([, arguments_]) => arguments_)).toEqual([
+      [
+        "exec",
+        "playwright",
+        "test",
+        "tests/e2e/deployment-smoke.test.ts",
+        "--grep",
+        "(?:SMOKE-FF-SCP-001-01|SMOKE-FF-DEP-002-01)",
+        "--workers=1",
+      ],
+      [
+        "exec",
+        "playwright",
+        "test",
+        "tests/e2e/deployment-smoke.test.ts",
+        "--grep",
+        "(?:SMOKE-FF-SCP-001-02|SMOKE-FF-DEP-003-01)",
+        "--workers=1",
+      ],
+    ]);
+  });
+
+  it("registers the completed bounded operation verifiers", () => {
     expect(Object.keys(operationRegistry)).toEqual(
       expect.arrayContaining([
         "OPS-FF-AUTH-006-01",
         "OPS-FF-AUTH-009-01",
         "OPS-FF-DASH-001-01",
+        "OPS-FF-DEP-002-01",
+        "OPS-FF-DEP-003-01",
         "OPS-FF-FOR-001-01",
         "OPS-FF-INC-001-01",
         "OPS-FF-TXN-005-01",

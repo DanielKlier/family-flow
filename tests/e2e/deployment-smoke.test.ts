@@ -1,0 +1,333 @@
+import { execFileSync } from "node:child_process";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+
+import { expect, test } from "@playwright/test";
+
+const smokeTimeoutMs = 180_000;
+const composeFile = resolve("compose.yaml");
+const migrationDirectory = resolve("drizzle");
+const fixtureDirectory = resolve("tests/fixtures");
+const proxyNetwork = "proxy";
+const projectPrefix = `family-flow-deployment-smoke-${process.pid}`;
+
+test.describe.configure({ mode: "serial" });
+test.setTimeout(smokeTimeoutMs);
+
+type SmokeEnvironment = {
+  project: string;
+  directory: string;
+  envFile: string;
+  overrideFile: string;
+  ownsProxyNetwork: boolean;
+};
+
+function docker(arguments_: string[]): string {
+  return execFileSync("docker", arguments_, { encoding: "utf8", stdio: "pipe" });
+}
+
+function compose(environment: SmokeEnvironment, arguments_: string[]): string {
+  return docker([
+    "compose",
+    "--project-name",
+    environment.project,
+    "--env-file",
+    environment.envFile,
+    "-f",
+    composeFile,
+    "-f",
+    environment.overrideFile,
+    ...arguments_,
+  ]);
+}
+
+async function createEnvironment(
+  name: string,
+  baseUrl = "http://127.0.0.1:3000",
+): Promise<SmokeEnvironment> {
+  const directory = await mkdtemp(join(tmpdir(), `${projectPrefix}-${name}-`));
+  const project = `${projectPrefix}-${name}`;
+  const envFile = join(directory, ".env");
+  const overrideFile = join(directory, "compose.override.yaml");
+  const networks = docker(["network", "ls", "--format", "{{.Name}}"]).split("\n").filter(Boolean);
+  const ownsProxyNetwork = !networks.includes(proxyNetwork);
+  if (ownsProxyNetwork) docker(["network", "create", proxyNetwork]);
+
+  await writeFile(
+    envFile,
+    [
+      `BASE_URL=${baseUrl}`,
+      "AUTH_MODE=oidc",
+      "OIDC_ISSUER_URL=http://oidc:8080",
+      "OIDC_CLIENT_ID=smoke-client",
+      "OIDC_CLIENT_SECRET=synthetic-placeholder",
+    ].join("\n"),
+  );
+  await writeFile(
+    overrideFile,
+    ["services:", "  app:", "    ports:", '      - "127.0.0.1::3000"'].join("\n"),
+  );
+  return { project, directory, envFile, overrideFile, ownsProxyNetwork };
+}
+
+async function cleanup(environment: SmokeEnvironment): Promise<void> {
+  try {
+    compose(environment, ["down", "--volumes", "--remove-orphans"]);
+  } catch {
+    // Cleanup must remain project-scoped when startup fails.
+  }
+  if (environment.ownsProxyNetwork) {
+    try {
+      docker(["network", "rm", proxyNetwork]);
+    } catch {
+      // The network may still be in Docker's asynchronous removal phase.
+    }
+  }
+  await rm(environment.directory, { recursive: true, force: true });
+}
+
+async function waitForPostgres(environment: SmokeEnvironment): Promise<void> {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    try {
+      if (
+        compose(environment, [
+          "exec",
+          "-T",
+          "postgres",
+          "pg_isready",
+          "-U",
+          "family_flow",
+          "-d",
+          "family_flow",
+        ])
+      ) {
+        return;
+      }
+    } catch {
+      // PostgreSQL is still initializing its empty volume.
+    }
+    await new Promise((resolve_) => setTimeout(resolve_, 1_000));
+  }
+  throw new Error("Compose PostgreSQL did not become ready");
+}
+
+async function waitForHealth(baseUrl: string): Promise<void> {
+  const deadline = Date.now() + 60_000;
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(`${baseUrl}/health`);
+      if (response.ok) {
+        expect(response.headers.get("x-request-id")).toBeTruthy();
+        return;
+      }
+    } catch {
+      // Startup migrations, seed data, or session cleanup may still be running.
+    }
+    await new Promise((resolve_) => setTimeout(resolve_, 1_000));
+  }
+  throw new Error("Compose app did not become healthy after startup work");
+}
+
+function appBaseUrl(environment: SmokeEnvironment): string {
+  const address = compose(environment, ["port", "app", "3000"]).trim().split("\n").at(0);
+  if (address === undefined) throw new Error("Compose app did not publish port 3000");
+  return `http://${address}`;
+}
+
+function migrationNames(): Promise<string[]> {
+  return readdir(migrationDirectory).then((names) =>
+    names.filter((name) => name.endsWith(".sql")).sort(),
+  );
+}
+
+function recordedMigrations(environment: SmokeEnvironment): string[] {
+  return compose(environment, [
+    "exec",
+    "-T",
+    "postgres",
+    "psql",
+    "-U",
+    "family_flow",
+    "-d",
+    "family_flow",
+    "-At",
+    "-c",
+    "select name from schema_migrations order by name",
+  ])
+    .split("\n")
+    .filter(Boolean);
+}
+
+async function startOidcProvider(environment: SmokeEnvironment): Promise<void> {
+  docker([
+    "run",
+    "--detach",
+    "--name",
+    `${environment.project}-oidc`,
+    "--network",
+    proxyNetwork,
+    "--network-alias",
+    "oidc",
+    "--mount",
+    `type=bind,src=${join(fixtureDirectory, "fake-oidc-server.mjs")},dst=/app/server.mjs,readonly`,
+    "node:24-alpine",
+    "node",
+    "/app/server.mjs",
+  ]);
+}
+
+function stopOidcProvider(environment: SmokeEnvironment): void {
+  try {
+    docker(["rm", "--force", `${environment.project}-oidc`]);
+  } catch {
+    // The disposable provider was not started.
+  }
+}
+
+async function preparePriorMigrationSet(environment: SmokeEnvironment): Promise<string> {
+  const names = await migrationNames();
+  const latest = names.at(-1);
+  if (latest === undefined) throw new Error("Expected at least one bundled migration");
+  const fixtureMigrations = join(environment.directory, "prior-migrations");
+  await mkdir(fixtureMigrations);
+  await Promise.all(
+    names.slice(0, -1).map(async (name) => {
+      const sql = await readFile(join(migrationDirectory, name));
+      await writeFile(join(fixtureMigrations, name), sql);
+    }),
+  );
+  return latest;
+}
+
+test("SMOKE-FF-SCP-001-01 empty Compose DB becomes healthy only after all bundled migrations", async () => {
+  const environment = await createEnvironment("empty");
+  try {
+    await startOidcProvider(environment);
+    compose(environment, ["up", "--build", "--detach"]);
+    const baseUrl = appBaseUrl(environment);
+    await waitForHealth(baseUrl);
+
+    expect(compose(environment, ["ps", "postgres", "--format", "json"])).toContain('"healthy"');
+    expect(recordedMigrations(environment)).toEqual(await migrationNames());
+  } finally {
+    stopOidcProvider(environment);
+    await cleanup(environment);
+  }
+});
+
+test("SMOKE-FF-DEP-002-01 normal Compose startup applies the one pending bundled migration before health", async () => {
+  const environment = await createEnvironment("update");
+  try {
+    const latest = await preparePriorMigrationSet(environment);
+    compose(environment, ["up", "--build", "--detach", "postgres"]);
+    await waitForPostgres(environment);
+    const migrationsPath = join(environment.directory, "prior-migrations");
+    compose(environment, [
+      "run",
+      "--rm",
+      "--no-deps",
+      "--entrypoint",
+      "node",
+      "--volume",
+      `${migrationsPath}:/migrations:ro`,
+      "app",
+      "--input-type=module",
+      "--eval",
+      "import { migrate } from './dist/adapters/db/migrate.js'; await migrate(process.env.DATABASE_URL, '/migrations');",
+    ]);
+    expect(recordedMigrations(environment)).not.toContain(latest);
+
+    await startOidcProvider(environment);
+    compose(environment, ["up", "--detach", "app"]);
+    await waitForHealth(appBaseUrl(environment));
+    expect(recordedMigrations(environment)).toContain(latest);
+  } finally {
+    stopOidcProvider(environment);
+    await cleanup(environment);
+  }
+});
+
+test("SMOKE-FF-SCP-001-02 external BASE_URL makes the OIDC callback and state cookie secure", async () => {
+  const environment = await createEnvironment("external-login", "https://finances.home.arpa");
+  try {
+    await startOidcProvider(environment);
+    compose(environment, ["up", "--build", "--detach"]);
+    const baseUrl = appBaseUrl(environment);
+    await waitForHealth(baseUrl);
+    const response = await fetch(`${baseUrl}/auth/login`, { redirect: "manual" });
+    const location = response.headers.get("location");
+    const stateCookie = response.headers.get("set-cookie");
+
+    expect(response.status).toBe(302);
+    expect(location).toBeTruthy();
+    expect(new URL(location ?? "http://invalid").searchParams.get("redirect_uri")).toBe(
+      "https://finances.home.arpa/auth/callback",
+    );
+    expect(stateCookie).toContain("ff_oidc_state=");
+    expect(stateCookie).toContain("Secure");
+  } finally {
+    stopOidcProvider(environment);
+    await cleanup(environment);
+  }
+});
+
+test("SMOKE-FF-DEP-003-01 external HTTPS links, logout, and session use the external origin", async () => {
+  const externalBaseUrl = "https://finances.home.arpa";
+  const environment = await createEnvironment("external-logout", externalBaseUrl);
+  try {
+    await startOidcProvider(environment);
+    compose(environment, ["up", "--build", "--detach"]);
+    const baseUrl = appBaseUrl(environment);
+    await waitForHealth(baseUrl);
+    const login = await fetch(`${baseUrl}/auth/login`, { redirect: "manual" });
+    const stateCookie = login.headers.get("set-cookie")?.split(";", 1)[0];
+    const state = new URL(login.headers.get("location") ?? "http://invalid").searchParams.get(
+      "state",
+    );
+    expect(stateCookie).toBeTruthy();
+    expect(state).toBeTruthy();
+
+    const callback = await fetch(`${baseUrl}/auth/callback?code=synthetic-code&state=${state}`, {
+      headers: { Cookie: stateCookie ?? "" },
+      redirect: "manual",
+    });
+    const sessionCookie = callback.headers
+      .getSetCookie()
+      .find((cookie) => cookie.startsWith("ff_session="));
+    expect(callback.status).toBe(302);
+    expect(sessionCookie).toContain("Secure");
+
+    const dashboard = await fetch(`${baseUrl}/`, {
+      headers: { Cookie: sessionCookie?.split(";", 1)[0] ?? "" },
+    });
+    const dashboardHtml = await dashboard.text();
+    const renderedHrefs = [...dashboardHtml.matchAll(/href="([^"]+)"/g)].map((match) => match[1]);
+    expect(dashboard.status).toBe(200);
+    expect(renderedHrefs.length).toBeGreaterThan(0);
+    expect(dashboardHtml).not.toContain(baseUrl);
+    for (const href of renderedHrefs) {
+      expect(new URL(href, externalBaseUrl).origin).toBe(externalBaseUrl);
+    }
+
+    const logout = await fetch(`${baseUrl}/auth/logout`, {
+      method: "POST",
+      headers: {
+        Cookie: sessionCookie?.split(";", 1)[0] ?? "",
+        Origin: externalBaseUrl,
+      },
+      redirect: "manual",
+    });
+    expect(logout.status).toBe(302);
+    expect(logout.headers.get("set-cookie")).toContain("Secure");
+    expect(
+      new URL(logout.headers.get("location") ?? "http://invalid").searchParams.get(
+        "post_logout_redirect_uri",
+      ),
+    ).toBe(`${externalBaseUrl}/auth/login`);
+  } finally {
+    stopOidcProvider(environment);
+    await cleanup(environment);
+  }
+});

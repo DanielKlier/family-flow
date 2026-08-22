@@ -109,7 +109,7 @@ Additionally:
 
 **Existing evidence:** health E2E coverage, configuration unit tests, build, and image configuration.
 
-**Pending gap:** `PH-00-R01` adds executable readiness and reverse-proxy smoke evidence.
+**Remediation:** `PH-00-R01` added executable readiness and reverse-proxy smoke evidence.
 
 ### PH-01 — Request Lifecycle, Logging, And Request IDs
 
@@ -472,16 +472,16 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-00-R01 — Deployment And Reverse-Proxy Smoke Evidence
 
-**Status:** Pending
-**Classification:** Evidence-only; expected green after prerequisite phases
+**Status:** Completed
+**Classification:** Evidence-only; verified green after prerequisite phases
 **Implements:** none
 **Verifies:** `FF-SCP-001`, `FF-DEP-001`, `FF-DEP-002`, `FF-DEP-003`
 **Operations:** `OPS-FF-DEP-002-01`, `OPS-FF-DEP-003-01`
 
-- [ ] Add readiness-based Compose smoke against an empty database.
-- [ ] Add update smoke with pending migrations.
-- [ ] Add reverse-proxy smoke using `BASE_URL=https://finances.home.arpa` and verify links, secure cookies, and OIDC redirect URLs.
-- [ ] Record commands, expected readiness, failure diagnosis, and rollback in `OPERATIONS.md`.
+- [x] Add readiness-based Compose smoke against an empty database.
+- [x] Add update smoke with pending migrations.
+- [x] Add reverse-proxy smoke using `BASE_URL=https://finances.home.arpa` and verify links, secure cookies, and OIDC redirect URLs.
+- [x] Record commands, expected readiness, failure diagnosis, and rollback in `OPERATIONS.md`.
 
 **Tests:** `SMOKE-FF-SCP-001-01`, `SMOKE-FF-SCP-001-02`, `SMOKE-FF-DEP-002-01`, `SMOKE-FF-DEP-003-01`.
 
