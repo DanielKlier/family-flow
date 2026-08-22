@@ -14,7 +14,11 @@ async function authenticatedServer() {
   const login = await server.inject({ method: "GET", url: "/auth/test-login" });
   const session = login.cookies.find(({ name }) => name === "ff_session");
   if (session === undefined) throw new Error("Test login must establish a session");
-  return { server, headers: { cookie: `ff_session=${session.value}`, "accept-language": "de" } };
+  return {
+    server,
+    repositories,
+    headers: { cookie: `ff_session=${session.value}`, "accept-language": "de" },
+  };
 }
 
 describe("scenario HTTP adapter", () => {
@@ -56,13 +60,17 @@ describe("scenario HTTP adapter", () => {
       expect(htmx.headers["x-request-id"]).toBe("scenario-fragment");
       expect(htmx.body).toContain('id="scenario-panel"');
       expect(htmx.body).not.toContain("<!doctype html>");
+
+      const list = await server.inject({ method: "GET", url: "/scenarios", headers });
+      expect(list.body).toContain("Elternzeit");
+      expect(list.body).toContain("Elternzeit HTMX");
     } finally {
       await server.close();
     }
   });
 
   it("returns localized 400 errors without persistence mutation for malformed, orphaning, out-of-range, and negative-derived inputs", async () => {
-    const { server, headers } = await authenticatedServer();
+    const { server, repositories, headers } = await authenticatedServer();
     try {
       const invalid = await server.inject({
         method: "POST",
@@ -80,10 +88,62 @@ describe("scenario HTTP adapter", () => {
       });
       expect(invalid.statusCode).toBe(400);
       expect(invalid.headers["x-request-id"]).toBe("scenario-invalid");
-      expect(invalid.body).toContain("18 oder 24");
+      expect(invalid.body).toContain("zwischen 18 und 24");
 
       const list = await server.inject({ method: "GET", url: "/scenarios", headers });
       expect(list.body).not.toContain("Invalid");
+
+      await server.inject({
+        method: "POST",
+        url: "/scenarios",
+        headers,
+        payload: {
+          name: "Derived validation",
+          startMonth: "08.2026",
+          endMonth: "01.2028",
+          startingBuffer: "0,00",
+          baseIncome: "10,00",
+          baselineMode: "manual",
+          manualBaseline: "10,00",
+        },
+      });
+      const stored = (await repositories.scenarios.list())[0];
+      if (stored === undefined) throw new Error("Scenario fixture must be persisted");
+      const adjustment = await server.inject({
+        method: "POST",
+        url: `/scenarios/${stored.scenario.id}/adjustments`,
+        headers,
+        payload: {
+          name: "Invalid income",
+          type: "income",
+          direction: "decrease",
+          amount: "10,01",
+          startMonth: "08.2026",
+          endMonth: "08.2026",
+        },
+      });
+      expect(adjustment.statusCode).toBe(400);
+      await expect(repositories.scenarios.get(stored.scenario.id)).resolves.toMatchObject({
+        adjustments: [],
+      });
+
+      const zeroAdjustment = await server.inject({
+        method: "POST",
+        url: `/scenarios/${stored.scenario.id}/adjustments`,
+        headers,
+        payload: {
+          name: "Zero",
+          type: "expense",
+          direction: "increase",
+          amount: "0,00",
+          startMonth: "08.2026",
+          endMonth: "08.2026",
+        },
+      });
+      expect(zeroAdjustment.statusCode).toBe(400);
+      await expect(repositories.scenarios.get(stored.scenario.id)).resolves.toMatchObject({
+        adjustments: [],
+      });
     } finally {
       await server.close();
     }

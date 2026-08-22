@@ -1,6 +1,8 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
+import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
 import {
+  assertAdjustmentWithinScenario,
   createScenario,
   createScenarioAdjustment,
   type Scenario,
@@ -37,17 +39,50 @@ export class DrizzleScenarioRepository implements ScenarioRepository {
 
   async save(scenario: Scenario, adjustments: ScenarioAdjustment[]): Promise<void> {
     await this.db.transaction(async (transaction) => {
-      await transaction
-        .insert(scenarios)
-        .values(toRow(scenario))
-        .onConflictDoUpdate({
-          target: scenarios.id,
-          set: toRow(scenario),
-        });
+      await lockScenario(transaction, scenario.id);
+      await upsertScenario(transaction, scenario);
+      calculateScenario(scenario, adjustments);
       await transaction
         .delete(scenarioAdjustments)
         .where(eq(scenarioAdjustments.scenarioId, scenario.id));
       if (adjustments.length > 0) await transaction.insert(scenarioAdjustments).values(adjustments);
+    });
+  }
+
+  async saveScenario(scenario: Scenario): Promise<void> {
+    await this.db.transaction(async (transaction) => {
+      await lockScenario(transaction, scenario.id);
+      await upsertScenario(transaction, scenario);
+      const rows = await transaction
+        .select()
+        .from(scenarioAdjustments)
+        .where(eq(scenarioAdjustments.scenarioId, scenario.id));
+      const adjustments = rows.map(createScenarioAdjustment);
+      for (const adjustment of adjustments) assertAdjustmentWithinScenario(scenario, adjustment);
+      calculateScenario(scenario, adjustments);
+    });
+  }
+
+  async addAdjustment(adjustment: ScenarioAdjustment): Promise<void> {
+    await this.db.transaction(async (transaction) => {
+      await lockScenario(transaction, adjustment.scenarioId);
+      const rows = await transaction
+        .select()
+        .from(scenarios)
+        .where(eq(scenarios.id, adjustment.scenarioId))
+        .limit(1);
+      if (rows[0] === undefined) throw new Error("Scenario does not exist");
+      const scenario = mapScenario(rows[0]);
+      assertAdjustmentWithinScenario(scenario, adjustment);
+      const persistedAdjustments = await transaction
+        .select()
+        .from(scenarioAdjustments)
+        .where(eq(scenarioAdjustments.scenarioId, adjustment.scenarioId));
+      calculateScenario(scenario, [
+        ...persistedAdjustments.map(createScenarioAdjustment),
+        adjustment,
+      ]);
+      await transaction.insert(scenarioAdjustments).values(adjustment);
     });
   }
 
@@ -56,6 +91,23 @@ export class DrizzleScenarioRepository implements ScenarioRepository {
     if (item === null) throw new Error("Persisted scenario disappeared");
     return item;
   }
+}
+
+async function lockScenario(
+  db: Pick<PostgresDatabase, "execute">,
+  scenarioId: string,
+): Promise<void> {
+  await db.execute(sql`select id from scenarios where id = ${scenarioId} for update`);
+}
+
+async function upsertScenario(
+  db: Pick<PostgresDatabase, "insert">,
+  scenario: Scenario,
+): Promise<void> {
+  await db
+    .insert(scenarios)
+    .values(toRow(scenario))
+    .onConflictDoUpdate({ target: scenarios.id, set: toRow(scenario) });
 }
 
 function toRow(scenario: Scenario): typeof scenarios.$inferInsert {

@@ -69,7 +69,14 @@ test("E2E-FF-SCN-001-01 E2E-FF-SCN-001-02 E2E-FF-SCN-003-01 E2E-FF-SCN-004-01 E2
       await adjustmentForm.getByLabel("Betrag").fill(amount);
       await adjustmentForm.getByLabel("Von Monat").fill("08.2026");
       await adjustmentForm.getByLabel("Bis Monat").fill("01.2028");
-      await adjustmentForm.getByRole("button", { name: "Anpassung hinzufügen" }).click();
+      await Promise.all([
+        page.waitForResponse(
+          (response) =>
+            response.request().method() === "POST" && response.url().includes("/adjustments"),
+        ),
+        adjustmentForm.getByRole("button", { name: "Anpassung hinzufügen" }).click(),
+      ]);
+      await expect(panel).toContainText(name);
     }
     await expect(panel).toContainText("Elternzeit");
     await expect(panel).toContainText("Kita-Kosten");

@@ -41,7 +41,7 @@ export function calculateScenario(
     if (expenseCents < 0) throw new Error("Monthly expense must be non-negative");
     const balanceCents = safeAdd(incomeCents, -expenseCents);
     bufferCents = safeAdd(bufferCents, balanceCents);
-    const fundingGapCents = Math.max(0, -bufferCents);
+    const fundingGapCents = Math.max(0, -balanceCents);
     lowestBufferCents = Math.min(lowestBufferCents, bufferCents);
     requiredAdditionalNetIncomeCents = Math.max(requiredAdditionalNetIncomeCents, fundingGapCents);
     return {

@@ -21,18 +21,22 @@ const scenarioInput = {
 };
 
 describe("family-finance scenarios", () => {
-  it("UNIT-FF-SCN-001-01 canonicalizes scenario fields, permits exactly 18 or 24 inclusive months, and snapshots completed historical months", () => {
+  it("UNIT-FF-SCN-001-01 canonicalizes scenario fields, permits 18 through 24 inclusive months, and snapshots completed historical months", () => {
     expect(createScenario(scenarioInput)).toMatchObject({
       name: "Parental leave",
       startMonth: "2026-08",
       endMonth: "2028-01",
       baseline: { mode: "manual", expenseCents: 70_000 },
     });
-    expect(() => createScenario({ ...scenarioInput, endMonth: "2028-02" })).toThrow(
-      "Scenario duration must be 18 or 24 months",
+    expect(createScenario({ ...scenarioInput, endMonth: "2028-02" })).toMatchObject({
+      startMonth: "2026-08",
+      endMonth: "2028-02",
+    });
+    expect(() => createScenario({ ...scenarioInput, endMonth: "2028-08" })).toThrow(
+      "Scenario duration must be between 18 and 24 months",
     );
     expect(() => createScenario({ ...scenarioInput, endMonth: "2027-12" })).toThrow(
-      "Scenario duration must be 18 or 24 months",
+      "Scenario duration must be between 18 and 24 months",
     );
     expect(() =>
       createScenario({ ...scenarioInput, startMonth: "2028-01", endMonth: "2026-08" }),
@@ -156,11 +160,11 @@ describe("family-finance scenarios", () => {
       [],
     );
     expect(deficit.months.slice(0, 2)).toMatchObject([
-      { balanceCents: -60_000, bufferCents: -50_000, fundingGapCents: 50_000 },
-      { bufferCents: -110_000, fundingGapCents: 110_000 },
+      { balanceCents: -60_000, bufferCents: -50_000, fundingGapCents: 60_000 },
+      { bufferCents: -110_000, fundingGapCents: 60_000 },
     ]);
     expect(deficit.lowestBufferCents).toBe(-1_070_000);
-    expect(deficit.requiredAdditionalNetIncomeCents).toBe(1_070_000);
+    expect(deficit.requiredAdditionalNetIncomeCents).toBe(60_000);
   });
 
   it("UNIT-FF-SCN-005-01 permits zero totals but rejects negative derived totals and unsafe arithmetic", () => {
