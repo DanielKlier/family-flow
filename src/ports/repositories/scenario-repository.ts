@@ -6,4 +6,6 @@ export interface ScenarioRepository {
   list(): Promise<StoredScenario[]>;
   get(id: string): Promise<StoredScenario | null>;
   save(scenario: Scenario, adjustments: ScenarioAdjustment[]): Promise<void>;
+  saveScenario(scenario: Scenario): Promise<void>;
+  addAdjustment(adjustment: ScenarioAdjustment): Promise<void>;
 }

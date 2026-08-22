@@ -277,6 +277,7 @@ export const messages: Record<string, string> = {
   "scenario.balance": "Saldo",
   "scenario.buffer": "Puffer",
   "scenario.empty": "Noch kein Szenario vorhanden.",
+  "scenario.list": "Gespeicherte Szenarien",
   "scenario.baselineValue": "Ausgabenbasis: {amount}",
   "scenario.saveFailed": "Das Szenario konnte nicht gespeichert werden.",
   "calculator.title": "FamilyFlow Rechner und Hilfen",

@@ -52,6 +52,7 @@ export function prepareScenarioViewModel(input: ScenarioViewInput, l: Localizati
       edit: l.text("scenario.edit"),
       update: l.text("scenario.update"),
       preserveBaseline: l.text("scenario.preserveBaseline"),
+      list: l.text("scenario.list"),
     },
     list: input.items.map(({ scenario }) => ({
       name: scenario.name,

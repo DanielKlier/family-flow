@@ -38,8 +38,8 @@ export function createScenario(input: Scenario): Scenario {
   if (scenario.endMonth < scenario.startMonth)
     throw new Error("Scenario end month must not precede start month");
   const duration = inclusiveMonthCount(scenario.startMonth, scenario.endMonth);
-  if (duration !== 18 && duration !== 24)
-    throw new Error("Scenario duration must be 18 or 24 months");
+  if (duration < 18 || duration > 24)
+    throw new Error("Scenario duration must be between 18 and 24 months");
   assertNonNegativeSafe(scenario.startingBufferCents, "Scenario starting buffer");
   assertNonNegativeSafe(scenario.baseIncomeCents, "Scenario base income");
   assertNonNegativeSafe(scenario.baseline.expenseCents, "Scenario expense baseline");

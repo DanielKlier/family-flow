@@ -276,6 +276,7 @@ export const messages: Readonly<Record<string, string>> = {
   "scenario.balance": "Balance",
   "scenario.buffer": "Buffer",
   "scenario.empty": "No scenario exists yet.",
+  "scenario.list": "Saved scenarios",
   "scenario.baselineValue": "Expense baseline: {amount}",
   "scenario.saveFailed": "The scenario could not be saved.",
   "calculator.title": "FamilyFlow calculators and help",

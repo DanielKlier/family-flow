@@ -444,7 +444,7 @@ Migration `0013_csv_import_purpose_identity.sql` introduces the purpose-aware v3
 
 ## Scenario Maintenance And Interpretation
 
-Authenticated users maintain 18- or 24-month family-finance plans at `/scenarios`. Values entered in German human format are persisted as integer cents. Historical baselines use the selected 3-, 6-, or 12-month completed-month window, include zero-expense months, and exclude planned transactions and internal transfers.
+Authenticated users maintain 18- through 24-month family-finance plans at `/scenarios`. Values entered in German human format are persisted as integer cents. Historical baselines use the selected 3-, 6-, or 12-month completed-month window, include zero-expense months, and exclude planned transactions and internal transfers.
 
 A historical baseline is a snapshot. Renaming a scenario or changing its range, starting buffer, or base income must retain the stored baseline. Select an explicit historical window or manual baseline in the edit form only when the snapshot should be replaced. Range changes are rejected when they would exclude an existing adjustment; correct or remove the adjustment deliberately rather than clipping it.
 

@@ -45,6 +45,38 @@ describe("Drizzle scenario repository", () => {
           scenario,
           adjustments: [adjustment],
         });
+
+        const concurrent = [
+          createScenarioAdjustment({ ...adjustment, id: "scenario-concurrent-a" }),
+          createScenarioAdjustment({ ...adjustment, id: "scenario-concurrent-b" }),
+        ];
+        await Promise.all(concurrent.map((item) => repository.addAdjustment(item)));
+        await expect(repository.get(scenario.id)).resolves.toMatchObject({
+          adjustments: [adjustment, ...concurrent].sort((left, right) =>
+            left.id.localeCompare(right.id),
+          ),
+        });
+
+        const conflicting = [
+          createScenarioAdjustment({
+            ...adjustment,
+            id: "scenario-conflicting-a",
+            deltaCents: -400_000,
+          }),
+          createScenarioAdjustment({
+            ...adjustment,
+            id: "scenario-conflicting-b",
+            deltaCents: -400_000,
+          }),
+        ];
+        const outcomes = await Promise.allSettled(
+          conflicting.map((item) => repository.addAdjustment(item)),
+        );
+        expect(outcomes.map(({ status }) => status).sort()).toEqual(["fulfilled", "rejected"]);
+        const persisted = await repository.get(scenario.id);
+        expect(
+          persisted?.adjustments.filter(({ id }) => id.startsWith("scenario-conflicting")),
+        ).toHaveLength(1);
       } finally {
         await connection.db
           .delete(scenarioAdjustments)

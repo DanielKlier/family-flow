@@ -1,5 +1,10 @@
 import { compareCodePoints } from "../../core/shared/compare-code-points.js";
-import type { Scenario, ScenarioAdjustment } from "../../core/scenarios/scenario.js";
+import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
+import {
+  assertAdjustmentWithinScenario,
+  type Scenario,
+  type ScenarioAdjustment,
+} from "../../core/scenarios/scenario.js";
 import type {
   ScenarioRepository,
   StoredScenario,
@@ -17,9 +22,23 @@ export class InMemoryScenarioRepository implements ScenarioRepository {
     return this.#items.get(id) ?? null;
   }
   async save(scenario: Scenario, adjustments: ScenarioAdjustment[]): Promise<void> {
+    calculateScenario(scenario, adjustments);
     this.#items.set(scenario.id, {
       scenario,
       adjustments: [...adjustments].sort((left, right) => compareCodePoints(left.id, right.id)),
     });
+  }
+  async saveScenario(scenario: Scenario): Promise<void> {
+    const existing = this.#items.get(scenario.id);
+    const adjustments = existing?.adjustments ?? [];
+    for (const adjustment of adjustments) assertAdjustmentWithinScenario(scenario, adjustment);
+    calculateScenario(scenario, adjustments);
+    this.#items.set(scenario.id, { scenario, adjustments });
+  }
+  async addAdjustment(adjustment: ScenarioAdjustment): Promise<void> {
+    const existing = this.#items.get(adjustment.scenarioId);
+    if (existing === undefined) throw new Error("Scenario does not exist");
+    assertAdjustmentWithinScenario(existing.scenario, adjustment);
+    await this.save(existing.scenario, [...existing.adjustments, adjustment]);
   }
 }

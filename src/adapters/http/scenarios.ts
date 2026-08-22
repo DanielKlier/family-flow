@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
+import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
 import {
   assertAdjustmentWithinScenario,
   createHistoricalBaselineSnapshot,
@@ -61,7 +62,7 @@ async function create(
       baseIncomeCents: localization.parseAmountCents(required(form, "baseIncome"), true),
       baseline,
     });
-    await repositories.scenarios.save(scenario, []);
+    await repositories.scenarios.saveScenario(scenario);
     return sendState(repositories, request, reply, scenario.id);
   } catch (error: unknown) {
     return formError(repositories, request, reply, error);
@@ -98,7 +99,8 @@ async function update(
       },
       stored.adjustments,
     );
-    await repositories.scenarios.save(scenario, stored.adjustments);
+    calculateScenario(scenario, stored.adjustments);
+    await repositories.scenarios.saveScenario(scenario);
     return sendState(repositories, request, reply, id);
   } catch (error: unknown) {
     return formError(repositories, request, reply, error, id);
@@ -116,7 +118,7 @@ async function addAdjustment(
   try {
     const form = readForm(request.body);
     const direction = required(form, "direction");
-    const magnitude = reply.request.localization.parseAmountCents(required(form, "amount"), true);
+    const magnitude = reply.request.localization.parseAmountCents(required(form, "amount"), false);
     const adjustment = createScenarioAdjustment({
       id: randomUUID(),
       scenarioId: id,
@@ -128,7 +130,8 @@ async function addAdjustment(
     });
     if (direction !== "increase" && direction !== "decrease") throw new Error("Invalid direction");
     assertAdjustmentWithinScenario(stored.scenario, adjustment);
-    await repositories.scenarios.save(stored.scenario, [...stored.adjustments, adjustment]);
+    calculateScenario(stored.scenario, [...stored.adjustments, adjustment]);
+    await repositories.scenarios.addAdjustment(adjustment);
     return sendState(repositories, request, reply, id);
   } catch (error: unknown) {
     return formError(repositories, request, reply, error, id);
