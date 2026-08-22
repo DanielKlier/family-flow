@@ -1,8 +1,10 @@
+import { inArray } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { DrizzleImportProfileRepository } from "../../src/adapters/db/drizzle-import-profile-repository.js";
 import { migrate } from "../../src/adapters/db/migrate.js";
 import { createPostgresConnection } from "../../src/adapters/db/postgres.js";
+import { importProfiles } from "../../src/adapters/db/schema.js";
 import { seedImportProfiles } from "../../src/adapters/db/seeds/import-profiles.js";
 import { createImportProfile } from "../../src/core/imports/import-profile.js";
 
@@ -75,6 +77,9 @@ describe("Drizzle import profile repository", () => {
         await expect(repository.get(zulu.id)).resolves.toEqual(zulu);
         await expect(repository.list()).resolves.toEqual([replacement, zulu]);
       } finally {
+        await connection.db
+          .delete(importProfiles)
+          .where(inArray(importProfiles.id, [alpha.id, zulu.id]));
         await connection.client.end();
       }
     },
@@ -131,6 +136,9 @@ describe("Drizzle import profile repository", () => {
         );
         await expect(repositories.importProfiles.list()).resolves.toEqual([replacement]);
       } finally {
+        await connection.db
+          .delete(importProfiles)
+          .where(inArray(importProfiles.id, ["profile-generic-bank"]));
         await connection.client.end();
       }
     },
