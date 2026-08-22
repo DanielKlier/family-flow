@@ -516,9 +516,9 @@
     },
     {
       "id": "PH-06-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Complete CSV profile and row-outcome acceptance.",
-      "classification": "Evidence-only after `PH-10C`; expected green"
+      "classification": "Behavior correction discovered by expected-green evidence"
     },
     {
       "id": "PH-07-R01",
@@ -3476,7 +3476,7 @@
       "procedure": "**CSV Profiles**: import named fixtures for every finite profile option.",
       "outcome": "Saved and reloaded profiles produce identical canonical previews.",
       "rollback": "Delete only the test profile/data by stable fixture IDs.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-CSV-001-01"
     },
     {
       "id": "OPS-FF-CSV-006-01",

@@ -20,6 +20,7 @@ FamilyFlow uses SemVer-style `0.x` versions before the first stable release. Tag
 - Preserve manual and CSV category decisions when categorization rules are reapplied while still applying fixed-cost and internal-transfer actions.
 - Keep transfer updates atomic and aligned with active transaction filters.
 - Make the Docker build gate independent of local OIDC secrets.
+- Accept the documented literal tab delimiter in CSV import profiles.
 
 ### Database migrations
 

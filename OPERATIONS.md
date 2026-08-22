@@ -498,7 +498,7 @@ Authenticated users can import expense CSV files at `/imports/csv`.
 Supported import flow:
 
 - Select an import account.
-- Select comma, semicolon, or tab delimiter; `UTF-8` or `Latin1` encoding; one of the three date formats; and comma- or dot-decimal amounts.
+- Select comma, semicolon, or tab delimiter; `UTF-8` or `Latin1` encoding; one of the three date formats; and comma- or dot-decimal amounts. Tab is stored and interpreted as the literal tab character, not trimmed as whitespace.
 - Map date, amount, description, and optional payee, purpose, and category columns.
 - Save reusable custom import profiles without bank-specific default data. Saving a manual mapping creates a new profile; loading and saving an existing profile updates that profile in place. A submitted profile ID that no longer exists is rejected and creates no profile.
 - Preview normalized rows before writing transactions. Importable rows are kept separate from ignored non-expenses and invalid required values.
@@ -517,6 +517,8 @@ Operational notes:
 - Category matching uses exact normalized names when a category column is mapped; unmatched rows are checked against categorization rules before falling back to `Sonstiges`.
 - If an import fails, reproduce the problem with a minimized CSV containing only representative rows. Do not log or paste complete bank exports.
 - Use the visible `X-Request-Id` response header to find the matching request log entry in `docker compose logs app`.
+
+Run `pnpm ops:verify --id OPS-FF-CSV-001-01` before deployment to exercise every finite CSV profile option and mapped field against canonical parser outcomes, then persist, sort, reload, and independently replace two profiles in isolated PostgreSQL. A passing `Operation OPS-FF-CSV-001-01 passed` result is the required profile acceptance evidence. If it fails, do not use the affected profile format; delete only profiles and imported fixtures created with the documented stable test IDs, then roll back the application image if deployment has started.
 
 Migration `0012_csv_security_atomicity.sql` first validates all historical import-profile options and required mappings. Unknown delimiters, encodings, date/decimal formats, kinds, or blank required fields abort the migration with every affected profile ID, this runbook reference, and remediation instructions. Correct the listed profile records deliberately and rerun `pnpm db:migrate`; the failed migration transaction leaves them unchanged.
 
