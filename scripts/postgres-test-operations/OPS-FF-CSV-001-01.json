@@ -1,0 +1,14 @@
+{
+  "commands": [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "--no-file-parallelism",
+      "tests/integration/csv-parser.test.ts",
+      "tests/integration/drizzle-import-profile-repository.test.ts",
+      "--testNamePattern",
+      "INT-FF-CSV-002-0[12]"
+    ]
+  ]
+}

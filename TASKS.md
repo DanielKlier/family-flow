@@ -581,18 +581,18 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-06-R01 — Complete CSV Profile Acceptance Evidence
 
-**Status:** Pending
-**Classification:** Evidence-only after `PH-10C`; expected green
-**Implements:** none
+**Status:** Completed
+**Classification:** Behavior correction discovered by expected-green evidence
+**Implements:** tab-delimited profile acceptance correction
 **Verifies:** `FF-CSV-001`, `FF-CSV-002`, `FF-CSV-003`, `FF-CSV-004`, `FF-CSV-005`
 **Operations:** `OPS-FF-CSV-001-01`
 
-- [ ] Cover two distinct saved profiles and profile reuse.
-- [ ] Cover delimiter, encoding, date, decimal, description, payee, purpose, and category mapping.
-- [ ] Verify documented `DD.MM.YY → 20YY-MM-DD` profile behavior.
-- [ ] Verify importable, ignored, invalid, and duplicate row outcomes.
-- [ ] Verify duplicate identity changes when normalized payee changes.
-- [ ] Add mandatory PostgreSQL integration for profile options, mapping, and round-trip behavior.
+- [x] Cover two distinct saved profiles and profile reuse.
+- [x] Cover delimiter, encoding, date, decimal, description, payee, purpose, and category mapping.
+- [x] Verify documented `DD.MM.YY → 20YY-MM-DD` profile behavior.
+- [x] Verify importable, ignored, invalid, and duplicate row outcomes.
+- [x] Verify duplicate identity changes when normalized payee changes.
+- [x] Add mandatory PostgreSQL integration for profile options, mapping, and round-trip behavior.
 
 **Tests:** `INT-FF-CSV-002-01` (CSV parsing/mapping) and `INT-FF-CSV-002-02` (PostgreSQL). The acceptance-primary E2E and duplicate-identity evidence is owned and completed by prerequisite PH-10C; this phase adds only the expected-green adapter evidence assigned to it.
 
@@ -600,7 +600,7 @@ The current composition registers authentication before protected routes. This d
 
 **Targeted verification:** `pnpm ops:verify --id OPS-FF-CSV-001-01`.
 
-**Commit:** `test: complete csv profile coverage`
+**Commits:** `fix: accept tab csv delimiters`; `test: complete csv profile coverage`
 
 ### PH-07-R01 — Complete Categorization Behavior
 
