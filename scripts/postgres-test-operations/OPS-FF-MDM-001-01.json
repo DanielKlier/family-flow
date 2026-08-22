@@ -1,0 +1,12 @@
+{
+  "commands": [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "tests/integration/drizzle-master-data-repositories.test.ts",
+      "-t",
+      "INT-FF-MDM-001-02"
+    ]
+  ]
+}

@@ -181,7 +181,7 @@ test("account owner display names can be edited", async ({ page }) => {
   }
 });
 
-test("edited account owner display names appear in transaction and income filters", async ({
+test("E2E-FF-MDM-001-01 editable owner labels remain presentation while filters retain stable keys", async ({
   page,
 }) => {
   const server = buildServer();
@@ -193,11 +193,21 @@ test("edited account owner display names appear in transaction and income filter
     await page.getByLabel("Eigentümername für shared").fill("Household");
     await page.getByRole("button", { name: "Eigentümername für shared speichern" }).click();
 
-    await page.goto(`${baseUrl}/transactions`);
-    await expect(page.getByLabel("Eigentümer")).toContainText("Household");
+    await expect(
+      page.getByRole("row").filter({ hasText: "Gemeinsames Girokonto" }).getByRole("cell", {
+        name: "Household",
+      }),
+    ).toBeVisible();
 
-    await page.goto(`${baseUrl}/income`);
-    await expect(page.getByLabel("Eigentümer filtern")).toContainText("Household");
+    await page.goto(`${baseUrl}/transactions?ownerContext=shared`);
+    const transactionOwnerFilter = page.getByLabel("Eigentümer");
+    await expect(transactionOwnerFilter).toContainText("Household");
+    await expect(transactionOwnerFilter).toHaveValue("shared");
+
+    await page.goto(`${baseUrl}/income?ownerContext=shared`);
+    const incomeOwnerFilter = page.getByLabel("Eigentümer filtern");
+    await expect(incomeOwnerFilter).toContainText("Household");
+    await expect(incomeOwnerFilter).toHaveValue("shared");
   } finally {
     await server.close();
   }
