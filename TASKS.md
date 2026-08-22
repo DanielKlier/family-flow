@@ -674,18 +674,18 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-10-R01 — Owner-Context Independence Evidence
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Evidence-only; expected green
 **Implements:** none
 **Verifies:** `FF-MDM-001`, `FF-SCP-003`, `FF-AUTH-008`, `FF-ARC-002`
 **Operations:** `OPS-FF-MDM-001-01`
 
-- [ ] Add `E2E-FF-MDM-001-01`: edited labels appear in account, transaction, and income surfaces.
-- [ ] Add `INT-FF-AUTH-008-01`: label changes cannot alter OIDC subject, session user context, or authorization.
-- [ ] Add `INT-FF-SCP-003-01`: two deterministic authenticated identities can maintain every owner context.
-- [ ] Add `INT-FF-MDM-001-01` for HTTP mapping and `INT-FF-MDM-001-02` for PostgreSQL owner-label round trips.
-- [ ] Add `SMOKE-FF-SCP-003-01`: expected-green deployment evidence proves both authenticated identities retain equal access to every owner context.
-- [ ] If expected-green evidence fails, stop and reclassify before production changes.
+- [x] Add `E2E-FF-MDM-001-01`: edited labels appear in account, transaction, and income surfaces.
+- [x] Add `INT-FF-AUTH-008-01`: label changes cannot alter OIDC subject, session user context, or authorization.
+- [x] Add `INT-FF-SCP-003-01`: two deterministic authenticated identities can maintain every owner context.
+- [x] Add `INT-FF-MDM-001-01` for HTTP mapping and `INT-FF-MDM-001-02` for PostgreSQL owner-label round trips.
+- [x] Add `SMOKE-FF-SCP-003-01`: expected-green deployment evidence proves both authenticated identities retain equal access to every owner context.
+- [x] Confirm all expected-green evidence passes without reclassifying the phase or changing production code.
 
 **Tests:** `E2E-FF-MDM-001-01`, `INT-FF-AUTH-008-01`, `INT-FF-SCP-003-01`, `INT-FF-MDM-001-01`, `INT-FF-MDM-001-02`, and `SMOKE-FF-SCP-003-01`.
 
