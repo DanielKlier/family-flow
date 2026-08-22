@@ -163,7 +163,7 @@ describe("request logging", () => {
     }
   });
 
-  it("INT-FF-OBS-005-01 excludes request secrets and raw errors from serialized entries and one-line stdout", async () => {
+  it("INT-FF-OBS-001-01 INT-FF-OBS-005-01 INT-FF-CSV-011-01 excludes request secrets and raw errors from serialized entries and one-line stdout", async () => {
     const logger = new CapturingLogger();
     const server = buildServer({ logger });
     server.get("/__test__/throw", async () => {

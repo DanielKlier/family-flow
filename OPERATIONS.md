@@ -406,8 +406,8 @@ If invalidation or cleanup fails, keep the app and traffic stopped, inspect Post
 - Use `docker compose logs postgres` to inspect PostgreSQL output.
 - Use `/health` to verify that the application process is reachable.
 - Use `/admin/master-data` to verify that account and category seeds are visible.
-- Every HTTP response contains an `X-Request-Id` header. Use this value to find the matching request log entry.
-- Send `X-Request-Id` in a request to keep a caller-provided correlation ID.
+- Every HTTP response contains an `X-Request-Id` header. Rendered resource, validation, authentication, and unexpected-error responses also display it. Use this value to find the matching request log entry.
+- Send exactly one lowercase canonical UUIDv4 in `X-Request-Id` to preserve a caller-provided correlation ID. Missing, repeated, uppercase, or malformed values are replaced with a generated UUIDv4.
 
 ## OIDC/Auth Problems
 
@@ -419,7 +419,7 @@ Check these items when login fails:
 - Use the visible `X-Request-Id` response header to find the matching request log entry.
 - Check Authentik logs for denied redirect URIs, invalid client credentials, or provider errors.
 
-Never log OIDC tokens, session cookies, client secrets, or complete callback URLs containing secret-like query values. Query parameters such as `code`, `state`, and `token` are redacted in request logs.
+Never log OIDC tokens, session cookies, client secrets, or complete callback URLs containing secret-like query values. Request logs omit all query parameters except the explicit diagnostic allowlist; values such as `code`, `state`, and `token` are absent rather than retained as redaction placeholders.
 
 ## CSV Import Problems
 
@@ -458,8 +458,8 @@ Migration `0013_csv_import_purpose_identity.sql` introduces the purpose-aware v3
 
 Every HTTP request writes exactly one human-readable request log entry to stdout. Docker logs are the primary log source.
 
-Request log entries include the request ID, timestamp, method, path, sanitized query values, status code, duration, user context when available, outcome, and error details when available. Authenticated requests record the stable user ID, not session cookie contents or OIDC tokens.
+Request log entries include the request ID, timestamp, method, path, allowlisted query diagnostics, final status code, duration, user context when available, outcome, and safe structured error details when available. Authenticated requests record the stable user ID, not session cookie contents or OIDC tokens. Failure details contain only a controlled `type` and generic `message`; raw validation and exception messages are not serialized.
 
-Query values with secret-like names such as `code`, `token`, `session`, `state`, `secret`, or `password` are redacted. Session cookies, OIDC tokens, full CSV content, and unnecessary financial details must not be logged.
+Only `month`, stable `transactionId`, and aggregate `rowCount` query values are retained. All other query fields are omitted. Session cookies, authorization headers, OIDC values, uploaded CSV content, descriptions, payees, purposes, notes, amounts, validation details, raw exceptions, and unnecessary financial details must not be logged.
 
-Use `docker compose logs app` and search for `request_id=<value>` to correlate a user-visible request ID with the server-side log entry.
+Use `docker compose logs app` and search for `request_id=<value>` to correlate a user-visible request ID with the server-side log entry. There must be exactly one final line for the ID and its status/outcome must match the response. If a sensitive value appears, restrict access to the captured output, treat it as a data exposure incident, and roll back to the prior logging implementation while the source is corrected.
