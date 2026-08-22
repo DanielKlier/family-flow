@@ -1,5 +1,5 @@
-import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
 import type { Scenario, ScenarioAdjustment } from "../../core/scenarios/scenario.js";
+import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
 import type { Localization } from "../../ports/localization/localization.js";
 
 export type ScenarioViewInput = {
@@ -41,6 +41,8 @@ export function prepareScenarioViewModel(input: ScenarioViewInput, l: Localizati
       from: l.text("scenario.from"),
       to: l.text("scenario.to"),
       add: l.text("scenario.add"),
+      editAdjustment: l.text("scenario.editAdjustment"),
+      deleteAdjustment: l.text("scenario.deleteAdjustment"),
       lowestBuffer: l.text("scenario.lowestBuffer"),
       requiredIncome: l.text("scenario.requiredIncome"),
       month: l.text("common.month"),
@@ -74,8 +76,14 @@ export function prepareScenarioViewModel(input: ScenarioViewInput, l: Localizati
             lowestBuffer: formatSignedAmount(result.lowestBufferCents, l),
             requiredIncome: l.formatAmount(result.requiredAdditionalNetIncomeCents),
             adjustments: selected.adjustments.map((adjustment) => ({
+              id: adjustment.id,
               name: adjustment.name,
               amount: formatSignedAmount(adjustment.deltaCents, l),
+              magnitude: l.formatAmount(Math.abs(adjustment.deltaCents)),
+              income: adjustment.type === "income",
+              increase: adjustment.deltaCents >= 0,
+              startMonth: l.formatMonth(adjustment.startMonth),
+              endMonth: l.formatMonth(adjustment.endMonth),
             })),
             months: result.months.map((month) => ({
               month: l.formatMonth(month.month),

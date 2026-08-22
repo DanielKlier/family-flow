@@ -26,7 +26,8 @@ async function scenarioFixture() {
   return repositories;
 }
 
-test("E2E-FF-SCN-001-01 E2E-FF-SCN-001-02 E2E-FF-SCN-003-01 E2E-FF-SCN-004-01 E2E-FF-LOC-001-03 E2E-FF-UI-001-03 creates immutable localized scenario plans and renders HTMX-compatible results", async ({
+test("E2E-FF-SCN-001-01 E2E-FF-SCN-001-02 E2E-FF-SCN-003-01 E2E-FF-SCN-004-01 E2E-FF-LOC-001-03 E2E-FF-UI-001-03 creates and maintains immutable localized scenario plans with full-page and HTMX parity", async ({
+  browser,
   page,
 }) => {
   const repositories = await scenarioFixture();
@@ -83,6 +84,24 @@ test("E2E-FF-SCN-001-01 E2E-FF-SCN-001-02 E2E-FF-SCN-003-01 E2E-FF-SCN-004-01 E2
     await expect(panel).toContainText("−1.000,00");
     await expect(panel).not.toContainText(/Steuer|gesetzlich/i);
 
+    const parentalLeave = panel
+      .locator(".scenario-adjustment-item")
+      .filter({ hasText: "Elternzeit" })
+      .first();
+    await parentalLeave.getByText("Anpassung bearbeiten").click();
+    await parentalLeave.getByLabel("Bezeichnung").fill("Elternzeit korrigiert");
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.request().method() === "POST" && response.url().includes("/adjustments/"),
+      ),
+      parentalLeave.getByRole("button", { name: "Änderungen speichern" }).click(),
+    ]);
+    await expect(panel).toContainText("Elternzeit korrigiert");
+    const daycare = panel.locator(".scenario-adjustment-item").filter({ hasText: "Kita-Kosten" });
+    await daycare.getByRole("button", { name: "Anpassung löschen" }).click();
+    await expect(panel).not.toContainText("Kita-Kosten");
+
     const baselineBeforeMutation = await panel.getByText("Ausgabenbasis").textContent();
     const source = await repositories.transactions.get("scenario-april");
     if (source === null) throw new Error("Scenario transaction fixture must exist");
@@ -93,6 +112,49 @@ test("E2E-FF-SCN-001-01 E2E-FF-SCN-001-02 E2E-FF-SCN-003-01 E2E-FF-SCN-004-01 E2
     });
     await page.reload();
     await expect(panel.getByText("Ausgabenbasis")).toHaveText(baselineBeforeMutation ?? "");
+
+    const htmxEdit = panel.locator("details").first();
+    await htmxEdit.getByText("Szenario bearbeiten").click();
+    await htmxEdit.getByLabel("Bezeichnung").fill("Elternzeit HTMX bearbeitet");
+    await htmxEdit.getByLabel("Startpuffer").fill("2.000,00");
+    await htmxEdit.getByRole("button", { name: "Änderungen speichern" }).click();
+    await expect(panel).toContainText("Elternzeit HTMX bearbeitet");
+    await expect(panel.getByText("Ausgabenbasis")).toHaveText(baselineBeforeMutation ?? "");
+    const replacementEdit = panel.locator("details").first();
+    await replacementEdit.getByText("Szenario bearbeiten").click();
+    await replacementEdit.getByLabel("Berechnungsgrundlage").selectOption("manual");
+    await replacementEdit.getByLabel("Manueller Betrag", { exact: true }).fill("777,00");
+    await replacementEdit.getByRole("button", { name: "Änderungen speichern" }).click();
+    await expect(panel.getByText("Ausgabenbasis")).toContainText("777,00");
+
+    const noJavaScriptContext = await browser.newContext({ javaScriptEnabled: false });
+    const noJavaScriptPage = await noJavaScriptContext.newPage();
+    await loginAsTestUserPage(noJavaScriptPage, baseUrl);
+    await noJavaScriptPage.goto(`${baseUrl}/scenarios`);
+    const noJavaScriptCreate = noJavaScriptPage.locator("#scenario-form");
+    await noJavaScriptCreate.getByLabel("Bezeichnung").fill("Ohne JavaScript");
+    await noJavaScriptCreate.getByLabel("Startmonat").fill("08.2026");
+    await noJavaScriptCreate.getByLabel("Endmonat").fill("01.2028");
+    await noJavaScriptCreate.getByLabel("Startpuffer").fill("1.000,00");
+    await noJavaScriptCreate.getByLabel("Monatliche Einnahmen").fill("3.000,00");
+    await noJavaScriptCreate.getByLabel("Ausgabenbasis").selectOption("historical-3");
+    await noJavaScriptCreate.getByRole("button", { name: "Szenario speichern" }).click();
+    const fullPagePanel = noJavaScriptPage.locator("#scenario-panel");
+    const fullPageBaseline = await fullPagePanel.getByText("Ausgabenbasis").textContent();
+    const fullPageEdit = fullPagePanel.locator("details").first();
+    await fullPageEdit.getByText("Szenario bearbeiten").click();
+    await fullPageEdit.getByLabel("Bezeichnung").fill("Ohne JavaScript bearbeitet");
+    await fullPageEdit.getByRole("button", { name: "Änderungen speichern" }).click();
+    await expect(noJavaScriptPage).toHaveURL(`${baseUrl}/scenarios`);
+    await expect(fullPagePanel).toContainText("Ohne JavaScript bearbeitet");
+    await expect(fullPagePanel.getByText("Ausgabenbasis")).toHaveText(fullPageBaseline ?? "");
+    const fullPageReplacement = fullPagePanel.locator("details").first();
+    await fullPageReplacement.getByText("Szenario bearbeiten").click();
+    await fullPageReplacement.getByLabel("Berechnungsgrundlage").selectOption("manual");
+    await fullPageReplacement.getByLabel("Manueller Betrag", { exact: true }).fill("888,00");
+    await fullPageReplacement.getByRole("button", { name: "Änderungen speichern" }).click();
+    await expect(fullPagePanel.getByText("Ausgabenbasis")).toContainText("888,00");
+    await noJavaScriptContext.close();
 
     const htmxResponse = await page.request.get(`${baseUrl}/scenarios`, {
       headers: { "HX-Request": "true" },

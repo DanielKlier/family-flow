@@ -1,15 +1,14 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-
-import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
 import {
   assertAdjustmentWithinScenario,
   createHistoricalBaselineSnapshot,
   createScenario,
   createScenarioAdjustment,
-  updateScenario,
   type ScenarioBaseline,
+  updateScenario,
 } from "../../core/scenarios/scenario.js";
+import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
 import type { Clock } from "../../ports/clock/clock.js";
 import type { Localization } from "../../ports/localization/localization.js";
 import type { ScenarioRepository } from "../../ports/repositories/scenario-repository.js";
@@ -32,6 +31,12 @@ export function registerScenarioRoutes(
   );
   server.post("/scenarios/:id/adjustments", async (request, reply) =>
     addAdjustment(repositories, request, reply),
+  );
+  server.post("/scenarios/:id/adjustments/:adjustmentId", async (request, reply) =>
+    updateAdjustment(repositories, request, reply),
+  );
+  server.post("/scenarios/:id/adjustments/:adjustmentId/delete", async (request, reply) =>
+    deleteAdjustment(repositories, request, reply),
   );
   server.get("/calculators", async (_request, reply) =>
     reply
@@ -116,19 +121,12 @@ async function addAdjustment(
   const stored = await repositories.scenarios.get(id);
   if (stored === null) return reply.status(404).send();
   try {
-    const form = readForm(request.body);
-    const direction = required(form, "direction");
-    const magnitude = reply.request.localization.parseAmountCents(required(form, "amount"), false);
-    const adjustment = createScenarioAdjustment({
-      id: randomUUID(),
-      scenarioId: id,
-      name: required(form, "name"),
-      type: required(form, "type") as "income" | "expense",
-      deltaCents: direction === "decrease" ? -magnitude : magnitude,
-      startMonth: reply.request.localization.parseMonth(required(form, "startMonth")),
-      endMonth: reply.request.localization.parseMonth(required(form, "endMonth")),
-    });
-    if (direction !== "increase" && direction !== "decrease") throw new Error("Invalid direction");
+    const adjustment = readAdjustmentForm(
+      readForm(request.body),
+      id,
+      randomUUID(),
+      reply.request.localization,
+    );
     assertAdjustmentWithinScenario(stored.scenario, adjustment);
     calculateScenario(stored.scenario, [...stored.adjustments, adjustment]);
     await repositories.scenarios.addAdjustment(adjustment);
@@ -136,6 +134,73 @@ async function addAdjustment(
   } catch (error: unknown) {
     return formError(repositories, request, reply, error, id);
   }
+}
+
+async function updateAdjustment(
+  repositories: Repositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const scenarioId = routeValue(request.params, "id");
+  const adjustmentId = routeValue(request.params, "adjustmentId");
+  const stored = await repositories.scenarios.get(scenarioId);
+  if (stored === null || !stored.adjustments.some((adjustment) => adjustment.id === adjustmentId))
+    return reply.status(404).send();
+  try {
+    const adjustment = readAdjustmentForm(
+      readForm(request.body),
+      scenarioId,
+      adjustmentId,
+      reply.request.localization,
+    );
+    assertAdjustmentWithinScenario(stored.scenario, adjustment);
+    calculateScenario(
+      stored.scenario,
+      stored.adjustments.map((item) => (item.id === adjustmentId ? adjustment : item)),
+    );
+    await repositories.scenarios.updateAdjustment(adjustment);
+    return sendState(repositories, request, reply, scenarioId);
+  } catch (error: unknown) {
+    return formError(repositories, request, reply, error, scenarioId);
+  }
+}
+
+async function deleteAdjustment(
+  repositories: Repositories,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const scenarioId = routeValue(request.params, "id");
+  const adjustmentId = routeValue(request.params, "adjustmentId");
+  const stored = await repositories.scenarios.get(scenarioId);
+  if (stored === null || !stored.adjustments.some((adjustment) => adjustment.id === adjustmentId))
+    return reply.status(404).send();
+  try {
+    await repositories.scenarios.deleteAdjustment(scenarioId, adjustmentId);
+    return sendState(repositories, request, reply, scenarioId);
+  } catch (error: unknown) {
+    return formError(repositories, request, reply, error, scenarioId);
+  }
+}
+
+function readAdjustmentForm(
+  form: ReturnType<typeof readForm>,
+  scenarioId: string,
+  adjustmentId: string,
+  localization: Localization,
+) {
+  const direction = required(form, "direction");
+  const magnitude = localization.parseAmountCents(required(form, "amount"), false);
+  if (direction !== "increase" && direction !== "decrease") throw new Error("Invalid direction");
+  return createScenarioAdjustment({
+    id: adjustmentId,
+    scenarioId,
+    name: required(form, "name"),
+    type: required(form, "type") as "income" | "expense",
+    deltaCents: direction === "decrease" ? -magnitude : magnitude,
+    startMonth: localization.parseMonth(required(form, "startMonth")),
+    endMonth: localization.parseMonth(required(form, "endMonth")),
+  });
 }
 
 async function readBaseline(
@@ -224,9 +289,12 @@ function required(form: ReturnType<typeof readForm>, field: string): string {
   return value;
 }
 function routeId(params: unknown): string {
+  return routeValue(params, "id");
+}
+function routeValue(params: unknown, field: string): string {
   if (typeof params !== "object" || params === null) return "";
-  const id = Reflect.get(params, "id");
-  return typeof id === "string" ? id : "";
+  const value = Reflect.get(params, field);
+  return typeof value === "string" ? value : "";
 }
 function queryScenarioId(query: unknown): string | undefined {
   if (typeof query !== "object" || query === null) return undefined;

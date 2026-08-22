@@ -1,6 +1,4 @@
 import { eq, sql } from "drizzle-orm";
-
-import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
 import {
   assertAdjustmentWithinScenario,
   createScenario,
@@ -8,6 +6,7 @@ import {
   type Scenario,
   type ScenarioAdjustment,
 } from "../../core/scenarios/scenario.js";
+import { calculateScenario } from "../../core/scenarios/scenario-calculator.js";
 import type {
   ScenarioRepository,
   StoredScenario,
@@ -86,6 +85,49 @@ export class DrizzleScenarioRepository implements ScenarioRepository {
     });
   }
 
+  async updateAdjustment(adjustment: ScenarioAdjustment): Promise<void> {
+    await this.db.transaction(async (transaction) => {
+      await lockScenario(transaction, adjustment.scenarioId);
+      const scenarioRows = await transaction
+        .select()
+        .from(scenarios)
+        .where(eq(scenarios.id, adjustment.scenarioId))
+        .limit(1);
+      if (scenarioRows[0] === undefined) throw new Error("Scenario does not exist");
+      const persisted = await transaction
+        .select()
+        .from(scenarioAdjustments)
+        .where(eq(scenarioAdjustments.scenarioId, adjustment.scenarioId));
+      if (!persisted.some(({ id }) => id === adjustment.id))
+        throw new Error("Adjustment does not exist");
+      const scenario = mapScenario(scenarioRows[0]);
+      assertAdjustmentWithinScenario(scenario, adjustment);
+      calculateScenario(
+        scenario,
+        persisted.map((row) =>
+          row.id === adjustment.id ? adjustment : createScenarioAdjustment(row),
+        ),
+      );
+      await transaction
+        .update(scenarioAdjustments)
+        .set(toAdjustmentRow(adjustment))
+        .where(eq(scenarioAdjustments.id, adjustment.id));
+    });
+  }
+
+  async deleteAdjustment(scenarioId: string, adjustmentId: string): Promise<void> {
+    await this.db.transaction(async (transaction) => {
+      await lockScenario(transaction, scenarioId);
+      const persisted = await transaction
+        .select({ id: scenarioAdjustments.id })
+        .from(scenarioAdjustments)
+        .where(eq(scenarioAdjustments.scenarioId, scenarioId));
+      if (!persisted.some(({ id }) => id === adjustmentId))
+        throw new Error("Adjustment does not exist");
+      await transaction.delete(scenarioAdjustments).where(eq(scenarioAdjustments.id, adjustmentId));
+    });
+  }
+
   private async required(id: string): Promise<StoredScenario> {
     const item = await this.get(id);
     if (item === null) throw new Error("Persisted scenario disappeared");
@@ -123,6 +165,9 @@ function toRow(scenario: Scenario): typeof scenarios.$inferInsert {
       scenario.baseline.mode === "historical" ? scenario.baseline.windowLength : null,
     baselineExpenseCents: scenario.baseline.expenseCents,
   };
+}
+function toAdjustmentRow(adjustment: ScenarioAdjustment): typeof scenarioAdjustments.$inferInsert {
+  return adjustment;
 }
 function mapScenario(row: typeof scenarios.$inferSelect): Scenario {
   const baseline =

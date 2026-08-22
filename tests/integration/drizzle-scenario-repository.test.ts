@@ -57,6 +57,28 @@ describe("Drizzle scenario repository", () => {
           ),
         });
 
+        const updated = createScenarioAdjustment({
+          ...adjustment,
+          name: "Updated benefit",
+          deltaCents: 100_000,
+        });
+        await repository.updateAdjustment(updated);
+        await expect(repository.get(scenario.id)).resolves.toMatchObject({
+          adjustments: expect.arrayContaining([updated]),
+        });
+        await expect(
+          repository.updateAdjustment(
+            createScenarioAdjustment({ ...updated, deltaCents: -600_001 }),
+          ),
+        ).rejects.toThrow("Monthly income must be non-negative");
+        await expect(repository.get(scenario.id)).resolves.toMatchObject({
+          adjustments: expect.arrayContaining([updated]),
+        });
+        await repository.deleteAdjustment(scenario.id, updated.id);
+        await expect(repository.get(scenario.id)).resolves.not.toMatchObject({
+          adjustments: expect.arrayContaining([expect.objectContaining({ id: updated.id })]),
+        });
+
         const conflicting = [
           createScenarioAdjustment({
             ...adjustment,
