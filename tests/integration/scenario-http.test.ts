@@ -6,6 +6,11 @@ import { buildServer } from "../../src/app/server.js";
 import { aTransaction } from "../support/transactions.js";
 
 const julyClock = { now: () => new Date(2026, 6, 10, 12, 0, 0) };
+const requestIds = {
+  redirect: "11111111-1111-4111-8111-111111111111",
+  fragment: "22222222-2222-4222-8222-222222222222",
+  invalid: "33333333-3333-4333-8333-333333333333",
+};
 
 async function authenticatedServer() {
   const repositories = createSeededInMemoryRepositories(createGermanLocalization());
@@ -28,7 +33,7 @@ describe("scenario HTTP adapter", () => {
       const fullPage = await server.inject({
         method: "POST",
         url: "/scenarios",
-        headers: { ...headers, "x-request-id": "scenario-redirect" },
+        headers: { ...headers, "x-request-id": requestIds.redirect },
         payload: {
           name: "Elternzeit",
           startMonth: "08.2026",
@@ -40,12 +45,12 @@ describe("scenario HTTP adapter", () => {
         },
       });
       expect(fullPage.statusCode).toBe(302);
-      expect(fullPage.headers["x-request-id"]).toBe("scenario-redirect");
+      expect(fullPage.headers["x-request-id"]).toBe(requestIds.redirect);
 
       const htmx = await server.inject({
         method: "POST",
         url: "/scenarios",
-        headers: { ...headers, "hx-request": "true", "x-request-id": "scenario-fragment" },
+        headers: { ...headers, "hx-request": "true", "x-request-id": requestIds.fragment },
         payload: {
           name: "Elternzeit HTMX",
           startMonth: "08.2026",
@@ -57,7 +62,7 @@ describe("scenario HTTP adapter", () => {
         },
       });
       expect(htmx.statusCode).toBe(200);
-      expect(htmx.headers["x-request-id"]).toBe("scenario-fragment");
+      expect(htmx.headers["x-request-id"]).toBe(requestIds.fragment);
       expect(htmx.body).toContain('id="scenario-panel"');
       expect(htmx.body).not.toContain("<!doctype html>");
 
@@ -152,7 +157,7 @@ describe("scenario HTTP adapter", () => {
       const invalid = await server.inject({
         method: "POST",
         url: "/scenarios",
-        headers: { ...headers, "x-request-id": "scenario-invalid" },
+        headers: { ...headers, "x-request-id": requestIds.invalid },
         payload: {
           name: "Invalid",
           startMonth: "08.2026",
@@ -164,7 +169,7 @@ describe("scenario HTTP adapter", () => {
         },
       });
       expect(invalid.statusCode).toBe(400);
-      expect(invalid.headers["x-request-id"]).toBe("scenario-invalid");
+      expect(invalid.headers["x-request-id"]).toBe(requestIds.invalid);
       expect(invalid.body).toContain("zwischen 18 und 24");
 
       const list = await server.inject({ method: "GET", url: "/scenarios", headers });
