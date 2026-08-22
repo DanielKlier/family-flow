@@ -77,6 +77,25 @@ export const operationRegistry: OperationRegistry = {
   "OPS-FF-AUTH-009-01": verifyPostgresOperation("OPS-FF-AUTH-009-01"),
   "OPS-FF-CAT-002-01": verifyPostgresOperation("OPS-FF-CAT-002-01"),
   "OPS-FF-CSV-001-01": verifyPostgresOperation("OPS-FF-CSV-001-01"),
+  "OPS-FF-MDM-003-01": verifyPostgresAndTestCommands("OPS-FF-MDM-003-01", [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "tests/integration/master-data-http.test.ts",
+      "--testNamePattern",
+      "INT-FF-MDM-(003-01|004-01)",
+    ],
+    [
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/master-data.test.ts",
+      "--grep",
+      "E2E-FF-MDM-(003|004)-0[12]",
+      "--workers=1",
+    ],
+  ]),
   "OPS-FF-TXN-002-01": verifyPostgresOperation("OPS-FF-TXN-002-01"),
   "OPS-FF-TXN-005-01": verifyPostgresOperation("OPS-FF-TXN-005-01"),
   "OPS-FF-LOC-002-01": verifyVitestOperation(

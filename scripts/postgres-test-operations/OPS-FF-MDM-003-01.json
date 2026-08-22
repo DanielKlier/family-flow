@@ -1,0 +1,13 @@
+{
+  "commands": [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "--no-file-parallelism",
+      "tests/integration/drizzle-master-data-activation.test.ts",
+      "--testNamePattern",
+      "INT-FF-MDM-(003-02|004-02|005-01)"
+    ]
+  ]
+}

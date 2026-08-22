@@ -83,7 +83,9 @@ test("account can be edited", async ({ page }) => {
   }
 });
 
-test("account can be deactivated without losing existing transactions", async ({ page }) => {
+test("E2E-FF-MDM-003-01 account can be deactivated without losing existing transactions", async ({
+  page,
+}) => {
   const server = buildServer();
 
   try {
@@ -108,6 +110,49 @@ test("account can be deactivated without losing existing transactions", async ({
 
     await expect(page.getByRole("cell", { name: "Existing transaction" })).toBeVisible();
     await expect(page.locator("#transaction-form").getByLabel("Konto")).not.toContainText(
+      "Girokonto Person A",
+    );
+  } finally {
+    await server.close();
+  }
+});
+
+test("E2E-FF-MDM-003-02 account can be reactivated by saving its edit form", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/transactions`);
+    await page
+      .locator("#transaction-form")
+      .getByLabel("Konto")
+      .selectOption("account-person-a-checking");
+    await page.getByLabel("Beschreibung").fill("Historical account transaction");
+    await page.getByLabel("Betrag").fill("10,00");
+    await page.getByLabel("Datum").fill("10.07.2026");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
+    await page.goto(`${baseUrl}/admin/master-data`);
+    const row = page.getByRole("row").filter({ hasText: "Girokonto Person A" });
+    await row.getByRole("button", { name: "Konto deaktivieren" }).click();
+    await page.goto(`${baseUrl}/transactions`);
+
+    await expect(page.getByRole("cell", { name: "Historical account transaction" })).toBeVisible();
+    await expect(page.locator("#transaction-form").getByLabel("Konto")).not.toContainText(
+      "Girokonto Person A",
+    );
+
+    await page.goto(`${baseUrl}/admin/master-data`);
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Girokonto Person A" })
+      .getByRole("link", { name: "Konto bearbeiten" })
+      .click();
+    await page.getByLabel("Aktiv").check();
+    await page.getByRole("button", { name: "Konto speichern" }).click();
+    await page.goto(`${baseUrl}/transactions`);
+
+    await expect(page.locator("#transaction-form").getByLabel("Konto")).toContainText(
       "Girokonto Person A",
     );
   } finally {
@@ -196,7 +241,9 @@ test("category can be edited", async ({ page }) => {
   }
 });
 
-test("category can be deactivated without losing existing transactions", async ({ page }) => {
+test("E2E-FF-MDM-004-01 category can be deactivated without losing existing transactions", async ({
+  page,
+}) => {
   const server = buildServer();
 
   try {
@@ -221,6 +268,49 @@ test("category can be deactivated without losing existing transactions", async (
 
     await expect(page.getByRole("cell", { name: "Existing groceries" })).toBeVisible();
     await expect(page.locator("#transaction-form").getByLabel("Kategorie")).not.toContainText(
+      "Lebensmittel",
+    );
+  } finally {
+    await server.close();
+  }
+});
+
+test("E2E-FF-MDM-004-02 category can be reactivated by saving its edit form", async ({ page }) => {
+  const server = buildServer();
+
+  try {
+    const baseUrl = await listen(server);
+    await loginAsTestUserPage(page, baseUrl);
+    await page.goto(`${baseUrl}/transactions`);
+    await page
+      .locator("#transaction-form")
+      .getByLabel("Kategorie")
+      .selectOption("category-groceries");
+    await page.getByLabel("Beschreibung").fill("Historical category transaction");
+    await page.getByLabel("Betrag").fill("10,00");
+    await page.getByLabel("Datum").fill("10.07.2026");
+    await page.getByRole("button", { name: "Transaktion hinzufügen" }).click();
+    await page.goto(`${baseUrl}/admin/master-data`);
+    const row = page.getByRole("row").filter({ hasText: "Lebensmittel" });
+    await row.getByRole("button", { name: "Kategorie deaktivieren" }).click();
+    await page.goto(`${baseUrl}/transactions`);
+
+    await expect(page.getByRole("cell", { name: "Historical category transaction" })).toBeVisible();
+    await expect(page.locator("#transaction-form").getByLabel("Kategorie")).not.toContainText(
+      "Lebensmittel",
+    );
+
+    await page.goto(`${baseUrl}/admin/master-data`);
+    await page
+      .getByRole("row")
+      .filter({ hasText: "Lebensmittel" })
+      .getByRole("link", { name: "Kategorie bearbeiten" })
+      .click();
+    await page.getByLabel("Aktiv").check();
+    await page.getByRole("button", { name: "Kategorie speichern" }).click();
+    await page.goto(`${baseUrl}/transactions`);
+
+    await expect(page.locator("#transaction-form").getByLabel("Kategorie")).toContainText(
       "Lebensmittel",
     );
   } finally {

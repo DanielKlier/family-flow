@@ -629,16 +629,16 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-08-R01 — Master-Data Reactivation And Adapter Evidence
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Evidence-only; expected green
 **Implements:** none
 **Verifies:** `FF-MDM-003`, `FF-MDM-004`, `FF-MDM-005`, `FF-ARC-002`
 **Operations:** `OPS-FF-MDM-003-01`
 
-- [ ] Add `E2E-FF-MDM-003-02` and `E2E-FF-MDM-004-02`: deactivate, verify historical visibility and choice exclusion, reactivate through edit, and verify choices return.
-- [ ] Add `INT-FF-MDM-003-01` and `INT-FF-MDM-004-01` for HTTP mapping and `INT-FF-MDM-003-02` and `INT-FF-MDM-004-02` for PostgreSQL create/edit/deactivate/reactivate and active filtering.
-- [ ] Add `INT-FF-MDM-005-01`: restart preserves names and active state.
-- [ ] If any expected-green evidence fails, stop and reclassify this phase as behavior remediation before changing production code.
+- [x] Add `E2E-FF-MDM-003-02` and `E2E-FF-MDM-004-02`: deactivate, verify historical visibility and choice exclusion, reactivate through edit, and verify choices return.
+- [x] Add `INT-FF-MDM-003-01` and `INT-FF-MDM-004-01` for HTTP mapping and `INT-FF-MDM-003-02` and `INT-FF-MDM-004-02` for PostgreSQL create/edit/deactivate/reactivate and active filtering.
+- [x] Add `INT-FF-MDM-005-01`: restart preserves names and active state.
+- [x] Confirm all expected-green evidence passes without reclassifying the phase or changing production code.
 
 **Tests:** `E2E-FF-MDM-003-01`, `E2E-FF-MDM-003-02`, `E2E-FF-MDM-004-01`, `E2E-FF-MDM-004-02`, `INT-FF-MDM-003-01`, `INT-FF-MDM-003-02`, `INT-FF-MDM-004-01`, `INT-FF-MDM-004-02`, and `INT-FF-MDM-005-01`.
 
