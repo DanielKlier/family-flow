@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { buildServer } from "../../src/app/server.js";
 import { HumanReadableRequestLogger } from "../../src/adapters/logging/human-readable-logger.js";
+import { buildServer } from "../../src/app/server.js";
 import type { RequestLogEntry, RequestLogger } from "../../src/ports/logging/logger.js";
 
 class CapturingLogger implements RequestLogger {
@@ -175,7 +175,7 @@ describe("request logging", () => {
       logger.reset();
       const response = await server.inject({
         method: "GET",
-        url: `/__test__/throw?month=2026-07&transactionId=transaction-123&rowCount=2&token=${encodeURIComponent(deniedValues[7])}&code=${encodeURIComponent(deniedValues[4])}&state=${encodeURIComponent(deniedValues[5])}&description=${encodeURIComponent(deniedValues[11])}&payee=${encodeURIComponent(deniedValues[12])}&purpose=${encodeURIComponent(deniedValues[13])}&note=${encodeURIComponent(deniedValues[14])}&amount=${deniedValues[15]}`,
+        url: `/__test__/throw?month=2026-07&transactionId=${requestIds.success}&rowCount=2&token=${encodeURIComponent(deniedValues[7])}&code=${encodeURIComponent(deniedValues[4])}&state=${encodeURIComponent(deniedValues[5])}&description=${encodeURIComponent(deniedValues[11])}&payee=${encodeURIComponent(deniedValues[12])}&purpose=${encodeURIComponent(deniedValues[13])}&note=${encodeURIComponent(deniedValues[14])}&amount=${deniedValues[15]}`,
         cookies: { ff_session: session },
         headers: {
           authorization: deniedValues[1],
@@ -195,7 +195,7 @@ describe("request logging", () => {
       const entry = logger.entries[0];
       expect(entry).toMatchObject({
         error: { type: "unexpected-error", message: "Unexpected server error" },
-        query: { month: "2026-07", transactionId: "transaction-123", rowCount: "2" },
+        query: { transactionId: requestIds.success, rowCount: "2" },
       });
       assertDeniedValuesAbsent(JSON.stringify(entry));
 

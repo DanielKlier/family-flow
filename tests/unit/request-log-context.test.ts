@@ -2,56 +2,63 @@ import { describe, expect, it } from "vitest";
 
 import { normalizeQueryForLog } from "../../src/adapters/logging/request-log-context.js";
 
+const transactionId = "123e4567-e89b-42d3-a456-426614174000";
+
+const deniedValues = [
+  "cookie=session-cookie",
+  "Bearer authorization-token",
+  "session-hash",
+  "oidc-code",
+  "oidc-state",
+  "oidc-nonce",
+  "oidc-token",
+  "password-value",
+  "secret-value",
+  "Date;Amount;Description\\n2026-07-15;42.99;Private payee",
+  "Private description",
+  "Private payee",
+  "Private purpose",
+  "Private note",
+  "42.99",
+  "validation detail",
+  "raw thrown error",
+];
+
 describe("normalizeQueryForLog", () => {
-  it("retains only safe query diagnostics and omits secret and financial fields", () => {
-    const deniedValues = [
-      "cookie=session-cookie",
-      "Bearer authorization-token",
-      "session-hash",
-      "oidc-code",
-      "oidc-state",
-      "oidc-nonce",
-      "oidc-token",
-      "password-value",
-      "secret-value",
-      "Date;Amount;Description\\n2026-07-15;42.99;Private payee",
-      "Private description",
-      "Private payee",
-      "Private purpose",
-      "Private note",
-      "42.99",
-      "validation detail",
-      "raw thrown error",
-    ];
-
-    const serialized = JSON.stringify(
+  it("retains only canonical stable IDs and bounded aggregate integer counts", () => {
+    expect(
       normalizeQueryForLog({
-        month: "2026-07",
-        transactionId: "transaction-123",
-        rowCount: "2",
+        transactionId,
+        rowCount: "10000",
         code: deniedValues[4],
-        state: deniedValues[5],
-        nonce: deniedValues[6],
         token: deniedValues[7],
-        authorization: deniedValues[1],
-        cookie: deniedValues[0],
-        sessionHash: deniedValues[2],
-        password: deniedValues[8],
-        secret: deniedValues[9],
-        csv: deniedValues[10],
         description: deniedValues[11],
-        payee: deniedValues[12],
-        purpose: deniedValues[13],
-        note: deniedValues[14],
         amount: deniedValues[15],
-        validation: deniedValues[16],
-        error: deniedValues[17],
       }),
-    );
+    ).toEqual({ transactionId, rowCount: "10000" });
+    expect(normalizeQueryForLog({ rowCount: "0" })).toEqual({ rowCount: "0" });
+  });
 
-    expect(serialized).toBe(
-      JSON.stringify({ month: "2026-07", transactionId: "transaction-123", rowCount: "2" }),
-    );
+  it.each([
+    ["month", "2026-07"],
+    ["month", deniedValues[8]],
+    ["month", ["2026-07", "2026-07"]],
+    ["month", ["2026-07", deniedValues[8]]],
+    ["transactionId", deniedValues[8]],
+    ["transactionId", "transaction-123"],
+    ["transactionId", transactionId.toUpperCase()],
+    ["transactionId", [transactionId, transactionId]],
+    ["transactionId", [transactionId, deniedValues[8]]],
+    ["rowCount", deniedValues[8]],
+    ["rowCount", "42.99"],
+    ["rowCount", "-1"],
+    ["rowCount", "10001"],
+    ["rowCount", ["2", "2"]],
+    ["rowCount", ["2", deniedValues[8]]],
+  ])("omits denied %s query value %#", (key, value) => {
+    const serialized = JSON.stringify(normalizeQueryForLog({ [key]: value }));
+
+    expect(serialized).toBe("{}");
     for (const deniedValue of deniedValues) {
       expect(serialized).not.toContain(deniedValue);
     }
