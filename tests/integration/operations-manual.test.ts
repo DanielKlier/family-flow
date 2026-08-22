@@ -27,7 +27,12 @@ describe("operations manual", () => {
     const backup = manual.slice(manual.indexOf("## Backup "), manual.indexOf("## Restore "));
     const restore = manual.slice(manual.indexOf("## Restore "), manual.indexOf("## Debugging"));
 
-    expect(backup).toMatch(/pg_dump/i);
+    expect(backup).toMatch(/maintenance mode/i);
+    expect(backup).toMatch(
+      /stop external traffic[\s\S]*stop app[\s\S]*recovery-evidence\.sql[\s\S]*pg_dump/i,
+    );
+    expect(backup).toMatch(/recovery-evidence\.sql[\s\S]*compare[\s\S]*start the app/i);
+    expect(backup).toMatch(/trap[\s\S]*start the app/i);
     expect(backup).toContain("scripts/recovery-evidence.sql");
     expect(backup).toMatch(/manifest/i);
     expect(backup).toMatch(/sha256|checksum/i);

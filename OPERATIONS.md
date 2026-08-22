@@ -386,33 +386,66 @@ Operational notes:
 
 ## Backup 
 
-PostgreSQL is the durable store for master data, transactions, import configuration and previews, categorization rules, income plans and overrides, and security-sensitive sessions. Back up the complete database rather than selected tables. From a trusted host, create a restricted backup directory and a custom-format dump:
+PostgreSQL is the durable store for master data, transactions, import configuration and previews, categorization rules, income plans and overrides, and security-sensitive sessions. Back up the complete database rather than selected tables.
+
+Use a short maintenance mode so the dump and its separately collected evidence describe the same database state. Announce the interruption, stop external traffic at the reverse proxy, and wait for in-flight requests to finish before stopping the app. Confirm that no other maintenance client or integration can write directly to PostgreSQL; this procedure is unsafe while any writer other than the stopped app remains active. Keep external traffic closed until the final health check succeeds.
+
+From a trusted host in the repository root, run the following commands. The `trap` attempts to start the app whenever the shell exits, including after a failed command; it deliberately does not reopen external traffic. The two evidence captures prove that no data changed while `pg_dump` ran.
 
 ```sh
+set -eu
 umask 077
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 BACKUP_DIR="/var/backups/family-flow/$STAMP"
 DUMP="$BACKUP_DIR/family-flow.dump"
 MANIFEST="$BACKUP_DIR/manifest.txt"
+EVIDENCE_BEFORE="$BACKUP_DIR/evidence-before.json"
+EVIDENCE_AFTER="$BACKUP_DIR/evidence-after.json"
 mkdir -p "$BACKUP_DIR"
+
+restart_app() {
+  docker compose -f compose.prod.yaml up --detach --no-deps app
+}
+trap restart_app EXIT
+
+docker compose -f compose.prod.yaml stop app
+docker compose -f compose.prod.yaml ps --status running --services | grep -Fx app && {
+  printf 'The app is still running; aborting backup.\n' >&2
+  exit 1
+}
+
+docker compose -f compose.prod.yaml exec -T postgres \
+  psql -X -U family_flow -d family_flow -At -v ON_ERROR_STOP=1 \
+  <scripts/recovery-evidence.sql >"$EVIDENCE_BEFORE"
 docker compose -f compose.prod.yaml exec -T postgres \
   pg_dump -U family_flow -d family_flow --format=custom --no-owner --no-privileges >"$DUMP"
+docker compose -f compose.prod.yaml exec -T postgres \
+  psql -X -U family_flow -d family_flow -At -v ON_ERROR_STOP=1 \
+  <scripts/recovery-evidence.sql >"$EVIDENCE_AFTER"
+# Compare the snapshots before accepting the dump.
+cmp "$EVIDENCE_BEFORE" "$EVIDENCE_AFTER"
+
 {
   printf 'created_at=%s\n' "$STAMP"
   printf 'app_image_id=%s\n' "$(docker compose -f compose.prod.yaml images -q app)"
   printf 'database_evidence='
-  docker compose -f compose.prod.yaml exec -T postgres \
-    psql -X -U family_flow -d family_flow -At -v ON_ERROR_STOP=1 \
-    <scripts/recovery-evidence.sql
+  cat "$EVIDENCE_BEFORE"
   sha256sum "$DUMP"
 } >"$MANIFEST"
 sha256sum "$MANIFEST" >"$MANIFEST.sha256"
 sha256sum --check "$MANIFEST.sha256"
 grep -F "$(sha256sum "$DUMP")" "$MANIFEST"
 pg_restore --list "$DUMP" >/dev/null
+rm "$EVIDENCE_BEFORE" "$EVIDENCE_AFTER"
+
+restart_app
+trap - EXIT
+curl --fail --silent --show-error http://127.0.0.1:3000/health >/dev/null
 ```
 
-The maintained `scripts/recovery-evidence.sql` command is the authoritative, content-minimized database inventory used by this runbook and the recovery smoke test. It records ordered `schema_migrations`, row counts for every application table, signed minor-unit totals for transactions, income plans, and monthly overrides, relationship IDs and orphan counts, seed IDs and edited labels, and active states. It does not include session tokens, transaction descriptions, or other row content. A backup is complete only after the manifest checksum, dump checksum recorded in the manifest, and `pg_restore --list` all succeed.
+If stopping the app, either evidence command, `pg_dump`, or `cmp` fails, reject the incomplete backup directory. Let the trap start the app, diagnose the failure while traffic remains closed, require a successful local `/health` response with `X-Request-Id`, and only then reopen external traffic. After the complete command succeeds, reopen traffic and monitor app and PostgreSQL logs. Record the maintenance window with the backup timestamp.
+
+The maintained `scripts/recovery-evidence.sql` command is the authoritative, content-minimized database inventory used by this runbook and the recovery smoke test. It records ordered `schema_migrations`, row counts for every application table, signed minor-unit totals for transactions, income plans, and monthly overrides, relationship IDs and orphan counts, seed IDs and edited labels, and active states. It does not include session tokens, transaction descriptions, or other row content. A backup is complete only after both evidence captures compare equal, the manifest checksum, the dump checksum recorded in the manifest, and `pg_restore --list` all succeed.
 
 Copy the dump, manifest, and manifest checksum together to encrypted storage outside the Compose host. Keep at least 7 daily, 5 weekly, and 12 monthly sets, subject to the household's agreed data-retention policy. Delete an expired set as one unit and record the deletion; never retain a manifest without its dump or vice versa. Run the focused recovery drill with `pnpm ops:verify --id OPS-FF-OPS-002-01` after backup-procedure or PostgreSQL changes.
 
