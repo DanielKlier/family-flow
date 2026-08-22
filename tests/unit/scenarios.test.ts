@@ -187,13 +187,19 @@ describe("family-finance scenarios", () => {
       expenseCents: 0,
     });
     const oneCent = calculateScenario(
-      createScenario({ ...scenarioInput, startingBufferCents: 0, baseIncomeCents: 1 }),
+      createScenario({
+        ...scenarioInput,
+        startingBufferCents: 0,
+        baseIncomeCents: 1,
+        baseline: { mode: "manual", expenseCents: 0 },
+      }),
       [],
     );
     expect(oneCent.months[0]).toMatchObject({
       incomeCents: 1,
-      balanceCents: -69_999,
-      bufferCents: -69_999,
+      expenseCents: 0,
+      balanceCents: 1,
+      bufferCents: 1,
     });
     const safeLimit = calculateScenario(
       createScenario({
