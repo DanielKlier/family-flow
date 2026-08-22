@@ -34,7 +34,10 @@ export type ImportProfileInput = Omit<
 export function createImportProfile(input: ImportProfileInput): ImportProfile {
   const id = requireTrimmed(input.id, "Import profile id is required");
   const name = requireTrimmed(input.name, "Import profile name is required");
-  const delimiter = requireTrimmed(input.delimiter, "Import profile delimiter is required");
+  const delimiter =
+    input.delimiter === "\t"
+      ? input.delimiter
+      : requireTrimmed(input.delimiter, "Import profile delimiter is required");
   if (delimiter !== "," && delimiter !== ";" && delimiter !== "\t") {
     throw new Error("Import profile delimiter is invalid");
   }
