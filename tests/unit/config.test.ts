@@ -2,6 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import { loadConfig } from "../../src/app/config.js";
 
+const validProductionEnvironment = {
+  NODE_ENV: "production",
+  HOST: "0.0.0.0",
+  PORT: "3000",
+  BASE_URL: "https://finances.home.arpa",
+  DATABASE_URL: "postgres://family_flow:family_flow@postgres:5432/family_flow",
+  AUTH_MODE: "oidc",
+  OIDC_ISSUER_URL: "https://authentik.home.arpa/application/o/family-flow",
+  OIDC_CLIENT_ID: "family-flow",
+  OIDC_CLIENT_SECRET: "production-client-secret",
+};
+
 describe("loadConfig", () => {
   it("loads a valid application configuration", () => {
     const config = loadConfig({
@@ -89,6 +101,24 @@ describe("loadConfig", () => {
         clientSecret: "client-secret-placeholder",
       },
     });
+  });
+
+  it.each([
+    ["test mode", { AUTH_MODE: "test" }],
+    ["non-HTTPS base URL", { BASE_URL: "http://finances.home.arpa" }],
+    [
+      "non-HTTPS issuer",
+      { OIDC_ISSUER_URL: "http://authentik.home.arpa/application/o/family-flow" },
+    ],
+    ["Dex issuer", { OIDC_ISSUER_URL: "https://dex.example.invalid/dex" }],
+    ["Dex development client ID", { OIDC_CLIENT_ID: "family-flow-dev" }],
+    ["Dex development client secret", { OIDC_CLIENT_SECRET: "family-flow-dev-secret" }],
+    [
+      "committed development session placeholder",
+      { SESSION_SECRET: "replace-with-at-least-32-random-characters" },
+    ],
+  ])("rejects production %s", (_description, override) => {
+    expect(() => loadConfig({ ...validProductionEnvironment, ...override })).toThrow();
   });
 
   it("rejects OIDC mode without an issuer URL", () => {

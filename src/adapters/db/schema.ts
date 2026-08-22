@@ -10,6 +10,23 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
+export const oidcTransactions = pgTable(
+  "oidc_transactions",
+  {
+    id: text("id").primaryKey(),
+    state: text("state").notNull(),
+    nonce: text("nonce").notNull(),
+    returnTo: text("return_to").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    consumedAt: timestamp("consumed_at", { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex("oidc_transactions_state_idx").on(table.state),
+    index("oidc_transactions_expiry_idx").on(table.expiresAt),
+  ],
+);
+
 export const sessions = pgTable(
   "sessions",
   {

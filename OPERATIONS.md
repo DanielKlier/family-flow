@@ -133,7 +133,7 @@ Fresh-database seed names use `DEFAULT_LOCALE` only when their stable IDs are fi
 
 ## Authentication And Sessions
 
-All non-health application routes are protected. `/health` remains public for local health checks. Login uses `/auth/login` and `/auth/callback`. Logout uses `POST /auth/logout` and requires an `Origin` matching the normalized `BASE_URL` origin; failed origin checks do not revoke. A missing, unknown, expired, or revoked logout session receives a localized `401` response instead of the protected-route login redirect.
+All non-health application routes are protected. `/health` remains public for local health checks. Login uses `/auth/login` and `/auth/callback`. Each login creates an opaque server-side state/nonce transaction in PostgreSQL; it expires exclusively after ten minutes and the callback consumes it atomically exactly once. No state or nonce is stored in a browser cookie. Logout uses `POST /auth/logout` and requires an `Origin` matching the normalized `BASE_URL` origin; failed origin checks do not revoke. A missing, unknown, expired, or revoked logout session receives a localized `401` response instead of the protected-route login redirect. `GET /auth/logout` is not a logout operation.
 
 Production uses Authentik through `AUTH_MODE=oidc` and requires these environment variables:
 
@@ -148,7 +148,20 @@ Authentik application settings:
 - Post-logout redirect URI: `https://finances.home.arpa/auth/login`.
 - Scopes: `openid`, `email`, and `profile`.
 
-Local E2E tests and development without Authentik can use `AUTH_MODE=test`. In this mode `/auth/test-login` creates an opaque PostgreSQL-backed session for the deterministic `test-user`. Do not run production with `AUTH_MODE=test`.
+Local E2E tests and development without Authentik can use `AUTH_MODE=test`. In this mode `/auth/test-login` creates an opaque PostgreSQL-backed session for the deterministic `test-user`. Do not run production with `AUTH_MODE=test`. Production startup also rejects a non-HTTPS application or issuer URL, a Dex issuer, the committed `family-flow-dev` credentials, and the historical committed development session placeholder.
+
+The callback accepts only a signed RS256 ID token from the discovery document's exact configured issuer and JWKS. Issuer, audience, expiry, transaction nonce, signature, and non-empty `sub`, `name`, and `email` claims must all validate before a session is created.
+
+### OIDC/Auth problems
+
+1. Capture the response `X-Request-Id`; do not copy authorization codes, ID tokens, client secrets, state, or nonce values into tickets or logs.
+2. Fetch `${OIDC_ISSUER_URL}/.well-known/openid-configuration` from the app network and confirm its `issuer` exactly equals the normalized configured issuer and that its authorization, token, userinfo, and JWKS endpoints are reachable.
+3. Confirm Authentik uses the exact callback `${BASE_URL}/auth/callback`, the FamilyFlow client ID, and the `openid email profile` scopes. Confirm its ID token supplies non-empty `sub`, `name`, and `email` claims.
+4. For an invalid or reused callback, start a new login. Transactions expire at exactly ten minutes and cannot be retried after any callback attempt, including a failed code exchange or claim check.
+5. Correlate the single sanitized request log by request ID. Callback query `code` and `state` values are redacted; tokens, nonce, and client secrets must never appear.
+6. For local Dex only, follow the development procedure below. Never point production at Dex or copy `.env.dev` values into production.
+
+Run `pnpm ops:verify --id OPS-FF-AUTH-002-01` for signed-token, invalid/reused callback, expiry, production-rejection, PostgreSQL atomic-consumption, and protected-route evidence. Roll back by disabling traffic and restoring the prior compatible image/config; retain only sanitized request-ID logs.
 
 Session cookies contain only a random 256-bit token and expire after an absolute eight hours. PostgreSQL stores its SHA-256 hash and user/lifetime/revocation metadata. `SESSION_SECRET`, signed sessions, and Redis are not used; deployment of migration `0011_sessions.sql` intentionally rejects old signed cookies.
 
@@ -173,7 +186,7 @@ Dex development settings:
 - Test user email: `dev@example.invalid`.
 - Test user password: `family-flow-dev`.
 
-The committed `.env.dev` file contains these local-only OIDC values. Keep production Authentik settings in `.env`, and use `.env.dev` for the Dex development flow. This local Dex setup is not intended for production and must not be exposed outside the development host.
+The committed `.env.dev` file contains these local-only OIDC values. Keep production Authentik settings in `.env`, and use `.env.dev` for the Dex development flow. This local Dex setup is not intended for production and must not be exposed outside the development host. Run `pnpm ops:verify --id OPS-FF-DEV-001-01` to verify the committed development contract remains separate from production configuration.
 
 ## Seeds
 

@@ -33,6 +33,7 @@ export function loadConfig(environment: Environment = process.env): AppConfig {
   const databaseUrl = readRequiredString(environment.DATABASE_URL, "DATABASE_URL");
   const defaultLocale = readDefaultLocale(environment.DEFAULT_LOCALE);
   const auth = readAuthConfig(environment, nodeEnv);
+  validateProductionConfig(environment, nodeEnv, baseUrl, auth);
 
   return {
     nodeEnv,
@@ -98,6 +99,40 @@ function readAuthConfig(environment: Environment, nodeEnv: NodeEnv): AuthConfig 
       clientSecret: readRequiredString(environment.OIDC_CLIENT_SECRET, "OIDC_CLIENT_SECRET"),
     },
   };
+}
+
+function validateProductionConfig(
+  environment: Environment,
+  nodeEnv: NodeEnv,
+  baseUrl: string,
+  auth: AuthConfig,
+): void {
+  if (nodeEnv !== "production") return;
+  if (new URL(baseUrl).protocol !== "https:") {
+    throw new Error("BASE_URL must use HTTPS in production");
+  }
+  if (auth.mode !== "oidc" || auth.oidc === null) {
+    throw new Error("AUTH_MODE must be oidc in production");
+  }
+  const issuer = new URL(auth.oidc.issuerUrl);
+  if (issuer.protocol !== "https:") {
+    throw new Error("OIDC_ISSUER_URL must use HTTPS in production");
+  }
+  if (
+    issuer.hostname.toLowerCase().split(".").includes("dex") ||
+    issuer.pathname.toLowerCase().split("/").includes("dex")
+  ) {
+    throw new Error("OIDC_ISSUER_URL must not use Dex in production");
+  }
+  if (auth.oidc.clientId === "family-flow-dev") {
+    throw new Error("OIDC_CLIENT_ID must not use development credentials in production");
+  }
+  if (auth.oidc.clientSecret === "family-flow-dev-secret") {
+    throw new Error("OIDC_CLIENT_SECRET must not use development credentials in production");
+  }
+  if (environment.SESSION_SECRET === "replace-with-at-least-32-random-characters") {
+    throw new Error("Development session placeholders are forbidden in production");
+  }
 }
 
 function readAuthMode(value: string | undefined, nodeEnv: NodeEnv): AuthConfig["mode"] {

@@ -84,7 +84,7 @@ Start the app and PostgreSQL with `docker compose up`.
 
 The app applies SQL migrations from `drizzle/` and seeds initial accounts and categories during startup. Transactions, including explicit internal-transfer classification for manual and CSV-imported expenses, income plans, monthly income overrides, and CSV import profiles are stored in PostgreSQL. Transactions are available at `/transactions`, income planning is available at `/income`, and CSV imports are available at `/imports/csv` after login.
 
-The app protects all non-health app routes. Production Compose defaults to `AUTH_MODE=oidc` and requires Authentik OIDC settings. Sessions are opaque eight-hour bearer tokens backed by PostgreSQL; Redis and `SESSION_SECRET` are not used.
+The app protects all non-health app routes. Production Compose defaults to `AUTH_MODE=oidc` and requires HTTPS Authentik OIDC settings. Login uses exact discovery issuer/JWKS validation, signed ID-token claims, and opaque ten-minute single-use state/nonce transactions backed by PostgreSQL. Sessions are opaque eight-hour bearer tokens backed by PostgreSQL; Redis and `SESSION_SECRET` are not used. Logout is an authenticated same-origin `POST /auth/logout` operation.
 
 The runtime image starts with `node dist/app/server.js`. It includes the compiled application and packaged `dist/views` templates, but it does not include pnpm or install packages at container startup.
 

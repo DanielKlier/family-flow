@@ -1,0 +1,26 @@
+{
+  "commands": [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "--no-file-parallelism",
+      "tests/unit/authentication.test.ts",
+      "tests/unit/authentik-oidc.test.ts",
+      "tests/unit/config.test.ts",
+      "tests/integration/oidc-http.test.ts",
+      "tests/integration/drizzle-oidc-transaction-store.test.ts",
+      "--testNamePattern",
+      "(?:UNIT|INT)-FF-AUTH-002"
+    ],
+    [
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/auth.test.ts",
+      "--grep",
+      "E2E-FF-AUTH-00[12]",
+      "--workers=1"
+    ]
+  ]
+}

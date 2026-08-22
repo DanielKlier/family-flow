@@ -537,18 +537,18 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-03-R01 — OIDC And Authentication Hardening
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-AUTH-002`
 **Verifies:** `FF-AUTH-001`, `FF-AUTH-007`, `FF-AUTH-008`, `FF-DEV-001`, `FF-DEP-004`
 **Operations:** `OPS-FF-AUTH-002-01`, `OPS-FF-DEV-001-01`
 
-- [ ] Add `E2E-FF-AUTH-002-01` and observe red because server-side ten-minute single-use state/nonce transactions do not exist.
-- [ ] Protect logout, replace GET with same-origin `POST /auth/logout`, validate normalized `Origin` against `BASE_URL`, and verify failed attempts do not revoke.
-- [ ] Implement exact discovery issuer comparison, ID-token signature/issuer/audience/expiry/nonce validation, and mandatory non-empty `sub`, `name`, and `email`.
-- [ ] Persist opaque state/nonce transactions behind authentication ports and consume them atomically.
-- [ ] Cover expiry, reuse, invalid code/callback/claims, safe return-to, request IDs, and sanitized logs.
-- [ ] Preserve committed Dex development and prove production rejects test mode, non-HTTPS/Dex issuer, `family-flow-dev` credentials, and committed development session placeholders.
+- [x] Add `E2E-FF-AUTH-002-01` and observe red because server-side ten-minute single-use state/nonce transactions do not exist.
+- [x] Protect logout, replace GET with same-origin `POST /auth/logout`, validate normalized `Origin` against `BASE_URL`, and verify failed attempts do not revoke.
+- [x] Implement exact discovery issuer comparison, ID-token signature/issuer/audience/expiry/nonce validation, and mandatory non-empty `sub`, `name`, and `email`.
+- [x] Persist opaque state/nonce transactions behind authentication ports and consume them atomically.
+- [x] Cover expiry, reuse, invalid code/callback/claims, safe return-to, request IDs, and sanitized logs.
+- [x] Preserve committed Dex development and prove production rejects test mode, non-HTTPS/Dex issuer, `family-flow-dev` credentials, and committed development session placeholders.
 
 **Tests:** `E2E-FF-AUTH-001-01`, `E2E-FF-AUTH-001-02`, `E2E-FF-AUTH-001-03` (protected same-origin POST logout), `UNIT-FF-AUTH-002-01` (ten-minute single-use state/nonce rules), `E2E-FF-AUTH-002-01`, `INT-FF-AUTH-002-01` (valid protocol path), `INT-FF-AUTH-002-02` (callback failures plus PostgreSQL state/nonce persistence and atomic consumption), `INT-FF-AUTH-002-03` (production configuration rejection), and `INT-FF-DEV-001-01`.
 

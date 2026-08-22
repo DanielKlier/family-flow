@@ -66,6 +66,7 @@ function runPnpmVerifier(
 // Verifiers are registered here when their owning phase delivers executable operations evidence.
 // Planned operations remain in traceability.json but cannot be dispatched until registered.
 export const operationRegistry: OperationRegistry = {
+  "OPS-FF-AUTH-002-01": verifyPostgresOperation("OPS-FF-AUTH-002-01"),
   "OPS-FF-AUTH-006-01": verifyPostgresOperation("OPS-FF-AUTH-006-01"),
   "OPS-FF-AUTH-009-01": verifyPostgresOperation("OPS-FF-AUTH-009-01"),
   "OPS-FF-CAT-002-01": verifyPostgresOperation("OPS-FF-CAT-002-01"),
@@ -98,6 +99,10 @@ export const operationRegistry: OperationRegistry = {
       "--workers=1",
     ],
   ]),
+  "OPS-FF-DEV-001-01": verifyVitestOperation(
+    "OPS-FF-DEV-001-01",
+    "tests/integration/dev-oidc-compose.test.ts",
+  ),
   "OPS-FF-FOR-001-01": verifyTestCommands("OPS-FF-FOR-001-01", [
     ["exec", "vitest", "run", "tests/unit/dashboard.test.ts", "--testNamePattern", "UNIT-FF-FOR"],
     [

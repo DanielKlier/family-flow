@@ -504,7 +504,7 @@
     },
     {
       "id": "PH-03-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Exact OIDC issuer/claims and server-side state/nonce transactions.",
       "classification": "Behavior change"
     },
@@ -578,7 +578,7 @@
   "acceptance": [
     {
       "id": "FF-AUTH-001-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-03-R01",
       "test": "E2E-FF-AUTH-001-01",
       "file": "tests/e2e/auth.test.ts",
@@ -586,7 +586,7 @@
     },
     {
       "id": "FF-AUTH-001-AC02",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-03-R01",
       "test": "E2E-FF-AUTH-001-02",
       "file": "tests/e2e/auth.test.ts",
@@ -594,7 +594,7 @@
     },
     {
       "id": "FF-AUTH-001-AC03",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-03-R01",
       "test": "E2E-FF-AUTH-001-03",
       "file": "tests/e2e/auth.test.ts",
@@ -602,7 +602,7 @@
     },
     {
       "id": "FF-AUTH-002-AC01",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-03-R01",
       "test": "INT-FF-AUTH-002-01",
       "file": "tests/integration/oidc-http.test.ts",
@@ -610,7 +610,7 @@
     },
     {
       "id": "FF-AUTH-002-AC02",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-03-R01",
       "test": "INT-FF-AUTH-002-02",
       "file": "tests/integration/oidc-http.test.ts",
@@ -618,7 +618,7 @@
     },
     {
       "id": "FF-AUTH-002-AC03",
-      "status": "Gap",
+      "status": "Verified",
       "phase": "PH-03-R01",
       "test": "INT-FF-AUTH-002-03",
       "file": "tests/integration/oidc-http.test.ts",
@@ -1704,7 +1704,7 @@
       "phase": "PH-03-R01",
       "file": "tests/e2e/auth.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "E2E-FF-AUTH-001-02",
@@ -1712,7 +1712,7 @@
       "phase": "PH-03-R01",
       "file": "tests/e2e/auth.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "E2E-FF-AUTH-001-03",
@@ -1720,7 +1720,7 @@
       "phase": "PH-03-R01",
       "file": "tests/e2e/auth.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "E2E-FF-AUTH-002-01",
@@ -1728,7 +1728,7 @@
       "phase": "PH-03-R01",
       "file": "tests/e2e/auth.test.ts",
       "boundary": "End-to-end",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "E2E-FF-AUTH-005-01",
@@ -2272,7 +2272,7 @@
       "phase": "PH-03-R01",
       "file": "tests/integration/oidc-http.test.ts",
       "boundary": "HTTP adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-002-02",
@@ -2280,7 +2280,7 @@
       "phase": "PH-03-R01",
       "file": "tests/integration/oidc-http.test.ts",
       "boundary": "HTTP adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-002-03",
@@ -2288,7 +2288,7 @@
       "phase": "PH-03-R01",
       "file": "tests/integration/oidc-http.test.ts",
       "boundary": "HTTP adapter",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-AUTH-003-01",
@@ -2560,7 +2560,7 @@
       "phase": "PH-03-R01",
       "file": "tests/integration/dev-oidc-compose.test.ts",
       "boundary": "Integration",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "INT-FF-INC-001-01",
@@ -3096,7 +3096,7 @@
       "phase": "PH-03-R01",
       "file": "tests/unit/authentication.test.ts",
       "boundary": "Core",
-      "classification": "Expected red before production change"
+      "classification": "Expected green evidence"
     },
     {
       "id": "UNIT-FF-AUTH-004-01",
@@ -3441,7 +3441,7 @@
       "procedure": "**OIDC/Auth Problems**: run documented Authentik and Dex discovery/callback diagnostics with invalid issuer/state/nonce fixtures.",
       "outcome": "Valid flow succeeds; every invalid flow is request-correlated without protocol leakage.",
       "rollback": "Disable traffic, restore prior auth image/config, and inspect sanitized request ID logs.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-AUTH-002-01"
     },
     {
       "id": "OPS-FF-AUTH-006-01",
@@ -3539,7 +3539,7 @@
       "procedure": "**Local OIDC Development**: start PostgreSQL/Dex with `.env.dev`, then run `pnpm dev:oidc`.",
       "outcome": "Documented developer login succeeds without changing production configuration.",
       "rollback": "Stop Dex and remove only development containers/volumes named by the procedure.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-DEV-001-01"
     },
     {
       "id": "OPS-FF-FOR-001-01",

@@ -24,11 +24,13 @@ describe("Docker Compose commands", () => {
 });
 
 describe("local OIDC development compose", () => {
-  it("configures Dex with the FamilyFlow development client", async () => {
-    const [compose, dexConfig, devEnv] = await Promise.all([
+  it("INT-FF-DEV-001-01 preserves the deterministic Dex development contract and production separation", async () => {
+    const [compose, dexConfig, devEnv, readme, operations] = await Promise.all([
       readFile("compose.dev.yaml", "utf8"),
       readFile("dev/dex/config.yaml", "utf8"),
       readFile(".env.dev", "utf8"),
+      readFile("README.md", "utf8"),
+      readFile("OPERATIONS.md", "utf8"),
     ]);
 
     expect(compose).toContain("dexidp/dex");
@@ -46,5 +48,9 @@ describe("local OIDC development compose", () => {
     expect(devEnv).toContain("OIDC_ISSUER_URL=http://127.0.0.1:5556/dex");
     expect(devEnv).toContain("OIDC_CLIENT_ID=family-flow-dev");
     expect(devEnv).toContain("OIDC_CLIENT_SECRET=family-flow-dev-secret");
+
+    expect(readme).toContain("pnpm dev:oidc");
+    expect(readme).toContain("This mode is intended for running PostgreSQL and Dex in Docker");
+    expect(operations).toContain("This local Dex setup is not intended for production");
   });
 });

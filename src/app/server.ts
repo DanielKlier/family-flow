@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 
 import Fastify from "fastify";
 
+import { SecureOidcTokenGenerator } from "../adapters/auth/oidc-cryptography.js";
 import {
   SecureSessionTokenGenerator,
   Sha256SessionTokenHasher,
@@ -15,10 +16,12 @@ import { DrizzleCategoryRepository } from "../adapters/db/drizzle-category-repos
 import { DrizzleImportPreviewBatchRepository } from "../adapters/db/drizzle-import-preview-batch-repository.js";
 import { DrizzleImportProfileRepository } from "../adapters/db/drizzle-import-profile-repository.js";
 import { DrizzleIncomeRepository } from "../adapters/db/drizzle-income-repository.js";
+import { DrizzleOidcTransactionStore } from "../adapters/db/drizzle-oidc-transaction-store.js";
 import { DrizzleOwnerContextRepository } from "../adapters/db/drizzle-owner-context-repository.js";
 import { DrizzleSessionStore } from "../adapters/db/drizzle-session-store.js";
 import { DrizzleTransactionRepository } from "../adapters/db/drizzle-transaction-repository.js";
 import { InMemoryImportPreviewBatchRepository } from "../adapters/db/in-memory-import-preview-batch-repository.js";
+import { InMemoryOidcTransactionStore } from "../adapters/db/in-memory-oidc-transaction-store.js";
 import { InMemorySessionStore } from "../adapters/db/in-memory-session-store.js";
 import { migrate } from "../adapters/db/migrate.js";
 import { createPostgresConnection } from "../adapters/db/postgres.js";
@@ -45,7 +48,9 @@ import {
   supportedLocales,
 } from "../adapters/localization/registry.js";
 import { HumanReadableRequestLogger } from "../adapters/logging/human-readable-logger.js";
+import { OidcTransactionService } from "../core/auth/oidc-transaction-service.js";
 import { SessionService } from "../core/auth/session-service.js";
+import type { OidcTokenGenerator } from "../ports/auth/oidc-transaction-store.js";
 import type { Clock } from "../ports/clock/clock.js";
 import type { CsvParser } from "../ports/csv/csv-parser.js";
 import type { RequestLogger } from "../ports/logging/logger.js";
@@ -68,6 +73,8 @@ type ServerOptions = {
   csvParser?: CsvParser;
   auth?: AuthRuntimeConfig;
   sessions?: SessionService;
+  oidcTransactions?: OidcTransactionService;
+  oidcTokens?: OidcTokenGenerator;
   importPreviewBatches?: ImportPreviewBatchRepository;
   clock?: Clock;
   defaultLocale?: SupportedLocale;
@@ -99,16 +106,24 @@ export function buildServer(options: ServerOptions = {}) {
     options.sessions ??
     new SessionService(
       new InMemorySessionStore(),
-      new SystemClock(),
+      clock,
       new SecureSessionTokenGenerator(),
       new Sha256SessionTokenHasher(),
+    );
+
+  const oidcTransactions =
+    options.oidcTransactions ??
+    new OidcTransactionService(
+      new InMemoryOidcTransactionStore(),
+      clock,
+      options.oidcTokens ?? new SecureOidcTokenGenerator(),
     );
 
   registerRequestLocalization(server, localizations, defaultLocale);
   registerFormParser(server);
   registerRequestLifecycle(server, logger);
   registerTemplateRenderer(server);
-  registerAuth(server, auth, sessions);
+  registerAuth(server, auth, sessions, oidcTransactions);
 
   registerStaticAssets(server);
   server.get("/health", async () => ({ status: "ok" }));
@@ -177,6 +192,12 @@ async function main() {
   const deletedSessions = await sessions.cleanup(1_000);
   console.info(`Session cleanup deleted ${deletedSessions} row(s)`);
 
+  const oidcTransactions = new OidcTransactionService(
+    new DrizzleOidcTransactionStore(connection.db),
+    new SystemClock(),
+    new SecureOidcTokenGenerator(),
+  );
+
   const server = buildServer({
     repositories,
     defaultLocale: config.defaultLocale,
@@ -185,6 +206,7 @@ async function main() {
       baseUrl: config.baseUrl,
     },
     sessions,
+    oidcTransactions,
     importPreviewBatches: new DrizzleImportPreviewBatchRepository(connection.db),
   });
 

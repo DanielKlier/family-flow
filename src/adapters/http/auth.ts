@@ -1,6 +1,5 @@
-import { randomUUID } from "node:crypto";
-
 import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { OidcTransactionService } from "../../core/auth/oidc-transaction-service.js";
 import type { SessionService } from "../../core/auth/session-service.js";
 import type { UserContext } from "../../ports/auth/user-context.js";
 import {
@@ -11,14 +10,7 @@ import {
   type OidcProviderMetadata,
   type OidcRuntimeConfig,
 } from "../oidc/authentik-oidc.js";
-import {
-  getPath,
-  readCallbackQuery,
-  readCookie,
-  readSafeReturnTo,
-  serializeExpiredNamedCookie,
-  serializeNamedCookie,
-} from "./auth-http.js";
+import { getPath, readCallbackQuery, readCookie, readSafeReturnTo } from "./auth-http.js";
 import {
   serializeExpiredSessionCookie,
   serializeSessionCookie,
@@ -42,19 +34,13 @@ const testUser: UserContext = {
   email: "test.user@example.invalid",
 };
 
-const publicPaths = new Set([
-  "/health",
-  "/auth/login",
-  "/auth/callback",
-  "/auth/test-login",
-  "/auth/logout",
-]);
-const oidcStateCookieName = "ff_oidc_state";
+const publicPaths = new Set(["/health", "/auth/login", "/auth/callback"]);
 
 export function registerAuth(
   server: FastifyInstance,
   config: AuthRuntimeConfig,
   sessions: SessionService,
+  oidcTransactions: OidcTransactionService,
 ): void {
   const secureCookie = config.baseUrl.startsWith("https://");
   let oidcProviderMetadata: Promise<OidcProviderMetadata> | null = null;
@@ -72,7 +58,11 @@ export function registerAuth(
       request.userContext = user;
     }
 
-    if (publicPaths.has(path)) {
+    if (
+      publicPaths.has(path) ||
+      (path === "/auth/test-login" && config.mode === "test") ||
+      (path === "/auth/logout" && request.method === "POST")
+    ) {
       return;
     }
 
@@ -104,34 +94,30 @@ export function registerAuth(
         );
     }
 
-    const state = randomUUID();
+    const transaction = await oidcTransactions.create(returnTo);
     const provider = await getOidcProviderMetadata(config.oidc);
-    reply.header("Set-Cookie", serializeNamedCookie(oidcStateCookieName, state, secureCookie));
-
-    return reply.redirect(buildAuthorizationUrl(config.oidc, provider, config.baseUrl, state));
-  });
-
-  server.get("/auth/test-login", async (request, reply) => {
-    if (config.mode !== "test") {
-      return reply
-        .status(404)
-        .type("text/html; charset=utf-8")
-        .send(
-          await createFamilyFlowViews(reply).authErrorPage(
-            reply.request.localization.text("auth.notFound"),
-          ),
-        );
-    }
-
-    const returnTo = readSafeReturnTo(request.query);
-    const session = await sessions.create(testUser);
-    reply.header(
-      "Set-Cookie",
-      serializeSessionCookie(session.token, session.expiresAt, secureCookie),
+    return reply.redirect(
+      buildAuthorizationUrl(
+        config.oidc,
+        provider,
+        config.baseUrl,
+        transaction.state,
+        transaction.nonce,
+      ),
     );
-
-    return reply.redirect(returnTo);
   });
+
+  if (config.mode === "test") {
+    server.get("/auth/test-login", async (request, reply) => {
+      const returnTo = readSafeReturnTo(request.query);
+      const session = await sessions.create(testUser);
+      reply.header(
+        "Set-Cookie",
+        serializeSessionCookie(session.token, session.expiresAt, secureCookie),
+      );
+      return reply.redirect(returnTo);
+    });
+  }
 
   server.get("/auth/callback", async (request, reply) => {
     if (config.mode !== "oidc" || config.oidc === null) {
@@ -146,8 +132,8 @@ export function registerAuth(
     }
 
     const query = readCallbackQuery(request.query);
-    const expectedState = readCookie(request.headers.cookie, oidcStateCookieName);
-    if (query === null || expectedState === undefined || query.state !== expectedState) {
+    const transaction = query === null ? null : await oidcTransactions.consume(query.state);
+    if (query === null || transaction === null) {
       return reply
         .status(400)
         .type("text/html; charset=utf-8")
@@ -158,25 +144,36 @@ export function registerAuth(
         );
     }
 
-    const provider = await getOidcProviderMetadata(config.oidc);
-    const oidcUser = await exchangeAuthorizationCode(
-      config.oidc,
-      provider,
-      config.baseUrl,
-      query.code,
-    );
-    const user: UserContext = {
-      id: oidcUser.sub,
-      displayName: oidcUser.name ?? oidcUser.preferred_username ?? oidcUser.email ?? oidcUser.sub,
-      email: oidcUser.email ?? null,
-    };
-    const session = await sessions.create(user);
-    reply.header("Set-Cookie", [
-      serializeSessionCookie(session.token, session.expiresAt, secureCookie),
-      serializeExpiredNamedCookie(oidcStateCookieName, secureCookie),
-    ]);
-
-    return reply.redirect("/");
+    try {
+      const provider = await getOidcProviderMetadata(config.oidc);
+      const oidcUser = await exchangeAuthorizationCode(
+        config.oidc,
+        provider,
+        config.baseUrl,
+        query.code,
+        transaction.nonce,
+      );
+      const user: UserContext = {
+        id: oidcUser.sub,
+        displayName: oidcUser.name,
+        email: oidcUser.email,
+      };
+      const session = await sessions.create(user);
+      reply.header(
+        "Set-Cookie",
+        serializeSessionCookie(session.token, session.expiresAt, secureCookie),
+      );
+      return reply.redirect(transaction.returnTo);
+    } catch {
+      return reply
+        .status(400)
+        .type("text/html; charset=utf-8")
+        .send(
+          await createFamilyFlowViews(reply).authErrorPage(
+            reply.request.localization.text("auth.invalidCallback"),
+          ),
+        );
+    }
   });
 
   server.post("/auth/logout", async (request, reply) => {
