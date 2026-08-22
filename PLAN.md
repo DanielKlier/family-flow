@@ -647,10 +647,10 @@ A historical average uses all qualifying expenses in the selected number of comp
 
 #### FF-SCN-002 — Scenario Adjustments
 
-Adjustments are typed as income or expense and contain a signed minor-unit delta over one month or an inclusive month range. In each month, all matching deltas of the same type add in stable adjustment-ID order; mathematical addition determines the result regardless of order.
+Adjustments can be added, corrected, and removed. They are typed as income or expense and contain a signed minor-unit delta over one month or an inclusive month range. In each month, all matching deltas of the same type add in stable adjustment-ID order; mathematical addition determines the result regardless of order.
 
 - **FF-SCN-002-AC01:** Adjustment ranges outside the scenario range are rejected. Valid start/end boundaries and overlapping positive and negative income/expense deltas produce exact expected totals.
-- **FF-SCN-002-AC02:** Shrinking a scenario range is rejected while any existing adjustment would fall outside it; no adjustment is silently clipped or deleted.
+- **FF-SCN-002-AC02:** Shrinking a scenario range is rejected while any existing adjustment would fall outside it; no adjustment is silently clipped or deleted. The user can edit or delete the blocking adjustment deliberately before retrying the range change.
 
 #### FF-SCN-003 — Family Planning Inputs
 
