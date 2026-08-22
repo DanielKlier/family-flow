@@ -129,10 +129,13 @@ describe("transactions", () => {
   });
 
   it("UNIT-FF-DASH-001-01 rejects an unsafe reusable expense total instead of returning an imprecise amount", () => {
-    const first = aTransaction({ id: "expense-first", amountCents: -Number.MAX_SAFE_INTEGER });
-    const second = aTransaction({ id: "expense-second", amountCents: -Number.MAX_SAFE_INTEGER });
+    const maximumExpense = aTransaction({
+      id: "maximum-expense",
+      amountCents: -2147483648,
+    });
+    const overflowingExpenses = new Array<typeof maximumExpense>(2 ** 22).fill(maximumExpense);
 
-    expect(() => transactionCore.expenseTotalCents([first, second])).toThrow(
+    expect(() => transactionCore.expenseTotalCents(overflowingExpenses)).toThrow(
       "Expense total must be a safe integer",
     );
   });

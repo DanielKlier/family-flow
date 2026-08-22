@@ -81,9 +81,9 @@ async function createEnvironment(name: string): Promise<Environment> {
   await writeFile(
     environment.envFile,
     [
-      "BASE_URL=http://127.0.0.1:3000",
+      "BASE_URL=https://finances.home.arpa",
       "AUTH_MODE=oidc",
-      "OIDC_ISSUER_URL=http://unused-oidc:8080",
+      "OIDC_ISSUER_URL=https://unused-oidc:8080",
       "OIDC_CLIENT_ID=recovery-smoke",
       "OIDC_CLIENT_SECRET=synthetic-placeholder",
     ].join("\n"),
