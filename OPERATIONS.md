@@ -95,6 +95,8 @@ For Drizzle adapter or migration work, run `env -u TEST_DATABASE_URL pnpm test:p
 
 Run named operational evidence with `pnpm ops:verify --id <OPS-ID>`. Only verifiers explicitly registered in `scripts/operations/registry.ts` are executable; inventory rows in `traceability.json` are documentation and mapping metadata, not commands. The package command clears inherited Node preload options before starting the dispatcher, and each verifier receives only `PATH` and `HOME`. Unknown IDs and non-passing or mismatched results fail closed. Follow the inventory rollback procedure after any failed production-facing operation.
 
+For request lifecycle and log-analysis evidence, run `pnpm ops:verify --id OPS-FF-OBS-003-01`. It executes only the request-context unit fixture, request-logging integration fixture, and request-ID lifecycle E2E fixture. A pass confirms one correlated final log per lifecycle path and query logging limited to canonical transaction UUIDv4 IDs and integer row counts from 0 through 10,000. Month filters, repeated values, malformed IDs, out-of-range counts, secrets, and financial text are omitted. If this verifier fails or sensitive context appears, restrict log access, retain the minimized request ID for investigation, and roll back the application image.
+
 ## Versioning And Tags
 
 Versions use SemVer-style `0.x.y` numbers before the first stable release. Every versioned state must update `package.json`, add a `CHANGELOG.md` entry, and create an annotated Git tag named `vMAJOR.MINOR.PATCH`.

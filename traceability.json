@@ -3578,10 +3578,10 @@
     },
     {
       "id": "OPS-FF-OBS-003-01",
-      "procedure": "**Log Analysis**: exercise finite lifecycle fixture and correlate request IDs.",
-      "outcome": "Exactly one complete sanitized log per request.",
+      "procedure": "**Log Analysis**: exercise the focused request-context, finite lifecycle, and request-ID fixtures.",
+      "outcome": "Exactly one complete sanitized log per request; query context contains only canonical transaction UUIDv4 IDs and bounded aggregate row counts.",
       "rollback": "Restrict log access and roll back if secrets/financial text leak.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-OBS-003-01"
     },
     {
       "id": "OPS-FF-OPS-002-01",
