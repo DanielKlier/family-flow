@@ -10,6 +10,77 @@ const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
 describe("Drizzle import profile repository", () => {
   it.runIf(testDatabaseUrl !== undefined)(
+    "INT-FF-CSV-002-02 persists, orders, and replaces independent import profiles",
+    async () => {
+      if (testDatabaseUrl === undefined) {
+        throw new Error("TEST_DATABASE_URL is required");
+      }
+
+      await migrate(testDatabaseUrl);
+      const connection = createPostgresConnection(testDatabaseUrl);
+      const repository = new DrizzleImportProfileRepository(connection.db);
+      const alpha = createImportProfile({
+        id: "profile-csv-alpha",
+        name: "Alpha CSV profile",
+        kind: "custom",
+        delimiter: ",",
+        encoding: "utf8",
+        dateFormat: "DD.MM.YY",
+        decimalFormat: "comma-decimal",
+        dateColumn: "Booked",
+        amountColumn: "Amount",
+        descriptionColumn: "Description",
+        payeeColumn: "Payee",
+        purposeColumn: "Purpose",
+        categoryColumn: "Category",
+      });
+      const zulu = createImportProfile({
+        id: "profile-csv-zulu",
+        name: "Zulu CSV profile",
+        kind: "custom",
+        delimiter: "\t",
+        encoding: "latin1",
+        dateFormat: "YYYY-MM-DD",
+        decimalFormat: "dot-decimal",
+        dateColumn: "Date",
+        amountColumn: "Value",
+        descriptionColumn: "Memo",
+      });
+
+      try {
+        await repository.save(zulu);
+        await repository.save(alpha);
+
+        await expect(repository.get(alpha.id)).resolves.toEqual(alpha);
+        await expect(repository.get(zulu.id)).resolves.toEqual(zulu);
+        await expect(repository.list()).resolves.toEqual([alpha, zulu]);
+
+        const replacement = createImportProfile({
+          ...alpha,
+          name: "Beta CSV profile",
+          delimiter: ";",
+          encoding: "latin1",
+          dateFormat: "DD.MM.YYYY",
+          decimalFormat: "dot-decimal",
+          dateColumn: "Posting date",
+          amountColumn: "Debit",
+          descriptionColumn: "Details",
+          payeeColumn: null,
+          purposeColumn: null,
+          categoryColumn: null,
+        });
+        await repository.save(replacement);
+
+        await expect(repository.get(alpha.id)).resolves.toEqual(replacement);
+        await expect(repository.get(zulu.id)).resolves.toEqual(zulu);
+        await expect(repository.list()).resolves.toEqual([replacement, zulu]);
+      } finally {
+        await connection.client.end();
+      }
+    },
+  );
+
+  it.runIf(testDatabaseUrl !== undefined)(
     "stores and lists user-created import profiles",
     async () => {
       if (testDatabaseUrl === undefined) {
