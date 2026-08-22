@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assertAdjustmentWithinScenario,
   createHistoricalBaselineSnapshot,
   createScenario,
-  assertAdjustmentWithinScenario,
   createScenarioAdjustment,
   updateScenario,
 } from "../../src/core/scenarios/scenario.js";
@@ -72,19 +72,28 @@ describe("family-finance scenarios", () => {
     const first = createScenarioAdjustment({
       id: "a-income",
       scenarioId: scenario.id,
-      name: "Benefit",
+      name: "Benefit reduction",
       type: "income",
       deltaCents: -10_000,
       startMonth: "2026-08",
       endMonth: "2028-01",
     });
-    expect(calculateScenario(scenario, [late, first]).months[0]).toMatchObject({
-      month: "2026-08",
-      incomeCents: 90_000,
-      expenseCents: 90_000,
-      adjustments: ["a-income", "z-expense"],
+    const overlapping = createScenarioAdjustment({
+      id: "b-income",
+      scenarioId: scenario.id,
+      name: "Part-time income",
+      type: "income",
+      deltaCents: 20_000,
+      startMonth: "2026-08",
+      endMonth: "2026-08",
     });
-    expect(calculateScenario(scenario, [late, first]).months.at(-1)).toMatchObject({
+    expect(calculateScenario(scenario, [late, overlapping, first]).months[0]).toMatchObject({
+      month: "2026-08",
+      incomeCents: 110_000,
+      expenseCents: 90_000,
+      adjustments: ["a-income", "b-income", "z-expense"],
+    });
+    expect(calculateScenario(scenario, [late, overlapping, first]).months.at(-1)).toMatchObject({
       month: "2028-01",
       incomeCents: 90_000,
       expenseCents: 70_000,
@@ -176,6 +185,30 @@ describe("family-finance scenarios", () => {
     expect(calculateScenario(scenario, []).months[0]).toMatchObject({
       incomeCents: 0,
       expenseCents: 0,
+    });
+    const oneCent = calculateScenario(
+      createScenario({ ...scenarioInput, startingBufferCents: 0, baseIncomeCents: 1 }),
+      [],
+    );
+    expect(oneCent.months[0]).toMatchObject({
+      incomeCents: 1,
+      balanceCents: -69_999,
+      bufferCents: -69_999,
+    });
+    const safeLimit = calculateScenario(
+      createScenario({
+        ...scenarioInput,
+        startingBufferCents: 0,
+        baseIncomeCents: Number.MAX_SAFE_INTEGER,
+        baseline: { mode: "manual", expenseCents: Number.MAX_SAFE_INTEGER },
+      }),
+      [],
+    );
+    expect(safeLimit.months[0]).toMatchObject({
+      incomeCents: Number.MAX_SAFE_INTEGER,
+      expenseCents: Number.MAX_SAFE_INTEGER,
+      balanceCents: 0,
+      bufferCents: 0,
     });
     expect(() =>
       calculateScenario(scenario, [
