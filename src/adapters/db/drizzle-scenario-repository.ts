@@ -118,12 +118,22 @@ export class DrizzleScenarioRepository implements ScenarioRepository {
   async deleteAdjustment(scenarioId: string, adjustmentId: string): Promise<void> {
     await this.db.transaction(async (transaction) => {
       await lockScenario(transaction, scenarioId);
+      const scenarioRows = await transaction
+        .select()
+        .from(scenarios)
+        .where(eq(scenarios.id, scenarioId))
+        .limit(1);
+      if (scenarioRows[0] === undefined) throw new Error("Scenario does not exist");
       const persisted = await transaction
-        .select({ id: scenarioAdjustments.id })
+        .select()
         .from(scenarioAdjustments)
         .where(eq(scenarioAdjustments.scenarioId, scenarioId));
       if (!persisted.some(({ id }) => id === adjustmentId))
         throw new Error("Adjustment does not exist");
+      calculateScenario(
+        mapScenario(scenarioRows[0]),
+        persisted.filter(({ id }) => id !== adjustmentId).map(createScenarioAdjustment),
+      );
       await transaction.delete(scenarioAdjustments).where(eq(scenarioAdjustments.id, adjustmentId));
     });
   }
