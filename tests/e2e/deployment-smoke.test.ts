@@ -73,7 +73,7 @@ async function createEnvironment(
       "      NODE_EXTRA_CA_CERTS: /app/test-ca/fake-oidc.crt",
       "    volumes:",
       `      - "${join(fixtureDirectory, "fake-oidc.crt")}:/app/test-ca/fake-oidc.crt:ro"`,
-      "    ports:",
+      "    ports: !override",
       '      - "127.0.0.1::3000"',
     ].join("\n"),
   );
@@ -140,8 +140,11 @@ async function waitForHealth(baseUrl: string): Promise<void> {
 }
 
 function appBaseUrl(environment: SmokeEnvironment): string {
-  const address = compose(environment, ["port", "app", "3000"]).trim().split("\n").at(0);
-  if (address === undefined) throw new Error("Compose app did not publish port 3000");
+  const address = compose(environment, ["port", "app", "3000"])
+    .trim()
+    .split("\n")
+    .find((publishedAddress) => publishedAddress.startsWith("127.0.0.1:"));
+  if (address === undefined) throw new Error("Compose app did not publish a loopback port");
   return `http://${address}`;
 }
 

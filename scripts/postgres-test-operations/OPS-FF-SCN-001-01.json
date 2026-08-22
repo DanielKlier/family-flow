@@ -1,0 +1,11 @@
+{
+  "commands": [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "--no-file-parallelism",
+      "tests/integration/drizzle-scenario-repository.test.ts"
+    ]
+  ]
+}

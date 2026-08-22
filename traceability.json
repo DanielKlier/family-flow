@@ -564,7 +564,7 @@
     },
     {
       "id": "PH-14",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Family-finance scenarios and external calculator links.",
       "classification": "Behavior change"
     },
@@ -1386,7 +1386,7 @@
     },
     {
       "id": "FF-SCN-001-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "E2E-FF-SCN-001-01",
       "file": "tests/e2e/scenarios.test.ts",
@@ -1394,7 +1394,7 @@
     },
     {
       "id": "FF-SCN-001-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "E2E-FF-SCN-001-02",
       "file": "tests/e2e/scenarios.test.ts",
@@ -1402,7 +1402,7 @@
     },
     {
       "id": "FF-SCN-002-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "UNIT-FF-SCN-002-01",
       "file": "tests/unit/scenarios.test.ts",
@@ -1410,7 +1410,7 @@
     },
     {
       "id": "FF-SCN-002-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "UNIT-FF-SCN-002-02",
       "file": "tests/unit/scenarios.test.ts",
@@ -1418,7 +1418,7 @@
     },
     {
       "id": "FF-SCN-003-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "E2E-FF-SCN-003-01",
       "file": "tests/e2e/scenarios.test.ts",
@@ -1426,7 +1426,7 @@
     },
     {
       "id": "FF-SCN-004-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "UNIT-FF-SCN-004-01",
       "file": "tests/unit/scenarios.test.ts",
@@ -1434,7 +1434,7 @@
     },
     {
       "id": "FF-SCN-004-AC02",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "UNIT-FF-SCN-004-02",
       "file": "tests/unit/scenarios.test.ts",
@@ -1442,7 +1442,7 @@
     },
     {
       "id": "FF-SCN-005-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "UNIT-FF-SCN-005-01",
       "file": "tests/unit/scenarios.test.ts",
@@ -1450,7 +1450,7 @@
     },
     {
       "id": "FF-SCN-006-AC01",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "E2E-FF-SCN-006-01",
       "file": "tests/e2e/scenarios.test.ts",
@@ -1474,7 +1474,7 @@
     },
     {
       "id": "FF-LOC-001-AC03",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "E2E-FF-LOC-001-03",
       "file": "tests/e2e/scenarios.test.ts",
@@ -1554,7 +1554,7 @@
     },
     {
       "id": "FF-UI-001-AC03",
-      "status": "Planned",
+      "status": "Verified",
       "phase": "PH-14",
       "test": "E2E-FF-UI-001-03",
       "file": "tests/e2e/scenarios.test.ts",
@@ -3616,7 +3616,7 @@
       "procedure": "**Scenario Maintenance**: create snapshot fixture, change source transactions, and reload.",
       "outcome": "Snapshot and exact results remain unchanged.",
       "rollback": "Remove test scenario; roll back if persisted source data changed.",
-      "verifier": null
+      "verifier": "scripts/postgres-test-operations/OPS-FF-SCN-001-01.json"
     },
     {
       "id": "OPS-FF-TXN-002-01",

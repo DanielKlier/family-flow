@@ -37,6 +37,12 @@ const legacyErrors: Record<string, string> = {
   "Income name is required": "Bezeichnung ist erforderlich.",
   "Income end month must not be before start month":
     "Der Endmonat darf nicht vor dem Startmonat liegen.",
+  "Scenario duration must be between 18 and 24 months":
+    "Die Szenariodauer muss zwischen 18 und 24 Monaten liegen.",
+  "Scenario end month must not precede start month":
+    "Der Endmonat darf nicht vor dem Startmonat liegen.",
+  "Adjustment range must be within the scenario range":
+    "Der Anpassungszeitraum muss innerhalb des Szenarios liegen.",
   "Categorization rule priority must be a non-negative integer":
     "Die Priorität muss eine nichtnegative ganze Zahl sein.",
   "CSV file is required": "Eine CSV-Datei ist erforderlich.",
