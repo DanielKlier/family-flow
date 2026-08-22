@@ -83,6 +83,8 @@ export function createGermanLocalization(): Localization {
       if (hasCode(error, "invalid_amount") || hasCode(error, "non_expense_amount"))
         return formErrors.invalid_amount;
       if (hasCode(error, "required_description")) return formErrors.required_description;
+      if (hasCode(error, "unknown_account")) return messages["transaction.unknownAccount"];
+      if (hasCode(error, "unknown_category")) return messages["transaction.unknownCategory"];
       return error instanceof Error
         ? (legacyErrors[error.message] ?? messages[fallbackKey] ?? fallbackKey)
         : (messages[fallbackKey] ?? fallbackKey);

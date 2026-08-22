@@ -34,4 +34,11 @@ export async function expectTransactionFilterContract(
   await expect(repository.list({ fixedCost: true })).resolves.toEqual([rent]);
   await expect(repository.list({ fixedCost: false })).resolves.toEqual([groceries]);
   await expect(repository.list({ ownerContext: "person_a" })).resolves.toEqual([groceries]);
+  await expect(
+    repository.list({ month: "2026-08", accountId: "account-shared-checking" }),
+  ).resolves.toEqual([rent]);
+  await expect(
+    repository.list({ ownerContext: "person_a", categoryId: "category-groceries" }),
+  ).resolves.toEqual([groceries]);
+  await expect(repository.list({ status: "planned", fixedCost: true })).resolves.toEqual([rent]);
 }

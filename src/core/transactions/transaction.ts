@@ -109,10 +109,14 @@ export function createTransaction(input: TransactionInput): Transaction {
   if (!isCategoryOrigin(input.categoryOrigin)) {
     throw new TransactionValidationError("invalid_category_origin");
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) {
+  if (!isGregorianDate(input.date)) {
     throw new TransactionValidationError("invalid_date");
   }
-  if (!Number.isSafeInteger(input.amountCents)) {
+  if (
+    !Number.isInteger(input.amountCents) ||
+    input.amountCents < -2147483648 ||
+    input.amountCents > 2147483647
+  ) {
     throw new TransactionValidationError("invalid_amount");
   }
   if (input.amountCents >= 0) {
@@ -158,6 +162,18 @@ export function expenseTotalCents(transactions: Transaction[]): number {
     }
     return next;
   }, 0);
+}
+
+function isGregorianDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (match === null) return false;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return month >= 1 && month <= 12 && day >= 1 && day <= (daysInMonth[month - 1] ?? 0);
 }
 
 function isCategoryOrigin(value: unknown): value is CategoryOrigin {

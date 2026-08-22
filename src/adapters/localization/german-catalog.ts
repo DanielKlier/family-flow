@@ -127,6 +127,8 @@ export const messages: Record<string, string> = {
   "transaction.amountPlaceholder": "1.234,56",
   "transaction.monthPlaceholder": "MM.JJJJ",
   "transaction.saveFailed": "Die Transaktion konnte nicht gespeichert werden.",
+  "transaction.unknownAccount": "Das Konto ist nicht vorhanden.",
+  "transaction.unknownCategory": "Die Kategorie ist nicht vorhanden.",
   "transaction.invalidTransferStatus": 'Der Umbuchungsstatus muss genau "true" oder "false" sein.',
   "income.title": "FamilyFlow Einnahmen",
   "income.heading": "Einnahmen",

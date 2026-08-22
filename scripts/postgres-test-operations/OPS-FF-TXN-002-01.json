@@ -1,0 +1,25 @@
+{
+  "commands": [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "--no-file-parallelism",
+      "tests/unit/financial-boundaries.test.ts",
+      "tests/unit/transaction-maintenance.test.ts",
+      "tests/integration/transaction-http.test.ts",
+      "tests/integration/drizzle-transaction-repository.test.ts",
+      "--testNamePattern",
+      "(?:UNIT-FF-ARC-006|INT-FF-TXN-00[23])"
+    ],
+    [
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/transactions.test.ts",
+      "--grep",
+      "E2E-FF-TXN-00[23]",
+      "--workers=1"
+    ]
+  ]
+}

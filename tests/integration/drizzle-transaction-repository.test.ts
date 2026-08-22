@@ -17,7 +17,7 @@ const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
 describe("Drizzle transaction repository", () => {
   it.runIf(testDatabaseUrl !== undefined)(
-    "INT-FF-CAT-005-02 INT-FF-TXN-001-01 INT-FF-TXN-001-03 INT-FF-TXN-001-04 INT-FF-TXN-004-01 INT-FF-TXN-005-01 INT-FF-TXN-005-03: reapplies through PostgreSQL and round-trips origin without overwriting concurrent edits",
+    "INT-FF-CAT-005-02 INT-FF-TXN-001-01 INT-FF-TXN-001-03 INT-FF-TXN-001-04 INT-FF-TXN-003-01 INT-FF-TXN-004-01 INT-FF-TXN-005-01 INT-FF-TXN-005-03: reapplies through PostgreSQL and round-trips origin without overwriting concurrent edits",
     async () => {
       if (testDatabaseUrl === undefined) {
         throw new Error("TEST_DATABASE_URL is required");
@@ -155,6 +155,16 @@ describe("Drizzle transaction repository", () => {
         await transactions.delete("transaction-reapply-z");
 
         await expectTransactionFilterContract(transactions);
+
+        const minimumIntegerCents = aTransaction({
+          id: "transaction-drizzle-minimum-integer-cents",
+          amountCents: -2147483648,
+        });
+        await transactions.save(minimumIntegerCents);
+        await expect(transactions.get(minimumIntegerCents.id)).resolves.toEqual(
+          minimumIntegerCents,
+        );
+        await transactions.delete(minimumIntegerCents.id);
       } finally {
         await transactions.delete("transaction-drizzle-default-transfer");
         await transactions.delete("transaction-drizzle-rent");
@@ -162,6 +172,7 @@ describe("Drizzle transaction repository", () => {
         await transactions.delete("transaction-reapply-z");
         await transactions.delete("transaction-filter-groceries");
         await transactions.delete("transaction-filter-rent");
+        await transactions.delete("transaction-drizzle-minimum-integer-cents");
         await connection.client.end();
       }
     },

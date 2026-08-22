@@ -22,7 +22,9 @@ export function readTransactionFilters(
   const month = readOptionalQueryValue(query, "month");
   if (month !== undefined) {
     try {
-      filters.month = localization.parseMonth(month);
+      filters.month = /^(\d{4})-(0[1-9]|1[0-2])$/.test(month)
+        ? month
+        : localization.parseMonth(month);
     } catch (error) {
       if (!localization.isInputError(error)) throw error;
     }

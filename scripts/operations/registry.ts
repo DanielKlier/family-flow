@@ -4,9 +4,7 @@ export type OperationResult = {
   operationId: string;
   status: "passed" | "failed" | "skipped";
 };
-export type OperationVerifier = (
-  environment: NodeJS.ProcessEnv,
-) => Promise<OperationResult>;
+export type OperationVerifier = (environment: NodeJS.ProcessEnv) => Promise<OperationResult>;
 export type OperationRegistry = Readonly<Record<string, OperationVerifier>>;
 
 function verifyPostgresOperation(id: string): OperationVerifier {
@@ -20,20 +18,14 @@ function verifyPostgresOperation(id: string): OperationVerifier {
       child.on("error", reject);
       child.on("close", (code, signal) => {
         if (code === 0) resolve();
-        else
-          reject(
-            new Error(`Operation ${id} verifier exited with ${code ?? signal}`),
-          );
+        else reject(new Error(`Operation ${id} verifier exited with ${code ?? signal}`));
       });
     });
     return { operationId: id, status: "passed" };
   };
 }
 
-function verifyTestCommands(
-  id: string,
-  commands: string[][],
-): OperationVerifier {
+function verifyTestCommands(id: string, commands: string[][]): OperationVerifier {
   return async (environment) => {
     for (const arguments_ of commands) {
       await runPnpmVerifier(id, arguments_, environment);
@@ -42,10 +34,7 @@ function verifyTestCommands(
   };
 }
 
-function verifyPostgresAndTestCommands(
-  id: string,
-  commands: string[][],
-): OperationVerifier {
+function verifyPostgresAndTestCommands(id: string, commands: string[][]): OperationVerifier {
   return async (environment) => {
     await verifyPostgresOperation(id)(environment);
     return verifyTestCommands(id, commands)(environment);
@@ -58,8 +47,7 @@ function verifyVitestOperation(
   testNamePattern?: string,
 ): OperationVerifier {
   const arguments_ = ["exec", "vitest", "run", ...[files].flat()];
-  if (testNamePattern !== undefined)
-    arguments_.push("--testNamePattern", testNamePattern);
+  if (testNamePattern !== undefined) arguments_.push("--testNamePattern", testNamePattern);
   return verifyTestCommands(id, [arguments_]);
 }
 
@@ -76,10 +64,7 @@ function runPnpmVerifier(
     child.on("error", reject);
     child.on("close", (code, signal) => {
       if (code === 0) resolve();
-      else
-        reject(
-          new Error(`Operation ${id} verifier exited with ${code ?? signal}`),
-        );
+      else reject(new Error(`Operation ${id} verifier exited with ${code ?? signal}`));
     });
   });
 }
@@ -91,6 +76,7 @@ export const operationRegistry: OperationRegistry = {
   "OPS-FF-AUTH-006-01": verifyPostgresOperation("OPS-FF-AUTH-006-01"),
   "OPS-FF-AUTH-009-01": verifyPostgresOperation("OPS-FF-AUTH-009-01"),
   "OPS-FF-CAT-002-01": verifyPostgresOperation("OPS-FF-CAT-002-01"),
+  "OPS-FF-TXN-002-01": verifyPostgresOperation("OPS-FF-TXN-002-01"),
   "OPS-FF-TXN-005-01": verifyPostgresOperation("OPS-FF-TXN-005-01"),
   "OPS-FF-LOC-002-01": verifyVitestOperation(
     "OPS-FF-LOC-002-01",
@@ -179,14 +165,7 @@ export const operationRegistry: OperationRegistry = {
     ],
   ]),
   "OPS-FF-FOR-001-01": verifyTestCommands("OPS-FF-FOR-001-01", [
-    [
-      "exec",
-      "vitest",
-      "run",
-      "tests/unit/dashboard.test.ts",
-      "--testNamePattern",
-      "UNIT-FF-FOR",
-    ],
+    ["exec", "vitest", "run", "tests/unit/dashboard.test.ts", "--testNamePattern", "UNIT-FF-FOR"],
     [
       "exec",
       "playwright",
@@ -207,10 +186,8 @@ export async function verifyOperation(
   const verifier = registry[id];
   if (!verifier) throw new Error(`Unknown operation: ${id}`);
   const result = await verifier(safeEnvironment(inheritedEnvironment));
-  if (result.operationId !== id)
-    throw new Error(`Operation result mismatch for ${id}`);
-  if (result.status !== "passed")
-    throw new Error(`Operation ${id} ${result.status}`);
+  if (result.operationId !== id) throw new Error(`Operation result mismatch for ${id}`);
+  if (result.status !== "passed") throw new Error(`Operation ${id} ${result.status}`);
   return result;
 }
 

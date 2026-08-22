@@ -77,6 +77,8 @@ export function createEnglishLocalization(): Localization {
         hasCode(error, "required_description")
       )
         return messages[fallbackKey] ?? fallbackKey;
+      if (hasCode(error, "unknown_account")) return messages["transaction.unknownAccount"];
+      if (hasCode(error, "unknown_category")) return messages["transaction.unknownCategory"];
       return error instanceof Error
         ? (legacyErrors[error.message] ?? messages[fallbackKey] ?? fallbackKey)
         : (messages[fallbackKey] ?? fallbackKey);

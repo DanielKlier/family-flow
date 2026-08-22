@@ -561,16 +561,16 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-04-R01 — Complete Transaction Boundaries
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-TXN-001`, `FF-TXN-002`, `FF-TXN-003`, `FF-ARC-006`
 **Verifies:** `FF-TXN-001`, `FF-TXN-002`, `FF-TXN-003`, `FF-ARC-006`, `FF-UI-001`
 **Operations:** `OPS-FF-TXN-002-01`
 
-- [ ] Add `E2E-FF-TXN-002-02` and observe red for nonexistent Gregorian dates, negative human input, and unsafe amounts before production validation changes.
-- [ ] Cover every filter individually plus month+account, owner+category, and status+fixed-cost combinations.
-- [ ] Cover invalid dates, invalid amounts, fractional cents, unsafe values, missing references, and friendly error rendering.
-- [ ] Add mandatory HTTP integration tests for parsing, use-case orchestration, redirects, and fragments plus mandatory PostgreSQL repository round-trip/filter tests.
+- [x] Add `E2E-FF-TXN-002-02` and observe red for nonexistent Gregorian dates, negative human input, and unsafe amounts before production validation changes.
+- [x] Cover every filter individually plus month+account, owner+category, and status+fixed-cost combinations.
+- [x] Cover invalid dates, invalid amounts, fractional cents, unsafe values, missing references, and friendly error rendering.
+- [x] Add mandatory HTTP integration tests for parsing, use-case orchestration, redirects, and fragments plus mandatory PostgreSQL repository round-trip/filter tests.
 **Tests:** `E2E-FF-TXN-002-01`, `E2E-FF-TXN-002-02`, `E2E-FF-TXN-003-01`, `UNIT-FF-ARC-006-01`, `UNIT-FF-ARC-006-02`, `INT-FF-TXN-002-01` (HTTP), and `INT-FF-TXN-003-01` (PostgreSQL baseline round trip and filters).
 
 **Quality gates:** the five canonical commands; apply the global conditional Docker and smoke gates when this phase changes migrations, runtime configuration, or deployment behavior.
