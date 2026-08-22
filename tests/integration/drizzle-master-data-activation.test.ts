@@ -99,19 +99,25 @@ describe("Drizzle master-data activation", () => {
       if (testDatabaseUrl === undefined) throw new Error("TEST_DATABASE_URL is required");
       await migrate(testDatabaseUrl);
       const firstConnection = createPostgresConnection(testDatabaseUrl);
-      const accountId = "account-mdm-restart-evidence";
-      const categoryId = "category-mdm-restart-evidence";
+      const firstRepositories = {
+        accounts: new DrizzleAccountRepository(firstConnection.db),
+        categories: new DrizzleCategoryRepository(firstConnection.db),
+        ownerContexts: new DrizzleOwnerContextRepository(firstConnection.db),
+      };
+      const accountId = "account-shared-checking";
+      const categoryId = "category-groceries";
 
       try {
-        await new DrizzleAccountRepository(firstConnection.db).save({
+        await seedMasterData(firstRepositories, createGermanLocalization());
+        await firstRepositories.accounts.save({
           id: accountId,
-          name: "Restart account",
+          name: "Edited seeded account",
           ownerContext: "shared",
           active: false,
         });
-        await new DrizzleCategoryRepository(firstConnection.db).save({
+        await firstRepositories.categories.save({
           id: categoryId,
-          name: "Restart category",
+          name: "Edited seeded category",
           active: false,
         });
       } finally {
@@ -130,13 +136,13 @@ describe("Drizzle master-data activation", () => {
         await seedMasterData(restartedRepositories, createGermanLocalization());
         await expect(restartedRepositories.accounts.get(accountId)).resolves.toEqual({
           id: accountId,
-          name: "Restart account",
+          name: "Edited seeded account",
           ownerContext: "shared",
           active: false,
         });
         await expect(restartedRepositories.categories.get(categoryId)).resolves.toEqual({
           id: categoryId,
-          name: "Restart category",
+          name: "Edited seeded category",
           active: false,
         });
       } finally {
