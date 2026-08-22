@@ -12,16 +12,25 @@ function encode(value) {
   return Buffer.from(JSON.stringify(value)).toString("base64url");
 }
 
-function idToken(nonce) {
+function idToken(code) {
+  const [identity, nonce] = code.split(":", 2);
+  const user =
+    identity === "fixture-owner-a"
+      ? { sub: "fixture-owner-a", name: "Fixture Owner A", email: "owner-a@example.test" }
+      : identity === "fixture-owner-b"
+        ? { sub: "fixture-owner-b", name: "Fixture Owner B", email: "owner-b@example.test" }
+        : {
+            sub: "synthetic-user",
+            name: "Synthetic User",
+            email: "synthetic@example.test",
+          };
   const header = encode({ alg: "RS256", kid: keyId, typ: "JWT" });
   const claims = encode({
     iss: issuer,
     aud: "smoke-client",
     exp: Math.floor(Date.now() / 1000) + 300,
-    nonce,
-    sub: "synthetic-user",
-    name: "Synthetic User",
-    email: "synthetic@example.test",
+    nonce: nonce ?? code,
+    ...user,
   });
   const signature = sign("RSA-SHA256", Buffer.from(`${header}.${claims}`), privateKey).toString(
     "base64url",
@@ -53,10 +62,10 @@ const server = createServer(
     if (url.pathname === "/token") {
       let body = "";
       for await (const chunk of request) body += chunk;
-      const nonce = new URLSearchParams(body).get("code") ?? "";
+      const code = new URLSearchParams(body).get("code") ?? "";
       response.writeHead(200, { "content-type": "application/json" });
       response.end(
-        JSON.stringify({ access_token: "synthetic-access-token", id_token: idToken(nonce) }),
+        JSON.stringify({ access_token: "synthetic-access-token", id_token: idToken(code) }),
       );
       return;
     }

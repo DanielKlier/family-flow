@@ -2,6 +2,8 @@ import { type createPrivateKey, generateKeyPairSync, sign } from "node:crypto";
 
 import { describe, expect, it } from "vitest";
 
+import { createSeededInMemoryRepositories } from "../../src/adapters/db/default-repositories.js";
+import { createGermanLocalization } from "../../src/adapters/localization/german.js";
 import { loadConfig } from "../../src/app/config.js";
 import { buildServer } from "../../src/app/server.js";
 import type { RequestLogEntry, RequestLogger } from "../../src/ports/logging/logger.js";
@@ -15,6 +17,74 @@ class CapturingLogger implements RequestLogger {
 }
 
 describe("OIDC HTTP adapter", () => {
+  it("INT-FF-AUTH-008-01 retains the OIDC subject after an owner-label edit", async () => {
+    const fixture = createOidcServerFixture();
+
+    try {
+      const headers = await fixture.login("fixture-owner-a");
+      const update = await fixture.server.inject({
+        method: "POST",
+        url: "/admin/master-data/owner-contexts/person_a",
+        headers,
+        payload: { label: "Reporting name" },
+      });
+      const protectedRequest = await fixture.server.inject({
+        method: "GET",
+        url: "/admin/master-data",
+        headers,
+      });
+
+      expect(update.statusCode).toBe(302);
+      expect(protectedRequest.statusCode).toBe(200);
+      expect(
+        fixture.logger.entries.filter((entry) => entry.path === "/admin/master-data"),
+      ).toContainEqual(expect.objectContaining({ user: "fixture-owner-a", statusCode: 200 }));
+      expect(
+        fixture.logger.entries.find(
+          (entry) => entry.path === "/admin/master-data/owner-contexts/person_a",
+        )?.user,
+      ).toBe("fixture-owner-a");
+      expect(fixture.logger.entries.map((entry) => entry.user)).not.toContain("Reporting name");
+    } finally {
+      await fixture.close();
+    }
+  });
+
+  it("INT-FF-SCP-003-01 gives both OIDC identities equal owner-label access without reassigning accounts", async () => {
+    const fixture = createOidcServerFixture();
+
+    try {
+      const accountsBefore = await fixture.repositories.accounts.list();
+      const firstHeaders = await fixture.login("fixture-owner-a");
+      const secondHeaders = await fixture.login("fixture-owner-b");
+
+      for (const headers of [firstHeaders, secondHeaders]) {
+        expect(
+          (await fixture.server.inject({ method: "GET", url: "/admin/master-data", headers }))
+            .statusCode,
+        ).toBe(200);
+        for (const ownerContext of ["person_a", "person_b", "shared"] as const) {
+          expect(
+            (
+              await fixture.server.inject({
+                method: "POST",
+                url: `/admin/master-data/owner-contexts/${ownerContext}`,
+                headers,
+                payload: { label: `${ownerContext} label` },
+              })
+            ).statusCode,
+          ).toBe(302);
+        }
+      }
+
+      await expect(fixture.repositories.accounts.list()).resolves.toEqual(accountsBefore);
+      expect(fixture.logger.entries.map((entry) => entry.user)).toContain("fixture-owner-a");
+      expect(fixture.logger.entries.map((entry) => entry.user)).toContain("fixture-owner-b");
+    } finally {
+      await fixture.close();
+    }
+  });
+
   it("INT-FF-AUTH-002-03 rejects development authentication configuration in production", () => {
     expect(() =>
       loadConfig({
@@ -163,6 +233,88 @@ describe("OIDC HTTP adapter", () => {
     }
   });
 });
+
+function createOidcServerFixture() {
+  const issuer = "https://issuer.example.invalid/family-flow";
+  const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  const jwk = publicKey.export({ format: "jwk" });
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+    if (url === `${issuer}/.well-known/openid-configuration`) {
+      return Response.json({
+        issuer,
+        authorization_endpoint: `${issuer}/authorize`,
+        token_endpoint: `${issuer}/token`,
+        userinfo_endpoint: `${issuer}/userinfo`,
+        jwks_uri: `${issuer}/jwks`,
+      });
+    }
+    if (url === `${issuer}/token` && init?.method === "POST") {
+      const [sub, nonce] = new URLSearchParams(String(init.body)).get("code")?.split(":") ?? [];
+      if (sub === undefined || nonce === undefined)
+        throw new Error("OIDC fixture code is malformed");
+      return Response.json({
+        id_token: signIdToken(privateKey, {
+          iss: issuer,
+          aud: "family-flow-client",
+          exp: 1_900_000_000,
+          sub,
+          name: `${sub} name`,
+          email: `${sub}@example.invalid`,
+          nonce,
+        }),
+      });
+    }
+    if (url === `${issuer}/jwks`) {
+      return Response.json({ keys: [{ ...jwk, kid: "fixture-key" }] });
+    }
+    throw new Error(`Unexpected OIDC fixture request: ${url}`);
+  };
+
+  const logger = new CapturingLogger();
+  const repositories = createSeededInMemoryRepositories(createGermanLocalization());
+  const server = buildServer({
+    logger,
+    repositories,
+    oidcTokens: {
+      generate: sequence(["a".repeat(43), "b".repeat(43), "c".repeat(43), "d".repeat(43)]),
+    },
+    auth: {
+      mode: "oidc",
+      baseUrl: "https://family-flow.example.invalid",
+      oidc: { issuerUrl: issuer, clientId: "family-flow-client", clientSecret: "client-secret" },
+    },
+  });
+
+  return {
+    logger,
+    repositories,
+    server,
+    async login(sub: string) {
+      const login = await server.inject({ method: "GET", url: "/auth/login" });
+      if (login.statusCode !== 302 || login.headers.location === undefined) {
+        throw new Error(`OIDC fixture login failed: ${login.statusCode}`);
+      }
+      const authorizationUrl = new URL(login.headers.location);
+      const state = authorizationUrl.searchParams.get("state");
+      const nonce = authorizationUrl.searchParams.get("nonce");
+      const callback = await server.inject({
+        method: "GET",
+        url: `/auth/callback?code=${encodeURIComponent(`${sub}:${nonce ?? ""}`)}&state=${encodeURIComponent(state ?? "")}`,
+      });
+      const session = callback.cookies.find(({ name }) => name === "ff_session");
+      if (callback.statusCode !== 302 || session === undefined) {
+        throw new Error("OIDC fixture login must establish a session");
+      }
+      return { cookie: `ff_session=${session.value}` };
+    },
+    async close() {
+      globalThis.fetch = originalFetch;
+      await server.close();
+    },
+  };
+}
 
 function sequence(values: string[]): () => string {
   let index = 0;

@@ -193,6 +193,25 @@ async function startOidcProvider(environment: SmokeEnvironment): Promise<void> {
   ]);
 }
 
+async function loginOidcUser(baseUrl: string, subject: string): Promise<string> {
+  const login = await fetch(`${baseUrl}/auth/login`, { redirect: "manual" });
+  const authorizationUrl = new URL(login.headers.get("location") ?? "http://invalid");
+  const state = authorizationUrl.searchParams.get("state");
+  const nonce = authorizationUrl.searchParams.get("nonce");
+  const callback = await fetch(
+    `${baseUrl}/auth/callback?code=${encodeURIComponent(`${subject}:${nonce ?? ""}`)}&state=${encodeURIComponent(state ?? "")}`,
+    { redirect: "manual" },
+  );
+  const cookie = callback.headers
+    .getSetCookie()
+    .find((value) => value.startsWith("ff_session="))
+    ?.split(";", 1)[0];
+  if (callback.status !== 302 || cookie === undefined) {
+    throw new Error("Smoke OIDC login must establish a session");
+  }
+  return cookie;
+}
+
 function stopOidcProvider(environment: SmokeEnvironment): void {
   try {
     docker(["rm", "--force", `${environment.project}-oidc`]);
@@ -212,6 +231,68 @@ async function prepareOldestMigrationSet(environment: SmokeEnvironment): Promise
   );
   return oldest;
 }
+
+test("SMOKE-FF-SCP-003-01 two OIDC identities can update every owner label without reassigning accounts", async () => {
+  const environment = await createEnvironment("owner-context-access");
+  try {
+    await startOidcProvider(environment);
+    compose(environment, ["up", "--build", "--detach"]);
+    const baseUrl = appBaseUrl(environment);
+    await waitForHealth(baseUrl);
+    const cookies = await Promise.all([
+      loginOidcUser(baseUrl, "fixture-owner-a"),
+      loginOidcUser(baseUrl, "fixture-owner-b"),
+    ]);
+
+    for (const [index, cookie] of cookies.entries()) {
+      const masterData = await fetch(`${baseUrl}/admin/master-data`, {
+        headers: { Cookie: cookie },
+      });
+      expect(masterData.status).toBe(200);
+      for (const ownerContext of ["person_a", "person_b", "shared"]) {
+        const update = await fetch(`${baseUrl}/admin/master-data/owner-contexts/${ownerContext}`, {
+          method: "POST",
+          headers: {
+            Cookie: cookie,
+            "content-type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ label: `${ownerContext} user ${index + 1}` }),
+          redirect: "manual",
+        });
+        expect(update.status).toBe(302);
+      }
+    }
+
+    for (const cookie of cookies) {
+      const body = await (
+        await fetch(`${baseUrl}/admin/master-data`, { headers: { Cookie: cookie } })
+      ).text();
+      for (const ownerContext of ["person_a", "person_b", "shared"]) {
+        expect(body).toContain(`${ownerContext} user 2`);
+      }
+    }
+    expect(
+      compose(environment, [
+        "exec",
+        "-T",
+        "postgres",
+        "psql",
+        "-U",
+        "family_flow",
+        "-d",
+        "family_flow",
+        "-At",
+        "-c",
+        "select owner_context from accounts order by id",
+      ])
+        .split("\n")
+        .filter(Boolean),
+    ).toEqual(["person_a", "person_b", "shared"]);
+  } finally {
+    stopOidcProvider(environment);
+    await cleanup(environment);
+  }
+});
 
 test("SMOKE-FF-SCP-001-01 empty Compose DB becomes healthy only after all bundled migrations", async () => {
   const environment = await createEnvironment("empty");

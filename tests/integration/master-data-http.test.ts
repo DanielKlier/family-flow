@@ -12,6 +12,41 @@ async function authenticatedHeaders(server: ReturnType<typeof buildServer>) {
 }
 
 describe("master-data HTTP adapter", () => {
+  it("INT-FF-MDM-001-01 maps an owner-label update without changing stable account ownership", async () => {
+    const repositories = createSeededInMemoryRepositories(createGermanLocalization());
+    const server = buildServer({ repositories });
+
+    try {
+      const headers = await authenticatedHeaders(server);
+      const accountsBefore = await repositories.accounts.list();
+      const ownerKeysBefore = (await repositories.ownerContexts.list()).map(
+        ({ ownerContext }) => ownerContext,
+      );
+      const response = await server.inject({
+        method: "POST",
+        url: "/admin/master-data/owner-contexts/person_a",
+        headers,
+        payload: { label: "Alex" },
+      });
+
+      expect(response.statusCode).toBe(302);
+      await expect(repositories.ownerContexts.get("person_a")).resolves.toEqual({
+        ownerContext: "person_a",
+        label: "Alex",
+      });
+      await expect(repositories.ownerContexts.get("person_b")).resolves.toEqual({
+        ownerContext: "person_b",
+        label: "Person B",
+      });
+      await expect(repositories.ownerContexts.list()).resolves.toMatchObject(
+        ownerKeysBefore.map((ownerContext) => ({ ownerContext })),
+      );
+      await expect(repositories.accounts.list()).resolves.toEqual(accountsBefore);
+    } finally {
+      await server.close();
+    }
+  });
+
   it("INT-FF-MDM-003-01 maps account create, edit, deactivate, and reactivate", async () => {
     const repositories = createSeededInMemoryRepositories(createGermanLocalization());
     const server = buildServer({ repositories });

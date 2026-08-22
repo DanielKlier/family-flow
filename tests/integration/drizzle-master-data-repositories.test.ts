@@ -16,6 +16,46 @@ const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 
 describe("Drizzle master data repositories", () => {
   it.runIf(testDatabaseUrl !== undefined)(
+    "INT-FF-MDM-001-02 persists an owner label without changing stable keys or seeded account ownership",
+    async () => {
+      if (testDatabaseUrl === undefined) {
+        throw new Error("TEST_DATABASE_URL is required");
+      }
+
+      const connection = createPostgresConnection(testDatabaseUrl);
+      const repositories = {
+        accounts: new DrizzleAccountRepository(connection.db),
+        ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+      };
+
+      try {
+        await connection.client.unsafe("drop schema public cascade; create schema public;");
+        await migrate(testDatabaseUrl);
+        await seedMasterData(
+          { ...repositories, categories: new DrizzleCategoryRepository(connection.db) },
+          createGermanLocalization(),
+        );
+        const accountsBefore = await repositories.accounts.list();
+
+        await repositories.ownerContexts.save({ ownerContext: "person_b", label: "Blair" });
+
+        await expect(repositories.ownerContexts.get("person_b")).resolves.toEqual({
+          ownerContext: "person_b",
+          label: "Blair",
+        });
+        await expect(repositories.ownerContexts.list()).resolves.toEqual([
+          { ownerContext: "person_a", label: "Person A" },
+          { ownerContext: "person_b", label: "Blair" },
+          { ownerContext: "shared", label: "Gemeinsam" },
+        ]);
+        await expect(repositories.accounts.list()).resolves.toEqual(accountsBefore);
+      } finally {
+        await connection.client.end();
+      }
+    },
+  );
+
+  it.runIf(testDatabaseUrl !== undefined)(
     "INT-FF-MDM-002-01 migrates an empty schema and preserves user-edited German master data on reseed",
     async () => {
       if (testDatabaseUrl === undefined) {
