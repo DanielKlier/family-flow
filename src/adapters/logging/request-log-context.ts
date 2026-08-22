@@ -1,4 +1,4 @@
-const secretQueryPattern = /(?:code|secret|token|session|state|password)/i;
+const safeQueryKeys = new Set(["month", "transactionId", "rowCount"]);
 
 export function normalizeQueryForLog(query: unknown): Record<string, string | string[]> {
   if (typeof query !== "object" || query === null) {
@@ -7,11 +7,11 @@ export function normalizeQueryForLog(query: unknown): Record<string, string | st
 
   const normalized: Record<string, string | string[]> = {};
   for (const [key, value] of Object.entries(query)) {
-    if (value === undefined) {
+    if (!safeQueryKeys.has(key)) {
       continue;
     }
     if (typeof value === "string" || isStringArray(value)) {
-      normalized[key] = secretQueryPattern.test(key) ? "[redacted]" : value;
+      normalized[key] = value;
     }
   }
 

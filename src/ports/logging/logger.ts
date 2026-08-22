@@ -1,3 +1,8 @@
+export type RequestLogError = {
+  type: string;
+  message: string;
+};
+
 export type RequestLogEntry = {
   requestId: string;
   timestamp: string;
@@ -8,7 +13,7 @@ export type RequestLogEntry = {
   durationMs: number;
   user: string | null;
   outcome: "success" | "error";
-  error: string | null;
+  error: RequestLogError | null;
 };
 
 export type RequestLogger = {

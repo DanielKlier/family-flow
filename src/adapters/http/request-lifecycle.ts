@@ -1,23 +1,23 @@
 import { randomUUID } from "node:crypto";
-import { STATUS_CODES } from "node:http";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
-import { normalizeQueryForLog } from "../logging/request-log-context.js";
 import type { UserContext } from "../../ports/auth/user-context.js";
-import type { RequestLogger } from "../../ports/logging/logger.js";
+import type { RequestLogError, RequestLogger } from "../../ports/logging/logger.js";
+import { normalizeQueryForLog } from "../logging/request-log-context.js";
+import { parseCanonicalRequestId } from "./request-id.js";
 
 type RequestWithLogContext = FastifyRequest & {
   userContext?: UserContext;
   requestLogContext?: {
     requestId: string;
     startedAt: bigint;
-    error: string | null;
+    error: RequestLogError | null;
   };
 };
 
 export function registerRequestLifecycle(server: FastifyInstance, logger: RequestLogger): void {
   server.addHook("onRequest", async (request: RequestWithLogContext, reply: FastifyReply) => {
-    const requestId = readRequestId(request) ?? randomUUID();
+    const requestId = parseCanonicalRequestId(request.headers["x-request-id"]) ?? randomUUID();
 
     request.requestLogContext = {
       requestId,
@@ -29,7 +29,7 @@ export function registerRequestLifecycle(server: FastifyInstance, logger: Reques
 
   server.addHook("onError", async (request: RequestWithLogContext, _reply, error) => {
     if (request.requestLogContext !== undefined) {
-      request.requestLogContext.error = error.message;
+      request.requestLogContext.error = safeErrorForStatus(errorStatusCode(error));
     }
   });
 
@@ -41,9 +41,6 @@ export function registerRequestLifecycle(server: FastifyInstance, logger: Reques
 
     const durationMs = Number(process.hrtime.bigint() - context.startedAt) / 1_000_000;
     const path = new URL(request.url, "http://localhost").pathname;
-    const error =
-      context.error ??
-      (reply.statusCode >= 400 ? (STATUS_CODES[reply.statusCode] ?? "Error") : null);
 
     logger.logRequest({
       requestId: context.requestId,
@@ -55,17 +52,37 @@ export function registerRequestLifecycle(server: FastifyInstance, logger: Reques
       durationMs,
       user: request.userContext?.id ?? null,
       outcome: reply.statusCode >= 400 ? "error" : "success",
-      error,
+      error:
+        context.error ?? (reply.statusCode >= 400 ? safeErrorForStatus(reply.statusCode) : null),
     });
   });
 }
 
-function readRequestId(request: FastifyRequest): string | null {
-  const header = request.headers["x-request-id"];
-
-  if (typeof header === "string" && header.trim() !== "") {
-    return header;
+function errorStatusCode(error: unknown): number {
+  if (typeof error !== "object" || error === null) {
+    return 500;
   }
 
-  return null;
+  const statusCode = Reflect.get(error, "statusCode");
+  return typeof statusCode === "number" ? statusCode : 500;
+}
+
+function safeErrorForStatus(statusCode: number): RequestLogError {
+  if (statusCode >= 500) {
+    return { type: "unexpected-error", message: "Unexpected server error" };
+  }
+
+  if (statusCode === 401) {
+    return { type: "authentication-error", message: "Authentication failed" };
+  }
+
+  if (statusCode === 403) {
+    return { type: "authorization-error", message: "Request forbidden" };
+  }
+
+  if (statusCode === 404) {
+    return { type: "not-found", message: "Resource not found" };
+  }
+
+  return { type: "invalid-request", message: "Request validation failed" };
 }

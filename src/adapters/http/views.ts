@@ -44,6 +44,7 @@ import {
 
 type ViewRenderer = Pick<FastifyReply, "viewAsync"> & {
   request?: { localization?: Localization };
+  getHeader?: FastifyReply["getHeader"];
 };
 
 type TransactionsInput = {
@@ -111,15 +112,20 @@ export function createFamilyFlowViews(renderer: ViewRenderer, configured?: Local
       );
     },
     authErrorPage(message: string): Promise<string> {
+      const requestId = String(renderer.getHeader?.("x-request-id") ?? "");
       return renderer.viewAsync(
         "pages/auth-error.njk",
-        page(prepareAuthErrorViewModel(message, localization), []),
+        page(prepareAuthErrorViewModel(message, requestId, localization), []),
       );
     },
     missingResourcePage(resource: MissingResource): Promise<string> {
+      const requestId = String(renderer.getHeader?.("x-request-id") ?? "");
       return renderer.viewAsync(
         "pages/resource-error.njk",
-        page(prepareMissingResourceViewModel(resource, localization), mainNavigation(localization)),
+        page(
+          prepareMissingResourceViewModel(resource, requestId, localization),
+          mainNavigation(localization),
+        ),
       );
     },
     badRequestPage(message: string, requestId: string): Promise<string> {

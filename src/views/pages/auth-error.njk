@@ -1,5 +1,6 @@
 {% extends "layouts/app.njk" %}
 {% block content %}<section class="panel">
   <p class="form-error">{{ message }}</p>
+  <p>{{ requestIdLabel }} <code>{{ requestId }}</code></p>
   <a class="button-link" href="{{ loginUrl }}">{{ loginLabel }}</a>
 </section>{% endblock %}
