@@ -243,6 +243,7 @@ Operational notes:
 - Use the edit page to reactivate a deactivated account or category.
 - Validation errors are shown in the master data form. Use the visible `X-Request-Id` to inspect the matching request log entry if saving fails unexpectedly.
 - Before broad cleanup of master data, create a database backup because deactivation is reversible through the UI, but direct database edits are not protected by the application.
+- Run `pnpm ops:verify --id OPS-FF-MDM-003-01` before deployment to verify account and category HTTP mapping, PostgreSQL create/edit/deactivate/reactivate and active filtering, restart persistence, historical visibility, and transaction-choice exclusion/restoration. A passing `Operation OPS-FF-MDM-003-01 passed` result confirms the bounded fixtures. If it fails, do not delete or directly rewrite referenced master data; restore each fixture's prior name and active state by stable ID or roll back the application image.
 
 ## Manual Transaction Maintenance
 

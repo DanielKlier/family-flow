@@ -528,7 +528,7 @@
     },
     {
       "id": "PH-08-R01",
-      "status": "Pending",
+      "status": "Completed",
       "summary": "Master-data reactivation and mandatory adapter evidence.",
       "classification": "Evidence-only; expected green"
     },
@@ -914,7 +914,7 @@
     },
     {
       "id": "FF-MDM-003-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-08-R01",
       "test": "E2E-FF-MDM-003-01",
       "file": "tests/e2e/master-data.test.ts",
@@ -922,7 +922,7 @@
     },
     {
       "id": "FF-MDM-004-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-08-R01",
       "test": "E2E-FF-MDM-004-01",
       "file": "tests/e2e/master-data.test.ts",
@@ -930,10 +930,10 @@
     },
     {
       "id": "FF-MDM-005-AC01",
-      "status": "Delivered-unverified",
+      "status": "Verified",
       "phase": "PH-08-R01",
       "test": "INT-FF-MDM-005-01",
-      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "file": "tests/integration/drizzle-master-data-activation.test.ts",
       "operation": null
     },
     {
@@ -2702,7 +2702,7 @@
       "id": "INT-FF-MDM-003-02",
       "acceptance": "FF-MDM-003-AC01",
       "phase": "PH-08-R01",
-      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "file": "tests/integration/drizzle-master-data-activation.test.ts",
       "boundary": "PostgreSQL adapter",
       "classification": "Expected green evidence"
     },
@@ -2718,7 +2718,7 @@
       "id": "INT-FF-MDM-004-02",
       "acceptance": "FF-MDM-004-AC01",
       "phase": "PH-08-R01",
-      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "file": "tests/integration/drizzle-master-data-activation.test.ts",
       "boundary": "PostgreSQL adapter",
       "classification": "Expected green evidence"
     },
@@ -2726,7 +2726,7 @@
       "id": "INT-FF-MDM-005-01",
       "acceptance": "FF-MDM-005-AC01",
       "phase": "PH-08-R01",
-      "file": "tests/integration/drizzle-master-data-repositories.test.ts",
+      "file": "tests/integration/drizzle-master-data-activation.test.ts",
       "boundary": "PostgreSQL adapter",
       "classification": "Expected green evidence"
     },
@@ -3574,7 +3574,7 @@
       "procedure": "**Master Data**: deactivate/reactivate fixture account/category.",
       "outcome": "History remains; new-choice availability follows active state.",
       "rollback": "Reactivate by stable ID or restore fixture.",
-      "verifier": null
+      "verifier": "scripts/operations/registry.ts#OPS-FF-MDM-003-01"
     },
     {
       "id": "OPS-FF-OBS-003-01",
