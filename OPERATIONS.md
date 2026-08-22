@@ -397,9 +397,22 @@ MANIFEST="$BACKUP_DIR/manifest.txt"
 mkdir -p "$BACKUP_DIR"
 docker compose -f compose.prod.yaml exec -T postgres \
   pg_dump -U family_flow -d family_flow --format=custom --no-owner --no-privileges >"$DUMP"
+{
+  printf 'created_at=%s\n' "$STAMP"
+  printf 'app_image_id=%s\n' "$(docker compose -f compose.prod.yaml images -q app)"
+  printf 'database_evidence='
+  docker compose -f compose.prod.yaml exec -T postgres \
+    psql -X -U family_flow -d family_flow -At -v ON_ERROR_STOP=1 \
+    <scripts/recovery-evidence.sql
+  sha256sum "$DUMP"
+} >"$MANIFEST"
+sha256sum "$MANIFEST" >"$MANIFEST.sha256"
+sha256sum --check "$MANIFEST.sha256"
+grep -F "$(sha256sum "$DUMP")" "$MANIFEST"
+pg_restore --list "$DUMP" >/dev/null
 ```
 
-Create a manifest beside every dump. It must record the UTC timestamp, deployed immutable app image ID, ordered `schema_migrations`, row counts for every application table, signed `sum(amount_cents)` totals for transactions, income plans, and monthly overrides, and foreign-key/reference reconciliation results. Do not include session tokens, transaction descriptions, or other row content. Append `sha256sum "$DUMP"` to the manifest, then protect the manifest itself with `sha256sum "$MANIFEST" >"$MANIFEST.sha256"`. A backup is complete only after `sha256sum --check "$MANIFEST.sha256"`, the dump checksum recorded in the manifest, and `pg_restore --list "$DUMP"` all succeed.
+The maintained `scripts/recovery-evidence.sql` command is the authoritative, content-minimized database inventory used by this runbook and the recovery smoke test. It records ordered `schema_migrations`, row counts for every application table, signed minor-unit totals for transactions, income plans, and monthly overrides, relationship IDs and orphan counts, seed IDs and edited labels, and active states. It does not include session tokens, transaction descriptions, or other row content. A backup is complete only after the manifest checksum, dump checksum recorded in the manifest, and `pg_restore --list` all succeed.
 
 Copy the dump, manifest, and manifest checksum together to encrypted storage outside the Compose host. Keep at least 7 daily, 5 weekly, and 12 monthly sets, subject to the household's agreed data-retention policy. Delete an expired set as one unit and record the deletion; never retain a manifest without its dump or vice versa. Run the focused recovery drill with `pnpm ops:verify --id OPS-FF-OPS-002-01` after backup-procedure or PostgreSQL changes.
 
@@ -412,8 +425,8 @@ Treat the source dump and its manifest as one recovery unit. Restore in this ord
 3. Restore a PostgreSQL dump with `docker compose -f compose.prod.yaml exec -T postgres pg_restore -U family_flow -d family_flow --clean --if-exists --no-owner --no-privileges --exit-on-error < "$DUMP"`. A non-zero exit aborts the recovery.
 4. While the app remains stopped, run `docker compose -f compose.prod.yaml run --rm --no-deps app node dist/app/session-invalidate.js` and require success. This compiled entry point applies pending migrations and revokes every restored session.
 5. Repeat `docker compose -f compose.prod.yaml run --rm --no-deps app node dist/app/session-cleanup.js --limit 1000` until it reports `0 row(s)`. Never bypass either session command.
-6. Reconcile all manifest table counts, signed monetary totals, IDs, migration names, and user-edited seed labels. Query for orphaned foreign-key references across transactions, import previews, categorization rules, and monthly overrides; every query must return zero. Investigate any difference instead of editing the manifest.
-7. Start the app with `docker compose -f compose.prod.yaml start app` so idempotent seeds run, but keep proxy traffic closed. Recheck reconciliation, then require a successful local `/health` response with `X-Request-Id`.
+6. Run the same maintained evidence command while the app is stopped: `docker compose -f compose.prod.yaml exec -T postgres psql -X -U family_flow -d family_flow -At -v ON_ERROR_STOP=1 <scripts/recovery-evidence.sql`. Compare ordered migrations, every non-session table count and ID, all three monetary totals, foreign-key relationships, seed inventory and edited labels, and active states with `database_evidence` in the manifest. Every orphan count must be zero. The restored session count and IDs may differ only after the mandatory invalidation step. Investigate any other difference instead of editing the manifest.
+7. Start the app in a fresh container with `docker compose -f compose.prod.yaml up --detach --no-deps --force-recreate app` so idempotent seeds run and stale process/network state is not reused, but keep proxy traffic closed. Run `scripts/recovery-evidence.sql` again and repeat the complete comparison from step 6, explicitly rechecking all three monetary totals, migration inventory, edited labels, active states, seed inventory, and zero orphan counts after startup. Require a successful local `/health` response with `X-Request-Id`.
 8. Validate that a session cookie captured before backup is rejected: `/transactions` must redirect to `/auth/login`. Only then reopen traffic and monitor app and PostgreSQL logs.
 
 If restore, migration, invalidation, cleanup, reconciliation, health, or token validation fails, keep traffic closed. Preserve the failed database for diagnosis, stop the app, and roll back by restoring the pre-restore safety dump with the same ordered procedure, including compiled session invalidation and cleanup. Start the prior compatible immutable image when the recovered manifest requires it, repeat reconciliation and health/token checks, and reopen traffic only after they pass. Retain the failed dump, manifests, command output, and pre-restore safety backup until the incident is resolved; then apply the normal encrypted retention schedule.
