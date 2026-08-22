@@ -19,6 +19,7 @@ import { DrizzleIncomeRepository } from "../adapters/db/drizzle-income-repositor
 import { DrizzleOidcTransactionStore } from "../adapters/db/drizzle-oidc-transaction-store.js";
 import { DrizzleOwnerContextRepository } from "../adapters/db/drizzle-owner-context-repository.js";
 import { DrizzleSessionStore } from "../adapters/db/drizzle-session-store.js";
+import { DrizzleScenarioRepository } from "../adapters/db/drizzle-scenario-repository.js";
 import { DrizzleTransactionRepository } from "../adapters/db/drizzle-transaction-repository.js";
 import { InMemoryImportPreviewBatchRepository } from "../adapters/db/in-memory-import-preview-batch-repository.js";
 import { InMemoryOidcTransactionStore } from "../adapters/db/in-memory-oidc-transaction-store.js";
@@ -40,6 +41,7 @@ import { registerIncomeRoutes } from "../adapters/http/income.js";
 import { registerRequestLocalization } from "../adapters/http/localization.js";
 import { registerMasterDataRoutes } from "../adapters/http/master-data.js";
 import { registerRequestLifecycle } from "../adapters/http/request-lifecycle.js";
+import { registerScenarioRoutes } from "../adapters/http/scenarios.js";
 import { registerTransactionRoutes } from "../adapters/http/transactions.js";
 import { createFamilyFlowViews, registerTemplateRenderer } from "../adapters/http/views.js";
 import {
@@ -57,6 +59,7 @@ import type { RequestLogger } from "../ports/logging/logger.js";
 import type { CategorizationRuleRepository } from "../ports/repositories/categorization-rule-repository.js";
 import type { ImportPreviewBatchRepository } from "../ports/repositories/import-preview-batch-repository.js";
 import type { IncomeRepository } from "../ports/repositories/income-repository.js";
+import type { ScenarioRepository } from "../ports/repositories/scenario-repository.js";
 import type { TransactionRepository } from "../ports/repositories/transaction-repository.js";
 import { loadConfig } from "./config.js";
 
@@ -64,6 +67,7 @@ type AppRepositories = MasterDataRepositories &
   ImportProfileRepositories & {
     categorizationRules: CategorizationRuleRepository;
     income: IncomeRepository;
+    scenarios: ScenarioRepository;
     transactions: TransactionRepository;
   };
 
@@ -133,6 +137,7 @@ export function buildServer(options: ServerOptions = {}) {
   registerCsvImportRoutes(server, { ...repositories, importPreviewBatches }, csvParser, clock);
   registerIncomeRoutes(server, repositories, clock);
   registerDashboardRoutes(server, repositories, clock);
+  registerScenarioRoutes(server, repositories, clock);
 
   server.setNotFoundHandler(async (_request, reply) => {
     const requestId = String(reply.getHeader("x-request-id"));
@@ -176,6 +181,7 @@ async function main() {
     income: new DrizzleIncomeRepository(connection.db),
     importProfiles: new DrizzleImportProfileRepository(connection.db),
     ownerContexts: new DrizzleOwnerContextRepository(connection.db),
+    scenarios: new DrizzleScenarioRepository(connection.db),
     transactions: new DrizzleTransactionRepository(connection.db),
   };
 

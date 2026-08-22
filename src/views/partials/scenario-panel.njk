@@ -1,0 +1,25 @@
+<section id="scenario-panel">
+<section class="panel"><h2>{{ text.create }}</h2>{% if formError %}<p class="form-error">{{ formError }}</p>{% endif %}
+<form id="scenario-form" class="grid-form" method="post" action="/scenarios" hx-post="/scenarios" hx-target="#scenario-panel" hx-swap="outerHTML">
+<label class="field">{{ text.name }} <input name="name" required></label>
+<label class="field">{{ text.startMonth }} <input name="startMonth" placeholder="{{ text.monthPlaceholder }}" required></label>
+<label class="field">{{ text.endMonth }} <input name="endMonth" placeholder="{{ text.monthPlaceholder }}" required></label>
+<label class="field">{{ text.startingBuffer }} <input name="startingBuffer" placeholder="{{ text.amountPlaceholder }}" required></label>
+<label class="field">{{ text.baseIncome }} <input name="baseIncome" placeholder="{{ text.amountPlaceholder }}" required></label>
+<label class="field">{{ text.baselineChoice }} <select name="baselineMode" aria-label="{{ text.baseline }}"><option value="historical-3">{{ text.historical3 }}</option><option value="historical-6">{{ text.historical6 }}</option><option value="historical-12">{{ text.historical12 }}</option><option value="manual">{{ text.manual }}</option></select></label>
+<label class="field">{{ text.manual }} <input name="manualBaseline" value="0,00"></label><button type="submit">{{ text.save }}</button>
+</form></section>
+{% if selected %}<section class="panel"><h2>{{ selected.name }}</h2><p>{{ selected.baseline }}</p>
+<details><summary>{{ text.edit }}</summary><form class="grid-form" method="post" action="/scenarios/{{ selected.id }}">
+<label class="field">{{ text.name }} <input name="name" value="{{ selected.name }}" required></label><label class="field">{{ text.startMonth }} <input name="startMonth" value="{{ selected.startMonth }}" required></label><label class="field">{{ text.endMonth }} <input name="endMonth" value="{{ selected.endMonth }}" required></label>
+<label class="field">{{ text.startingBuffer }} <input name="startingBuffer" value="{{ selected.startingBuffer }}" required></label><label class="field">{{ text.baseIncome }} <input name="baseIncome" value="{{ selected.baseIncome }}" required></label>
+<label class="field">{{ text.baselineChoice }} <select name="baselineMode"><option value="preserve">{{ text.preserveBaseline }}</option><option value="historical-3">{{ text.historical3 }}</option><option value="historical-6">{{ text.historical6 }}</option><option value="historical-12">{{ text.historical12 }}</option><option value="manual">{{ text.manual }}</option></select></label><label class="field">{{ text.manual }} <input name="manualBaseline" value="0,00"></label><button type="submit">{{ text.update }}</button></form></details>
+<p>{{ text.lowestBuffer }} {{ selected.lowestBuffer }}</p><p>{{ text.requiredIncome }} {{ selected.requiredIncome }}</p>
+<form id="scenario-adjustment-form" class="grid-form" method="post" action="/scenarios/{{ selected.id }}/adjustments">
+<label class="field">{{ text.name }} <input name="name" required></label><label class="field">{{ text.type }} <select name="type"><option value="income">{{ text.income }}</option><option value="expense">{{ text.expense }}</option></select></label>
+<label class="field">{{ text.direction }} <select name="direction"><option value="increase">{{ text.increase }}</option><option value="decrease">{{ text.decrease }}</option></select></label><label class="field">{{ text.amount }} <input name="amount" required></label>
+<label class="field">{{ text.from }} <input name="startMonth" placeholder="{{ text.monthPlaceholder }}" required></label><label class="field">{{ text.to }} <input name="endMonth" placeholder="{{ text.monthPlaceholder }}" required></label><button type="submit">{{ text.add }}</button></form>
+<ul>{% for adjustment in selected.adjustments %}<li>{{ adjustment.name }} {{ adjustment.amount }}</li>{% endfor %}</ul>
+<div class="table-wrap"><table><thead><tr><th>{{ text.month }}</th><th>{{ text.income }}</th><th>{{ text.expense }}</th><th>{{ text.balance }}</th><th>{{ text.buffer }}</th></tr></thead><tbody>{% for month in selected.months %}<tr><td>{{ month.month }}</td><td>{{ month.income }}</td><td>{{ month.expense }}</td><td>{{ month.balance }}</td><td>{{ month.buffer }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% else %}<p class="empty-state">{{ text.empty }}</p>{% endif %}
+</section>

@@ -805,7 +805,7 @@ The current composition registers authentication before protected routes. This d
 
 ### PH-14 — Family-Finance Scenarios
 
-**Status:** Pending
+**Status:** Completed
 **Classification:** Behavior change
 **Implements:** `FF-SCN-001`, `FF-SCN-002`, `FF-SCN-003`, `FF-SCN-004`, `FF-SCN-005`, `FF-SCN-006`
 **Verifies:** `FF-ARC-006`, `FF-LOC-001`, `FF-LOC-003`, `FF-UI-001`
@@ -813,22 +813,22 @@ The current composition registers authentication before protected routes. This d
 
 **Red:**
 
-- [ ] Add `E2E-FF-SCN-001-01`, observe failure because scenarios do not exist, and record the red result.
-- [ ] Add `E2E-FF-SCN-004-01` and `E2E-FF-SCN-006-01`; observe missing results and calculator pages.
-- [ ] Then add exact-value core tests for snapshots, typed deltas, inclusive ranges, and formulas.
+- [x] Add `E2E-FF-SCN-001-01`, observe failure because scenarios do not exist, and record the red result.
+- [x] Add `E2E-FF-SCN-004-01` and `E2E-FF-SCN-006-01`; observe missing results and calculator pages.
+- [x] Then add exact-value core tests for snapshots, typed deltas, inclusive ranges, and formulas.
 
 **Tasks:**
 
-- [ ] Implement scenario and typed income/expense adjustment core entities and calculation service.
-- [ ] Snapshot the selected completed-month historical average at creation; later source, ordinary scenario edits, or clock changes never recalculate it.
-- [ ] Recompute/replace the snapshot only when the user explicitly changes baseline mode/window/value.
-- [ ] Reject adjustments outside the scenario range and reject range shrinkage that would orphan an adjustment.
-- [ ] Support family-planning income and expense adjustments without internal legal calculations.
-- [ ] Calculate monthly balance, cumulative and lowest buffer, funding gap, and required additional net income in minor units.
-- [ ] Add repository ports, migration, and PostgreSQL adapters.
-- [ ] Add German scenario list, creation, editing, monthly table, and help page.
-- [ ] Link the exact Familienportal and BMF calculator URLs.
-- [ ] Update scenario interpretation and maintenance runbooks.
+- [x] Implement scenario and typed income/expense adjustment core entities and calculation service.
+- [x] Snapshot the selected completed-month historical average at creation; later source, ordinary scenario edits, or clock changes never recalculate it.
+- [x] Recompute/replace the snapshot only when the user explicitly changes baseline mode/window/value.
+- [x] Reject adjustments outside the scenario range and reject range shrinkage that would orphan an adjustment.
+- [x] Support family-planning income and expense adjustments without internal legal calculations.
+- [x] Calculate monthly balance, cumulative and lowest buffer, funding gap, and required additional net income in minor units.
+- [x] Add repository ports, migration, and PostgreSQL adapters.
+- [x] Add German scenario list, creation, editing, adjustment maintenance, monthly table, and help page.
+- [x] Link the exact Familienportal and BMF calculator URLs.
+- [x] Update scenario interpretation and maintenance runbooks.
 
 **Tests:** `E2E-FF-SCN-001-01`, `E2E-FF-SCN-001-02`, `UNIT-FF-SCN-001-01`, `INT-FF-SCN-001-01` (snapshot persistence), `UNIT-FF-SCN-002-01`, `UNIT-FF-SCN-002-02`, `E2E-FF-SCN-003-01`, `E2E-FF-SCN-004-01`, `UNIT-FF-SCN-004-01`, `UNIT-FF-SCN-004-02`, `UNIT-FF-SCN-005-01`, `E2E-FF-SCN-006-01`, `E2E-FF-LOC-001-03`, `E2E-FF-UI-001-03`, `INT-FF-SCN-001-02` (PostgreSQL), and `INT-FF-SCN-001-03` (HTTP).
 

@@ -11,6 +11,7 @@ import { InMemoryCategoryRepository } from "./in-memory-category-repository.js";
 import { InMemoryImportProfileRepository } from "./in-memory-import-profile-repository.js";
 import { InMemoryIncomeRepository } from "./in-memory-income-repository.js";
 import { InMemoryOwnerContextRepository } from "./in-memory-owner-context-repository.js";
+import { InMemoryScenarioRepository } from "./in-memory-scenario-repository.js";
 import { InMemoryTransactionRepository } from "./in-memory-transaction-repository.js";
 import { initialImportProfiles, type ImportProfileRepositories } from "./seeds/import-profiles.js";
 
@@ -20,6 +21,7 @@ export function createSeededInMemoryRepositories(
   ImportProfileRepositories & {
     categorizationRules: InMemoryCategorizationRuleRepository;
     income: InMemoryIncomeRepository;
+    scenarios: InMemoryScenarioRepository;
     transactions: InMemoryTransactionRepository;
   } {
   const accounts = createInitialAccounts(names);
@@ -31,6 +33,7 @@ export function createSeededInMemoryRepositories(
     income: new InMemoryIncomeRepository(),
     importProfiles: new InMemoryImportProfileRepository(initialImportProfiles),
     ownerContexts: new InMemoryOwnerContextRepository(createInitialOwnerContexts(names)),
+    scenarios: new InMemoryScenarioRepository(),
     transactions: new InMemoryTransactionRepository(accounts),
   };
 }

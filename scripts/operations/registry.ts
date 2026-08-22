@@ -79,6 +79,16 @@ export const operationRegistry: OperationRegistry = {
     "tests/unit/income-plans.test.ts",
     "tests/integration/income-http.test.ts",
   ]),
+  "OPS-FF-SCN-001-01": verifyPostgresAndTestCommands("OPS-FF-SCN-001-01", [
+    [
+      "exec",
+      "vitest",
+      "run",
+      "tests/unit/scenarios.test.ts",
+      "tests/integration/scenario-http.test.ts",
+    ],
+    ["exec", "playwright", "test", "tests/e2e/scenarios.test.ts", "--workers=1"],
+  ]),
   "OPS-FF-DASH-001-01": verifyPostgresAndTestCommands("OPS-FF-DASH-001-01", [
     [
       "exec",

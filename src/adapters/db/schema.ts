@@ -162,3 +162,31 @@ export const monthlyIncomeOverrides = pgTable("monthly_income_overrides", {
   amountCents: integer("amount_cents").notNull(),
   note: text("note"),
 });
+
+export const scenarios = pgTable("scenarios", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  startMonth: text("start_month").notNull(),
+  endMonth: text("end_month").notNull(),
+  startingBufferCents: integer("starting_buffer_cents").notNull(),
+  baseIncomeCents: integer("base_income_cents").notNull(),
+  baselineMode: text("baseline_mode").notNull().$type<"manual" | "historical">(),
+  baselineWindowLength: integer("baseline_window_length"),
+  baselineExpenseCents: integer("baseline_expense_cents").notNull(),
+});
+
+export const scenarioAdjustments = pgTable(
+  "scenario_adjustments",
+  {
+    id: text("id").primaryKey(),
+    scenarioId: text("scenario_id")
+      .notNull()
+      .references(() => scenarios.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    type: text("type").notNull().$type<"income" | "expense">(),
+    deltaCents: integer("delta_cents").notNull(),
+    startMonth: text("start_month").notNull(),
+    endMonth: text("end_month").notNull(),
+  },
+  (table) => [index("scenario_adjustments_scenario_idx").on(table.scenarioId, table.id)],
+);
